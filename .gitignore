@@ -36,3 +36,7 @@ datasets/cifake/*
 !datasets/cifake/.gitkeep
 datasets/genimage/*
 !datasets/genimage/.gitkeep
+
+# Text Datasets
+datasets/raid/*
+!datasets/raid/.gitkeep
