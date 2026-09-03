@@ -53,3 +53,66 @@ pip install -r requirements.txt
 ```bash
 python3 scripts/prepare_image_datasets.py
 ```
+
+---
+
+# Sprint 1 — Week 1: Frontend Architecture & Text Dataset Preparation
+
+**Student:** Aryansh Agarwal (`23ESKCA021`)  
+**Department:** Computer Science & Engineering (Artificial Intelligence)  
+**Institution:** Swami Keshvanand Institute of Technology, Management & Gramothan (SKIT), Jaipur  
+**Academic Year:** 2026–27 (Phase-II, 7th Semester)  
+**Sprint Window:** 03-August-2026 to 20-September-2026  
+**User Story:** *Preparing text data and frontend architecture*
+
+---
+
+## 📌 Milestone Overview (Week 1 Submission)
+
+This submission delivers **Task 1** of Form – 2 for Sprint 1 (Aryansh Agarwal):
+
+> **Form-2 Task 1:** *Implementing core frontend architecture and preparing the Robust AI Detection (RAID) text benchmark.*
+
+---
+
+## 📁 Week 1 Deliverables & Architecture
+
+| Component | Path | Description |
+|---|---|---|
+| **Frontend Foundation** | [`frontend/`](frontend/) | Next.js 16 (App Router), TypeScript, Tailwind CSS, Axios API client. |
+| **UI & Layout** | [`frontend/src/components/`](frontend/src/components/) | Reusable `Navbar`, `Footer`, `UploadDropzone`, `JobStatusCard`, `Button`, `Modal`, `LoadingSpinner`. |
+| **Application Pages** | [`frontend/src/app/`](frontend/src/app/) | Initial routes: `/`, `/login`, `/register`, `/dashboard`, `/health`. |
+| **Text Data Pipeline** | [`scripts/prepare_text_dataset.py`](scripts/prepare_text_dataset.py) | Streams HF `liamdugan/raid`, balances classes, generates text manifest. |
+| **Text Manifest** | [`datasets/splits/text_manifest.csv`](datasets/splits/text_manifest.csv) | Final 20,000-record text split (80/10/10). |
+
+---
+
+## 🗂️ Dataset Sources & Organisation
+
+The text pipeline prepares a deterministically sampled 20,000-record subset from the **Robust AI Detection (RAID)** benchmark (`liamdugan/raid`), producing a balanced dataset:
+
+1. **Human Collection (Real - Label 0)**:
+   - 10,000 deterministically sampled human-written records.
+2. **AI Collection (Fake - Label 1)**:
+   - 10,000 deterministically sampled AI-generated records evenly distributed across 11 distinct generator subtypes (e.g., ChatGPT, Cohere, LLaMA, Mistral, GPT-4).
+3. **Partitioning**:
+   - Random Seed `42` ensures perfect reproducibility.
+   - 80/10/10 stratified split: Train (16,000), Validation (2,000), Test (2,000).
+   - Raw HF corpus is streamed and cache is excluded via `.gitignore` to prevent storage bloat.
+
+---
+
+## 🚀 Execution Instructions & Verification
+
+### 1. Verification Results
+- **Frontend**: Linting and production build passed cleanly.
+- **Dataset**: Validation confirms 50/50 balance across all splits, no empty texts, no duplicate IDs, and identical SHA-256 generation across multiple script runs.
+
+### 2. Run the Text Dataset Pipeline
+```bash
+# Install text requirements
+pip install -r requirements.txt
+
+# Run the pipeline
+python3 scripts/prepare_text_dataset.py
+```
