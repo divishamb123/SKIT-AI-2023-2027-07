@@ -32,8 +32,10 @@ Thumbs.db
 .vscode/
 
 # Large binary datasets (manifest.csv is committed, image binaries tracked via cloud/drive)
+datasets/cifake
 datasets/cifake/*
 !datasets/cifake/.gitkeep
+datasets/genimage
 datasets/genimage/*
 !datasets/genimage/.gitkeep
 
