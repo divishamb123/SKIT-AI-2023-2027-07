@@ -4,7 +4,7 @@ import os
 import httpx
 
 FRONTEND_URL = "http://localhost:3000"
-AUTH_SERVICE_URL = "http://localhost:8001/api/v1/auth"
+AUTH_SERVICE_URL = "http://localhost:8006/api/v1/auth"
 
 import tempfile
 import contextlib

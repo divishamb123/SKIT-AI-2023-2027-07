@@ -87,3 +87,86 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  init-db:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: forensics-init-db
+    networks:
+      - forensics_net
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-forensics_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-forensics_db}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-forensics_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-forensics_db}
+    command: >
+      sh -c "alembic -c shared/db/alembic.ini upgrade head"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: forensics-auth-service
+    restart: unless-stopped
+    networks:
+      - forensics_net
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-forensics_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-forensics_db}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-secret}
+    ports:
+      - "8006:8006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      init-db:
+        condition: service_completed_successfully
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: forensics-api-gateway
+    restart: unless-stopped
+    networks:
+      - forensics_net
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8006/api/v1/auth
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-forensics}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      auth-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  stub-consumer:
+    build:
+      context: .
+      dockerfile: services/stub-consumer/Dockerfile
+    container_name: forensics-stub-consumer
+    restart: unless-stopped
+    networks:
+      - forensics_net
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-forensics_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-forensics_db}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-forensics}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      init-db:
+        condition: service_completed_successfully

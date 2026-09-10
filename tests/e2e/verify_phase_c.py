@@ -2,7 +2,7 @@ import asyncio
 import httpx
 
 API_GATEWAY_URL = "http://localhost:8001/api/v1"
-AUTH_SERVICE_URL = "http://localhost:8001/api/v1/auth"
+AUTH_SERVICE_URL = "http://localhost:8006/api/v1/auth"
 
 
 async def main():
