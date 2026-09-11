@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev, 'feature/**' ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ./shared
+          pip install -r services/api-gateway/requirements.txt
+          pip install ruff black
+
+      - name: Check code formatting (Black)
+        run: black --check .
+
+      - name: Lint code (Ruff)
+        run: ruff check .
+
+      - name: Verify Alembic Configuration and Syntax
+        run: |
+          alembic -c shared/db/alembic.ini check
