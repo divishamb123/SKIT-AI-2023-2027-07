@@ -1,8 +1,7 @@
 """
-verify_sprint1_splits.py — Comprehensive Manifest & Partition Verification Suite
+verify_sprint1_splits.py — Image Dataset Partition Verification Suite
 
-
-Validates the following Form-2 Sprint 1 criteria:
+Validates:
 1. Manifest Existence & Non-Emptiness: manifest.csv exists and is well-formatted.
 2. Required Schema Fields: dataset, split, label, generator, path.
 3. Strict Class Balancing:
@@ -25,8 +24,7 @@ MANIFEST_PATH = PROJECT_ROOT / "datasets" / "splits" / "manifest.csv"
 
 def verify_manifest():
     print("=" * 75)
-    print("SPRINT 1 — IMAGE DATASET PARTITION VERIFICATION SUITE")
-    print("Student: Divisha Manak Bohra (23ESKCA038) | CSE (AI) SKIT")
+    print("IMAGE DATASET PARTITION VERIFICATION SUITE")
     print("=" * 75)
 
     if not MANIFEST_PATH.is_file():

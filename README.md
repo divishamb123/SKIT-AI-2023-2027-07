@@ -15,10 +15,10 @@ This submission delivers **all 4 tasks** of Form – 2 for Sprint 1 (Divisha Man
 
 | S.No. | Form-2 Sprint 1 Task | Implementation | Status |
 |---|---|---|---|
-| 1 | **Collecting and organising image datasets for real/AI-generated classification** | Curated 132,000 real and synthetic images across CIFAKE and GenImage datasets. | **Completed & Verified (Week 1)** |
-| 2 | **Creating balanced train, validation and test splits** | Generated 90k train, 10k val, 20k test, and 12k holdout splits with exact 50/50 class balance (`seed=42`). | **Completed & Verified (Week 2)** |
-| 3 | **Designing login and registration interface components** | Reusable UI primitives (`Input`, `Button`, `AuthCard`, `PasswordRequirements`, `FormAlert`). | **Completed & Verified (Task 3)** |
-| 4 | **Building responsive authentication screens and handling representative form states** | Responsive `/login` and `/register` screens with live form validation, dynamic password strength meter, evaluator quick-fill, and `AuthContext` session handling. | **Completed & Verified (Task 4)** |
+| 1 | **Collecting and organising image datasets for real/AI-generated classification** | Curated 132,000 real and synthetic images across CIFAKE and GenImage datasets. | Completed & Verified (Week 1) |
+| 2 | **Creating balanced train, validation and test splits** | Generated 90k train, 10k val, 20k test, and 12k holdout splits with exact 50/50 class balance (`seed=42`). | Completed & Verified (Week 2) |
+| 3 | **Designing login and registration interface components** | Reusable UI primitives (`Input`, `Button`, `AuthCard`, `PasswordRequirements`, `FormAlert`). | Completed & Verified (Week 3) |
+| 4 | **Building responsive authentication screens and handling representative form states** | Responsive `/login` and `/register` pages with form validation, dynamic password strength meter, and session handling. | Completed & Verified (Week 4) |
 
 ---
 
@@ -87,7 +87,7 @@ All partition metadata is stored in [`datasets/splits/manifest.csv`](datasets/sp
 
 ---
 
-## 📁 Task 3 Deliverables: Reusable Authentication Interface Primitives
+## 📁 Week 3 Deliverables: Reusable Authentication Interface Primitives (Task 3)
 
 The authentication UI primitives provide a modular, accessible, and responsive foundation:
 
@@ -101,7 +101,7 @@ The authentication UI primitives provide a modular, accessible, and responsive f
 
 ---
 
-## 📁 Task 4 Deliverables: Responsive Screens, Form States & Session Management
+## 📁 Week 4 Deliverables: Responsive Screens, Form States & Session Management (Task 4)
 
 | Component | Path | Description |
 |---|---|---|

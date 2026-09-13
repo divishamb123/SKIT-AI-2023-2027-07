@@ -1,6 +1,5 @@
 """
-test_dataset_splits.py — Automated Unit & Invariant Tests for Sprint 1 Data Preparation
-Author: Divisha Manak Bohra (23ESKCA038)
+test_dataset_splits.py — Automated Unit & Invariant Tests for Dataset Partitions
 """
 
 import csv

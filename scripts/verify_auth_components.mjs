@@ -1,7 +1,5 @@
 /**
- * SPRINT 1 — AUTHENTICATION & INTERFACE VERIFICATION SUITE
- * Member 1: Divisha Manak Bohra (23ESKCA038)
- * CSE (Artificial Intelligence) - SKIT Jaipur
+ * AUTHENTICATION & INTERFACE VERIFICATION SUITE
  *
  * Verifies:
  *  1. Password requirements calculation & strength meter logic
@@ -62,8 +60,7 @@ function validatePasswordMatch(p1, p2) {
 }
 
 console.log('===========================================================================');
-console.log('SPRINT 1 — AUTHENTICATION & INTERFACE VERIFICATION SUITE');
-console.log('Student: Divisha Manak Bohra (23ESKCA038) | CSE (AI) SKIT');
+console.log('AUTHENTICATION & INTERFACE VERIFICATION SUITE');
 console.log('===========================================================================\n');
 
 let passedTests = 0;
