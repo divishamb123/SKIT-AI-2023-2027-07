@@ -7,7 +7,7 @@ export function validateEmail(email: string): string | null {
     return 'Email address is required.';
   }
   if (!EMAIL_REGEX.test(email.trim())) {
-    return 'Please enter a valid email address (e.g., divisha@skit.ac.in).';
+    return 'Please enter a valid email address (e.g., analyst@aiforensics.io).';
   }
   return null;
 }

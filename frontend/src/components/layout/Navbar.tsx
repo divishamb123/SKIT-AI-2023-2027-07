@@ -26,13 +26,13 @@ export function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2.5">
               <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-sm shadow-xs">
-                AI
+                AF
               </span>
               <span className="text-lg font-bold text-gray-900 tracking-tight">
-                ForensicsLab
+                AIForensics
               </span>
-              <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                Sprint 1
+              <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Enterprise Suite
               </span>
             </Link>
 
@@ -59,24 +59,36 @@ export function Navbar() {
           {/* Desktop Right Side */}
           <div className="hidden sm:flex sm:items-center sm:space-x-4">
             {showAuthUser ? (
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2.5 bg-gray-50 border border-gray-200 rounded-full py-1 px-3">
-                  <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                    {user.name.charAt(0)}
+              (() => {
+                const displayName =
+                  user && !/divisha|dev|aryansh/i.test(user.name)
+                    ? user.name
+                    : 'Alex Rivera';
+                const displayRole =
+                  user && !/skit/i.test(user.role)
+                    ? user.role
+                    : 'Senior Forensics Analyst';
+                return (
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2.5 bg-gray-50 border border-gray-200 rounded-full py-1 px-3">
+                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                        {displayName.charAt(0)}
+                      </div>
+                      <div className="text-left leading-none">
+                        <p className="text-xs font-semibold text-gray-800">{displayName}</p>
+                        <p className="text-[10px] text-gray-500">{displayRole}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="text-xs text-gray-600 hover:text-red-600 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      Sign out
+                    </button>
                   </div>
-                  <div className="text-left leading-none">
-                    <p className="text-xs font-semibold text-gray-800">{user.name}</p>
-                    <p className="text-[10px] text-gray-500">{user.role}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="text-xs text-gray-600 hover:text-red-600 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
-                >
-                  Sign out
-                </button>
-              </div>
+                );
+              })()
             ) : (
               <>
                 <Link

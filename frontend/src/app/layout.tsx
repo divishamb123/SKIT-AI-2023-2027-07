@@ -5,8 +5,8 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'AI Content Forensics | SKIT AI Lab',
-  description: 'Multi-Model AI System for Detecting AI-Generated Content (Text, Image & Audio)',
+  title: 'AIForensics | Multi-Model Media Detection Platform',
+  description: 'Enterprise Multi-Model Forensic System for Detecting AI-Generated Content (Text, Image & Audio)',
 };
 
 export default function RootLayout({

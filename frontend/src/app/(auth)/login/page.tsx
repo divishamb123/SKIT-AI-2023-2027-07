@@ -33,7 +33,7 @@ export default function LoginPage() {
   const [forgotStatus, setForgotStatus] = useState<string | null>(null);
 
   // Handle demo autofill
-  const handleQuickDemo = (type: 'divisha' | 'lead' | 'researcher') => {
+  const handleQuickDemo = (type: 'analyst' | 'security' | 'auditor' | string) => {
     const creds = fillDemoCredentials(type);
     setEmail(creds.email);
     setPassword(creds.password);
@@ -99,8 +99,8 @@ export default function LoginPage() {
     <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-gray-100">
       <AuthCard
         title="Sign in to your account"
-        subtitle="SKIT Multi-Model AI Detection & Verification Platform"
-        badge="Sprint 1 — Authentication Interface"
+        subtitle="Enterprise Synthetic Media & Content Authenticity Platform"
+        badge="Enterprise Forensics Console"
         footer={
           <p>
             Don&apos;t have an account yet?{' '}
@@ -152,8 +152,8 @@ export default function LoginPage() {
             id="login-email"
             name="email"
             type="email"
-            label="Institutional / Project Email"
-            placeholder="e.g., divisha@skit.ac.in"
+            label="Corporate / Organization Email"
+            placeholder="e.g., analyst@aiforensics.io"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -228,32 +228,32 @@ export default function LoginPage() {
             {isSubmitting ? 'Authenticating...' : 'Sign in to Console'}
           </Button>
 
-          {/* Quick Demo Credentials Panel for Evaluators & Mentors */}
+          {/* Quick Demo Credentials Panel */}
           <div className="pt-4 mt-4 border-t border-gray-100">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center mb-2.5">
-              Quick Fill Demo Accounts (Evaluator Testing)
+              Quick Sign-In Demo Accounts
             </p>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickDemo('divisha')}
+                onClick={() => handleQuickDemo('analyst')}
                 className="px-2 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer text-center"
               >
-                Divisha (Lead 1)
+                Lead Analyst
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickDemo('lead')}
+                onClick={() => handleQuickDemo('security')}
                 className="px-2 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors cursor-pointer text-center"
               >
-                Dev (Team Lead)
+                Security Lead
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickDemo('researcher')}
+                onClick={() => handleQuickDemo('auditor')}
                 className="px-2 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg transition-colors cursor-pointer text-center"
               >
-                Aryansh (Lead 2)
+                Compliance
               </button>
             </div>
           </div>
@@ -307,7 +307,7 @@ export default function LoginPage() {
                   id="forgot-email"
                   type="email"
                   label="Email address"
-                  placeholder="divisha@skit.ac.in"
+                  placeholder="analyst@aiforensics.io"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
                   required

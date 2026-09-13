@@ -12,7 +12,7 @@ interface AuthCardProps {
 export function AuthCard({
   title,
   subtitle,
-  badge = 'SKIT AI Forensics Lab',
+  badge = 'Enterprise AI Forensics',
   children,
   footer,
   className = '',

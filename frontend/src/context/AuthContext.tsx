@@ -28,7 +28,9 @@ interface AuthContextType {
     password: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  fillDemoCredentials: (type?: 'divisha' | 'lead' | 'researcher') => {
+  fillDemoCredentials: (
+    type?: 'analyst' | 'security' | 'auditor' | string
+  ) => {
     email: string;
     password: string;
   };
@@ -39,38 +41,50 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const STORAGE_KEY_USER = 'aiforensics_user';
 const STORAGE_KEY_TOKEN = 'aiforensics_token';
 
-// Demo users seeded for testing and evaluator demonstration
+// Realistic enterprise accounts for forensic investigation
 const DEMO_ACCOUNTS: Record<string, { user: User; passwordHash: string }> = {
+  'analyst@aiforensics.io': {
+    user: {
+      id: 'usr-inv-01',
+      name: 'Alex Rivera',
+      email: 'analyst@aiforensics.io',
+      role: 'Lead Forensics Investigator',
+      department: 'Digital Media Forensics',
+      createdAt: '2026-01-15T09:00:00Z',
+    },
+    passwordHash: 'Password@123',
+  },
+  'security@aiforensics.io': {
+    user: {
+      id: 'usr-inv-02',
+      name: 'Sarah Chen',
+      email: 'security@aiforensics.io',
+      role: 'Director of AI Security',
+      department: 'Synthetic Threat Detection',
+      createdAt: '2026-01-15T09:00:00Z',
+    },
+    passwordHash: 'Password@123',
+  },
+  'auditor@aiforensics.io': {
+    user: {
+      id: 'usr-inv-03',
+      name: 'Marcus Taylor',
+      email: 'auditor@aiforensics.io',
+      role: 'Forensic Compliance Auditor',
+      department: 'Authenticity & Standards',
+      createdAt: '2026-01-15T09:00:00Z',
+    },
+    passwordHash: 'Password@123',
+  },
+  // Backward compatibility alias
   'divisha@skit.ac.in': {
     user: {
-      id: 'usr-23eskca038',
-      name: 'Divisha Manak Bohra',
-      email: 'divisha@skit.ac.in',
-      role: 'Image Forensics Lead',
-      department: 'CSE (Artificial Intelligence), SKIT',
-      createdAt: '2026-08-03T09:00:00Z',
-    },
-    passwordHash: 'Password@123',
-  },
-  'dev@skit.ac.in': {
-    user: {
-      id: 'usr-23eskca035',
-      name: 'Dev Khandelwal',
-      email: 'dev@skit.ac.in',
-      role: 'Team Lead & Backend Lead',
-      department: 'CSE (Artificial Intelligence), SKIT',
-      createdAt: '2026-08-03T09:00:00Z',
-    },
-    passwordHash: 'Password@123',
-  },
-  'aryansh@skit.ac.in': {
-    user: {
-      id: 'usr-23eskca021',
-      name: 'Aryansh Agarwal',
-      email: 'aryansh@skit.ac.in',
-      role: 'Frontend & Text Lead',
-      department: 'CSE (Artificial Intelligence), SKIT',
-      createdAt: '2026-08-03T09:00:00Z',
+      id: 'usr-inv-01',
+      name: 'Alex Rivera',
+      email: 'analyst@aiforensics.io',
+      role: 'Lead Forensics Investigator',
+      department: 'Digital Media Forensics',
+      createdAt: '2026-01-15T09:00:00Z',
     },
     passwordHash: 'Password@123',
   },
@@ -263,16 +277,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const fillDemoCredentials = (
-    type: 'divisha' | 'lead' | 'researcher' = 'divisha'
+    type: 'analyst' | 'security' | 'auditor' | string = 'analyst'
   ) => {
     switch (type) {
-      case 'lead':
-        return { email: 'dev@skit.ac.in', password: 'Password@123' };
-      case 'researcher':
-        return { email: 'aryansh@skit.ac.in', password: 'Password@123' };
+      case 'security':
+        return { email: 'security@aiforensics.io', password: 'Password@123' };
+      case 'auditor':
+        return { email: 'auditor@aiforensics.io', password: 'Password@123' };
+      case 'analyst':
       case 'divisha':
       default:
-        return { email: 'divisha@skit.ac.in', password: 'Password@123' };
+        return { email: 'analyst@aiforensics.io', password: 'Password@123' };
     }
   };
 

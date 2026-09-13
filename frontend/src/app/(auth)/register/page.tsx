@@ -40,8 +40,8 @@ export default function RegisterPage() {
   // Autofill sample data for quick evaluation
   const handleAutofillDemo = () => {
     const randomId = Math.floor(100 + Math.random() * 900);
-    setName('Divisha Bohra');
-    setEmail(`analyst_${randomId}@skit.ac.in`);
+    setName('Morgan Brooks');
+    setEmail(`analyst_${randomId}@aiforensics.io`);
     setPassword('SecurePass@2026');
     setConfirmPassword('SecurePass@2026');
     setAgreeTerms(true);
@@ -115,8 +115,8 @@ export default function RegisterPage() {
     <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-gray-100">
       <AuthCard
         title="Create your account"
-        subtitle="Join the SKIT Multi-Model AI Detection & Forensics Lab"
-        badge="Sprint 1 — Registration Interface"
+        subtitle="Access the multi-model synthetic content detection platform"
+        badge="Enterprise Access"
         footer={
           <p>
             Already have an account?{' '}
@@ -152,7 +152,7 @@ export default function RegisterPage() {
             name="name"
             type="text"
             label="Full Name"
-            placeholder="Divisha Manak Bohra"
+            placeholder="Elena Vance"
             value={name}
             onChange={(e) => {
               setName(e.target.value);
@@ -175,8 +175,8 @@ export default function RegisterPage() {
             id="register-email"
             name="email"
             type="email"
-            label="Institutional Email"
-            placeholder="divisha@skit.ac.in"
+            label="Corporate / Organization Email"
+            placeholder="analyst@aiforensics.io"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -267,9 +267,9 @@ export default function RegisterPage() {
               <span className="ml-2">
                 I agree to the{' '}
                 <span className="font-semibold text-gray-800">
-                  SKIT AI Research Code of Ethics
+                  Forensic Media Verification Terms of Service
                 </span>{' '}
-                and terms of academic data handling.
+                and ethical usage standards.
               </span>
             </label>
             {termsError && (
