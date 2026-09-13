@@ -1,4 +1,4 @@
-# Sprint 1 — Week 2: Image Dataset Preparation & Partitioning
+# Sprint 1 — Final Submission: Image Dataset Preparation & Authentication Interface
 
 **Student:** Divisha Manak Bohra (`23ESKCA038`)  
 **Department:** Computer Science & Engineering (Artificial Intelligence)  
@@ -9,16 +9,16 @@
 
 ---
 
-## 📌 Milestone Overview (Week 2 Submission)
+## 📌 Milestone Overview (Sprint 1 Final Deliverables)
 
-This submission delivers **Task 1 and Task 2** of Form – 2 for Sprint 1:
+This submission delivers **all 4 tasks** of Form – 2 for Sprint 1 (Divisha Manak Bohra):
 
 | S.No. | Form-2 Sprint 1 Task | Implementation | Status |
 |---|---|---|---|
-| 1 | **Collecting and organising image datasets for real/AI-generated classification** | Curated 132,000 real and synthetic images across CIFAKE and GenImage datasets. | Completed (Week 1) |
-| 2 | **Creating balanced train, validation and test splits** | Generated 90k train, 10k val, 20k test, and 12k holdout splits with exact 50/50 class balance (`seed=42`). | Completed & Verified (Week 2) |
-| 3 | **Designing login and registration interface components** | Reusable UI primitives (`Input`, `Button`, `AuthCard`, `PasswordRequirements`). | Scheduled (Week 3) |
-| 4 | **Building responsive authentication screens and handling representative form states** | Responsive `/login` and `/register` pages with form validation, loading, error, and session states. | Scheduled (Week 3) |
+| 1 | **Collecting and organising image datasets for real/AI-generated classification** | Curated 132,000 real and synthetic images across CIFAKE and GenImage datasets. | **Completed & Verified (Week 1)** |
+| 2 | **Creating balanced train, validation and test splits** | Generated 90k train, 10k val, 20k test, and 12k holdout splits with exact 50/50 class balance (`seed=42`). | **Completed & Verified (Week 2)** |
+| 3 | **Designing login and registration interface components** | Reusable UI primitives (`Input`, `Button`, `AuthCard`, `PasswordRequirements`, `FormAlert`). | **Completed & Verified (Task 3)** |
+| 4 | **Building responsive authentication screens and handling representative form states** | Responsive `/login` and `/register` screens with live form validation, dynamic password strength meter, evaluator quick-fill, and `AuthContext` session handling. | **Completed & Verified (Task 4)** |
 
 ---
 
@@ -87,26 +87,70 @@ All partition metadata is stored in [`datasets/splits/manifest.csv`](datasets/sp
 
 ---
 
+## 📁 Task 3 Deliverables: Reusable Authentication Interface Primitives
+
+The authentication UI primitives provide a modular, accessible, and responsive foundation:
+
+| Component | Path | Description |
+|---|---|---|
+| **Input Primitive** | [`frontend/src/components/ui/Input.tsx`](frontend/src/components/ui/Input.tsx) | Accessible input with validation error display, left icon support, show/hide password toggle, and ARIA attributes. |
+| **Auth Card Container** | [`frontend/src/components/auth/AuthCard.tsx`](frontend/src/components/auth/AuthCard.tsx) | Responsive card container with branding header, gradient accents, badge, and subtle shadows. |
+| **Password Strength Meter** | [`frontend/src/components/auth/PasswordRequirements.tsx`](frontend/src/components/auth/PasswordRequirements.tsx) | Dynamic password rule checklist and real-time strength progress indicator (Weak / Moderate / Strong). |
+| **Form Alert** | [`frontend/src/components/ui/FormAlert.tsx`](frontend/src/components/ui/FormAlert.tsx) | Accessible banner for field and form-level feedback (error, success, warning, info). |
+| **Action Button** | [`frontend/src/components/ui/Button.tsx`](frontend/src/components/ui/Button.tsx) | Enhanced button supporting inline spinners, disabled states, fullWidth, and multiple variants. |
+
+---
+
+## 📁 Task 4 Deliverables: Responsive Screens, Form States & Session Management
+
+| Component | Path | Description |
+|---|---|---|
+| **Login Screen** | [`frontend/src/app/(auth)/login/page.tsx`](frontend/src/app/(auth)/login/page.tsx) | Fully responsive `/login` route featuring inline validation, remember-me persistence, forgot-password modal, and quick evaluator autofill. |
+| **Registration Screen** | [`frontend/src/app/(auth)/register/page.tsx`](frontend/src/app/(auth)/register/page.tsx) | Responsive `/register` route with real-time password requirement validation, password matching, terms agreement, and instant redirect. |
+| **Authentication Context** | [`frontend/src/context/AuthContext.tsx`](frontend/src/context/AuthContext.tsx) | Centralized session state management supporting simulated JWT tokens, demo evaluators, and persistent localStorage sessions. |
+| **Validation Library** | [`frontend/src/lib/validation.ts`](frontend/src/lib/validation.ts) | Form validation utilities enforcing institutional email patterns, name format, and password criteria. |
+| **Auth Verification Suite** | [`scripts/verify_auth_components.mjs`](scripts/verify_auth_components.mjs) | Standalone Node test runner verifying password evaluation, regex validation, and component file integrity. |
+
+### 🔐 Representative Form States Handled
+
+1. **Initial Idle State**: Clean, accessible inputs with placeholder text and quick demo account fill buttons.
+2. **Interactive Typing & Validation**: Real-time evaluation of password rules and instant feedback upon field blur.
+3. **Loading / Submitting State**: Disabled inputs and animated button spinner during asynchronous credential authentication.
+4. **Field-Level Error State**: Inline error messages highlighted with warning icons and accessible ARIA live regions.
+5. **Form-Level Error State**: Dismissible error banner for invalid credentials, duplicate account registrations, or network failures.
+6. **Success State & Redirection**: Visual success confirmation banner with automated routing to the Forensics Dashboard (`/dashboard`).
+7. **Session Persistence**: Stored user profile and simulated JWT token reflected in the global navigation bar and dashboard greeting.
+
+---
+
 ## 🚀 Execution & Verification Instructions
 
 ### 1. Install Dependencies
 ```bash
+# Python dependencies (Image datasets)
 pip install -r requirements.txt
+
+# Node dependencies (Frontend & Auth UI)
+cd frontend && npm install && cd ..
 ```
 
-### 2. Run the Dataset Preparation Pipeline
-```bash
-python3 scripts/prepare_image_datasets.py
-```
-
-### 3. Verify Dataset Partitions & Zero Leakage
+### 2. Run Image Dataset Verification Suite (Tasks 1 & 2)
 ```bash
 python3 scripts/verify_sprint1_splits.py
+pytest tests/test_dataset_splits.py
 ```
 
-### 4. Run Automated Pytest Suite
+### 3. Run Authentication & Interface Verification Suite (Tasks 3 & 4)
 ```bash
-pytest tests/test_dataset_splits.py
+node scripts/verify_auth_components.mjs
+```
+
+### 4. Build & Lint Frontend Architecture
+```bash
+cd frontend
+npm run lint
+npm run build
+npm run dev
 ```
 
 ---

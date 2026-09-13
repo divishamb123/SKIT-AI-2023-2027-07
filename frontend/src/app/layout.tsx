@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { Providers } from '@/components/Providers';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'AI Content Forensics',
-  description: 'Multi-Model AI System for Detecting AI-Generated Content',
+  title: 'AI Content Forensics | SKIT AI Lab',
+  description: 'Multi-Model AI System for Detecting AI-Generated Content (Text, Image & Audio)',
 };
 
 export default function RootLayout({
@@ -15,12 +16,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50 flex flex-col antialiased">
-        <Navbar />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
+      <body className="min-h-screen bg-gray-50 text-gray-900 flex flex-col antialiased">
+        <Providers>
+          <Navbar />
+          <main className="flex-grow flex flex-col">{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
