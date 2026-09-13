@@ -92,7 +92,12 @@ def test_genimage_holdout_isolation(manifest_rows):
 
 
 def test_path_resolution(manifest_rows):
-    # Sample test paths
+    # Sample test paths if binary dataset is present locally
+    sample_path = PROJECT_ROOT / manifest_rows[0]["path"]
+    if not sample_path.exists():
+        pytest.skip(
+            "Binary image files not present in lightweight git checkout (tracked in external storage)"
+        )
     for r in manifest_rows[::4000]:  # Every 4000th row
         p = PROJECT_ROOT / r["path"]
         assert p.is_file(), f"Path in manifest not found on disk: {p}"
