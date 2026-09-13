@@ -1,16 +1,18 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
-import magic
-from typing import Dict, Any
+from typing import Any
 
-from .deps import get_current_user
-from shared.db.session import get_async_session
+import magic
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from shared.db.models.job import Job, JobStatus, ModalityType
-from ..core.storage import storage
-from ..core.queue import queue_service
+from shared.db.session import get_async_session
+
 from ..core.config import settings
 from ..core.limiter import limiter
+from ..core.queue import queue_service
+from ..core.storage import storage
+from .deps import get_current_user
 
 router = APIRouter()
 
@@ -24,7 +26,7 @@ async def detect_image(
     request: Request,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_async_session),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
 ):
     # 1. Validate file size
     file_bytes = await file.read()
@@ -83,7 +85,7 @@ async def detect_image(
     except Exception as e:
         # If RabbitMQ fails, mark job as FAILED and store error
         new_job.status = JobStatus.FAILED
-        new_job.error_message = f"Queue publish failed: {str(e)}"
+        new_job.error_message = f"Queue publish failed: {e!s}"
         await db.commit()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

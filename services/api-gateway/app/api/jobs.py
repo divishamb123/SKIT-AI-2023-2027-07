@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import uuid
-from typing import Dict, Any
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from shared.db.models.job import Job
+from shared.db.session import get_async_session
 
 from .deps import get_current_user
-from shared.db.session import get_async_session
-from shared.db.models.job import Job
 
 router = APIRouter()
 
@@ -15,7 +17,7 @@ router = APIRouter()
 async def get_job(
     job_id: uuid.UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
 ):
     query = select(Job).where(
         Job.id == job_id, Job.user_id == uuid.UUID(current_user["sub"])

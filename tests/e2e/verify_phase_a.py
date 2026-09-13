@@ -4,8 +4,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "services", "api-gateway"))
 
-from app.core.storage import storage
 from app.core.queue import queue_service
+from app.core.storage import storage
 
 
 async def main():

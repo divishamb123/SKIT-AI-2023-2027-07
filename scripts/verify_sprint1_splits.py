@@ -38,7 +38,9 @@ def verify_manifest():
         reader = csv.DictReader(f)
         required_fields = {"dataset", "split", "label", "generator", "path"}
         if not required_fields.issubset(set(reader.fieldnames or [])):
-            print(f"[FAIL] Manifest missing required columns. Found: {reader.fieldnames}")
+            print(
+                f"[FAIL] Manifest missing required columns. Found: {reader.fieldnames}"
+            )
             sys.exit(1)
         for r in reader:
             rows.append(r)
@@ -60,17 +62,25 @@ def verify_manifest():
         real_cnt = sum(1 for r in split_rows if r["label"] == "0")
         fake_cnt = sum(1 for r in split_rows if r["label"] == "1")
         balance_ratio = (real_cnt / count) * 100 if count > 0 else 0
-        print(f"  * Split '{split:<7}': {count:>7,} rows | Real (0): {real_cnt:>6,} | Fake (1): {fake_cnt:>6,} | Real%: {balance_ratio:.1f}%")
+        print(
+            f"  * Split '{split:<7}': {count:>7,} rows | Real (0): {real_cnt:>6,} | Fake (1): {fake_cnt:>6,} | Real%: {balance_ratio:.1f}%"
+        )
 
         if split == "train":
             assert count == 90000, f"Expected 90,000 train rows, got {count}"
-            assert real_cnt == 45000 and fake_cnt == 45000, "Train split is not 50/50 balanced!"
+            assert (
+                real_cnt == 45000 and fake_cnt == 45000
+            ), "Train split is not 50/50 balanced!"
         elif split == "val":
             assert count == 10000, f"Expected 10,000 val rows, got {count}"
-            assert real_cnt == 5000 and fake_cnt == 5000, "Val split is not 50/50 balanced!"
+            assert (
+                real_cnt == 5000 and fake_cnt == 5000
+            ), "Val split is not 50/50 balanced!"
         elif split == "test":
             assert count == 20000, f"Expected 20,000 test rows, got {count}"
-            assert real_cnt == 10000 and fake_cnt == 10000, "Test split is not 50/50 balanced!"
+            assert (
+                real_cnt == 10000 and fake_cnt == 10000
+            ), "Test split is not 50/50 balanced!"
 
     print("[PASS] All CIFAKE splits strictly satisfy exact 50/50 class balance.")
 
@@ -87,14 +97,18 @@ def verify_manifest():
             s1, s2 = split_list[i], split_list[j]
             overlap = paths_by_split[s1].intersection(paths_by_split[s2])
             if overlap:
-                print(f"[FAIL] Data leakage detected between {s1} and {s2}: {len(overlap)} overlapping paths!")
+                print(
+                    f"[FAIL] Data leakage detected between {s1} and {s2}: {len(overlap)} overlapping paths!"
+                )
                 leakage_found = True
             else:
                 print(f"  * Overlap between '{s1}' and '{s2}': 0 (Disjoint - Verified)")
 
     if leakage_found:
         sys.exit(1)
-    print("[PASS] Strict zero-leakage guarantee verified. All splits are mutually exclusive.")
+    print(
+        "[PASS] Strict zero-leakage guarantee verified. All splits are mutually exclusive."
+    )
 
     # 3. Generator Breakdown
     print("\n--- [3] Generator Attribution Breakdown ---")
@@ -110,7 +124,9 @@ def verify_manifest():
         resolved = PROJECT_ROOT / r["path"]
         if resolved.is_file():
             checked_count += 1
-    print(f"[PASS] Sample path resolution validated ({checked_count}/{len(sample_rows)} sample paths confirmed).")
+    print(
+        f"[PASS] Sample path resolution validated ({checked_count}/{len(sample_rows)} sample paths confirmed)."
+    )
 
     print("\n" + "=" * 75)
     print("ALL SPRINT 1 DATA PREPARATION CHECKS PASSED SUCCESSFULLY (100%)")

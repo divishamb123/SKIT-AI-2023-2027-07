@@ -2,8 +2,8 @@
 prepare_image_datasets.py — Sprint 1 (Data Preparation & Interface)
 
 Purpose:
-Builds deterministic, balanced, and reproducible train / validation / test splits 
-for real and AI-generated image datasets (CIFAKE & GenImage holdout pools) and 
+Builds deterministic, balanced, and reproducible train / validation / test splits
+for real and AI-generated image datasets (CIFAKE & GenImage holdout pools) and
 exports a unified manifest CSV.
 
 Design Invariants:
@@ -23,7 +23,6 @@ Usage:
 """
 
 import csv
-import os
 import random
 from collections import Counter
 from pathlib import Path
@@ -60,7 +59,8 @@ def list_images(folder: Path) -> list[Path]:
     if not folder.is_dir():
         return []
     files = [
-        p for p in folder.iterdir()
+        p
+        for p in folder.iterdir()
         if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES
     ]
     return sorted(files)
@@ -95,21 +95,25 @@ def collect_cifake(rng: random.Random) -> list[dict]:
         train_files = shuffled[n_val:]
 
         for f in train_files:
-            rows.append({
-                "dataset": "cifake",
-                "split": "train",
-                "label": label,
-                "generator": "stable-diffusion-1.4" if label else "cifar10",
-                "path": rel(f),
-            })
+            rows.append(
+                {
+                    "dataset": "cifake",
+                    "split": "train",
+                    "label": label,
+                    "generator": "stable-diffusion-1.4" if label else "cifar10",
+                    "path": rel(f),
+                }
+            )
         for f in val_files:
-            rows.append({
-                "dataset": "cifake",
-                "split": "val",
-                "label": label,
-                "generator": "stable-diffusion-1.4" if label else "cifar10",
-                "path": rel(f),
-            })
+            rows.append(
+                {
+                    "dataset": "cifake",
+                    "split": "val",
+                    "label": label,
+                    "generator": "stable-diffusion-1.4" if label else "cifar10",
+                    "path": rel(f),
+                }
+            )
 
     # Process test split -> Kept intact
     for label_name, label in CIFAKE_LABELS.items():
@@ -120,13 +124,15 @@ def collect_cifake(rng: random.Random) -> list[dict]:
             continue
 
         for f in files:
-            rows.append({
-                "dataset": "cifake",
-                "split": "test",
-                "label": label,
-                "generator": "stable-diffusion-1.4" if label else "cifar10",
-                "path": rel(f),
-            })
+            rows.append(
+                {
+                    "dataset": "cifake",
+                    "split": "test",
+                    "label": label,
+                    "generator": "stable-diffusion-1.4" if label else "cifar10",
+                    "path": rel(f),
+                }
+            )
 
     return rows
 
@@ -144,13 +150,15 @@ def collect_genimage() -> list[dict]:
             continue
 
         for f in files:
-            rows.append({
-                "dataset": "genimage",
-                "split": "holdout",
-                "label": label,
-                "generator": generator,
-                "path": rel(f),
-            })
+            rows.append(
+                {
+                    "dataset": "genimage",
+                    "split": "holdout",
+                    "label": label,
+                    "generator": generator,
+                    "path": rel(f),
+                }
+            )
     return rows
 
 
@@ -176,7 +184,9 @@ def main():
 
     all_rows = cifake_rows + genimage_rows
     if not all_rows:
-        print("[ERROR] No image records were collected. Please check dataset directories.")
+        print(
+            "[ERROR] No image records were collected. Please check dataset directories."
+        )
         return
 
     print(f"\n[3/3] Writing manifest CSV to: {MANIFEST}")
@@ -197,7 +207,9 @@ def main():
     for split, count in split_counts.most_common():
         real_cnt = sum(1 for r in all_rows if r["split"] == split and r["label"] == 0)
         fake_cnt = sum(1 for r in all_rows if r["split"] == split and r["label"] == 1)
-        print(f"  * Split: {split:<10} Total: {count:>8,} | Real (0): {real_cnt:>7,} | Fake (1): {fake_cnt:>7,}")
+        print(
+            f"  * Split: {split:<10} Total: {count:>8,} | Real (0): {real_cnt:>7,} | Fake (1): {fake_cnt:>7,}"
+        )
 
     print("\nGenerator Distribution:")
     gen_counts = Counter(r["generator"] for r in all_rows)

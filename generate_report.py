@@ -21,7 +21,6 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-
 # -------------------------------------------------------------
 # CONFIGURATION: Institution & Department Details
 # -------------------------------------------------------------
@@ -36,6 +35,7 @@ DEPARTMENT_NAME = "Department of Computer Science & Engineering"
 # -------------------------------------------------------------
 # GET REPOSITORY INFORMATION
 # -------------------------------------------------------------
+
 
 def get_repo_info():
     """Extract the repository name and current branch."""
@@ -58,11 +58,7 @@ def get_repo_info():
                 encoding="utf-8",
             ).strip()
 
-            repo_name = (
-                remote_url.rstrip("/")
-                .split("/")[-1]
-                .replace(".git", "")
-            )
+            repo_name = remote_url.rstrip("/").split("/")[-1].replace(".git", "")
 
         except Exception:
             repo_name = os.path.basename(os.getcwd())
@@ -82,6 +78,7 @@ def get_repo_info():
 # -------------------------------------------------------------
 # GET GIT METRICS
 # -------------------------------------------------------------
+
 
 def get_git_metrics(interval="weekly"):
     """
@@ -105,18 +102,14 @@ def get_git_metrics(interval="weekly"):
     ]
 
     if interval == "weekly":
-        since_date = (
-            today - datetime.timedelta(days=7)
-        ).strftime("%Y-%m-%d")
+        since_date = (today - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
 
         git_args.append(f"--since={since_date}")
 
         scope_title = f"Last 7 Days (Since {since_date})"
 
     elif interval == "monthly":
-        since_date = (
-            today - datetime.timedelta(days=30)
-        ).strftime("%Y-%m-%d")
+        since_date = (today - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
         git_args.append(f"--since={since_date}")
 
@@ -149,9 +142,7 @@ def get_git_metrics(interval="weekly"):
         }
     )
 
-    timeline_activity = defaultdict(
-        lambda: defaultdict(int)
-    )
+    timeline_activity = defaultdict(lambda: defaultdict(int))
 
     student_logs = defaultdict(list)
 
@@ -179,10 +170,7 @@ def get_git_metrics(interval="weekly"):
                 continue
 
             # Ignore automated bots
-            if (
-                "bot" in author.lower()
-                or "github-actions" in author.lower()
-            ):
+            if "bot" in author.lower() or "github-actions" in author.lower():
                 current_author = None
                 continue
 
@@ -191,13 +179,9 @@ def get_git_metrics(interval="weekly"):
 
             students[current_author]["commits"] += 1
 
-            students[current_author]["active_days"].add(
-                current_date_str
-            )
+            students[current_author]["active_days"].add(current_date_str)
 
-            student_logs[current_author].append(
-                (date_str, sha, msg)
-            )
+            student_logs[current_author].append((date_str, sha, msg))
 
             try:
                 dt = datetime.datetime.strptime(
@@ -209,17 +193,12 @@ def get_git_metrics(interval="weekly"):
                     period_key = dt.strftime("%a (%b %d)")
 
                 elif interval == "monthly":
-                    period_key = (
-                        f"{dt.isocalendar()[0]}-W"
-                        f"{dt.isocalendar()[1]:02d}"
-                    )
+                    period_key = f"{dt.isocalendar()[0]}-W" f"{dt.isocalendar()[1]:02d}"
 
                 else:
                     period_key = dt.strftime("%Y-%m")
 
-                timeline_activity[period_key][
-                    current_author
-                ] += 1
+                timeline_activity[period_key][current_author] += 1
 
             except Exception:
                 pass
@@ -228,18 +207,10 @@ def get_git_metrics(interval="weekly"):
 
             parts = line.split()
 
-            if (
-                len(parts) >= 2
-                and parts[0].isdigit()
-                and parts[1].isdigit()
-            ):
-                students[current_author]["added"] += int(
-                    parts[0]
-                )
+            if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+                students[current_author]["added"] += int(parts[0])
 
-                students[current_author]["deleted"] += int(
-                    parts[1]
-                )
+                students[current_author]["deleted"] += int(parts[1])
 
     return (
         students,
@@ -252,6 +223,7 @@ def get_git_metrics(interval="weekly"):
 # -------------------------------------------------------------
 # CREATE CHARTS
 # -------------------------------------------------------------
+
 
 def create_charts(students, timeline_activity, interval):
     """Generate workload and trend charts."""
@@ -269,10 +241,7 @@ def create_charts(students, timeline_activity, interval):
     if periods and authors:
 
         for author in authors:
-            counts = [
-                timeline_activity[p].get(author, 0)
-                for p in periods
-            ]
+            counts = [timeline_activity[p].get(author, 0) for p in periods]
 
             ax1.plot(
                 periods,
@@ -312,11 +281,7 @@ def create_charts(students, timeline_activity, interval):
     # 2. Net LOC Bar Chart
     if authors:
 
-        net_loc = [
-            students[a]["added"]
-            - students[a]["deleted"]
-            for a in authors
-        ]
+        net_loc = [students[a]["added"] - students[a]["deleted"] for a in authors]
 
         colors_list = [
             "#4E79A7",
@@ -326,10 +291,7 @@ def create_charts(students, timeline_activity, interval):
             "#59A14F",
         ]
 
-        bar_colors = [
-            colors_list[i % len(colors_list)]
-            for i in range(len(authors))
-        ]
+        bar_colors = [colors_list[i % len(colors_list)] for i in range(len(authors))]
 
         ax2.bar(
             authors,
@@ -387,6 +349,7 @@ def create_charts(students, timeline_activity, interval):
 # GENERATE PDF REPORT
 # -------------------------------------------------------------
 
+
 def generate_pdf(interval="weekly"):
 
     repo_name, branch_name = get_repo_info()
@@ -401,38 +364,27 @@ def generate_pdf(interval="weekly"):
     if students is None:
         return
 
-    date_stamp = datetime.date.today().strftime(
-        "%Y-%m-%d"
-    )
+    date_stamp = datetime.date.today().strftime("%Y-%m-%d")
 
     if interval == "weekly":
 
         report_title = "Weekly Progress Report (Form-3)"
 
-        doc_name = (
-            f"{repo_name}_"
-            f"Weekly_Progress_Report_Form-3_"
-            f"{date_stamp}.pdf"
-        )
+        doc_name = f"{repo_name}_" f"Weekly_Progress_Report_Form-3_" f"{date_stamp}.pdf"
 
     elif interval == "monthly":
 
         report_title = "Monthly Progress Report (Form-3)"
 
         doc_name = (
-            f"{repo_name}_"
-            f"Monthly_Progress_Report_Form-3_"
-            f"{date_stamp}.pdf"
+            f"{repo_name}_" f"Monthly_Progress_Report_Form-3_" f"{date_stamp}.pdf"
         )
 
     else:
 
         report_title = "Final Project Evaluation Report"
 
-        doc_name = (
-            f"{repo_name}_Final_Report_"
-            f"{date_stamp}.pdf"
-        )
+        doc_name = f"{repo_name}_Final_Report_" f"{date_stamp}.pdf"
 
     doc = SimpleDocTemplate(
         doc_name,
@@ -615,10 +567,7 @@ def generate_pdf(interval="weekly"):
         )
     )
 
-    total_commits = sum(
-        data["commits"]
-        for data in students.values()
-    )
+    total_commits = sum(data["commits"] for data in students.values())
 
     table_data = [
         [
@@ -635,18 +584,9 @@ def generate_pdf(interval="weekly"):
 
         for name, data in students.items():
 
-            pct = (
-                data["commits"]
-                / total_commits
-                * 100
-                if total_commits > 0
-                else 0
-            )
+            pct = data["commits"] / total_commits * 100 if total_commits > 0 else 0
 
-            net = (
-                data["added"]
-                - data["deleted"]
-            )
+            net = data["added"] - data["deleted"]
 
             table_data.append(
                 [
@@ -827,11 +767,7 @@ def generate_pdf(interval="weekly"):
             # First commit row
             first_date, first_sha, first_msg = logs[0]
 
-            safe_msg = (
-                html.escape(first_msg)
-                if first_msg
-                else "(No commit message)"
-            )
+            safe_msg = html.escape(first_msg) if first_msg else "(No commit message)"
 
             log_table_data.append(
                 [
@@ -857,11 +793,7 @@ def generate_pdf(interval="weekly"):
             # Remaining commit rows
             for date_val, sha_val, msg_val in logs[1:]:
 
-                safe_msg = (
-                    html.escape(msg_val)
-                    if msg_val
-                    else "(No commit message)"
-                )
+                safe_msg = html.escape(msg_val) if msg_val else "(No commit message)"
 
                 log_table_data.append(
                     [
@@ -977,16 +909,12 @@ def generate_pdf(interval="weekly"):
                 ),
             ]
 
-            log_table.setStyle(
-                TableStyle(t_style)
-            )
+            log_table.setStyle(TableStyle(t_style))
 
             student_section.append(log_table)
             student_section.append(Spacer(1, 5))
 
-            story.append(
-                KeepTogether(student_section)
-            )
+            story.append(KeepTogether(student_section))
 
     # ---------------------------------------------------------
     # 6. Signatures
@@ -1074,9 +1002,7 @@ def generate_pdf(interval="weekly"):
         )
     )
 
-    story.append(
-        KeepTogether(sig_table)
-    )
+    story.append(KeepTogether(sig_table))
 
     # Build PDF
     doc.build(story)
@@ -1084,8 +1010,7 @@ def generate_pdf(interval="weekly"):
     print(f"\n[SUCCESS] Generated: {doc_name}")
 
     print(
-        f" -> Found {len(students)} student(s) "
-        f"and {total_commits} total commits."
+        f" -> Found {len(students)} student(s) " f"and {total_commits} total commits."
     )
 
 
@@ -1095,10 +1020,6 @@ def generate_pdf(interval="weekly"):
 
 if __name__ == "__main__":
 
-    chosen_interval = (
-        sys.argv[1].lower()
-        if len(sys.argv) > 1
-        else "weekly"
-    )
+    chosen_interval = sys.argv[1].lower() if len(sys.argv) > 1 else "weekly"
 
     generate_pdf(chosen_interval)

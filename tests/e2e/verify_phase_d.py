@@ -1,13 +1,14 @@
 import asyncio
-from playwright.async_api import async_playwright
 import os
+
 import httpx
+from playwright.async_api import async_playwright
 
 FRONTEND_URL = "http://localhost:3000"
 AUTH_SERVICE_URL = "http://localhost:8006/api/v1/auth"
 
-import tempfile
 import contextlib
+import tempfile
 
 
 @contextlib.asynccontextmanager

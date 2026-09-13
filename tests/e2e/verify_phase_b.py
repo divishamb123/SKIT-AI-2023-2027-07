@@ -1,4 +1,5 @@
 import asyncio
+
 import httpx
 
 API_GATEWAY_URL = "http://localhost:8001/api/v1"

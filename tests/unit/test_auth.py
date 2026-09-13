@@ -1,8 +1,9 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock
-from fastapi.testclient import TestClient
-import uuid
 import os
+import uuid
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+from fastapi.testclient import TestClient
 
 # We need to set env vars before importing anything that uses them
 os.environ["JWT_SECRET_KEY"] = "test_secret_key"
@@ -12,11 +13,11 @@ os.environ["MINIO_SECRET_KEY"] = "test"
 os.environ["RABBITMQ_URL"] = "amqp://test"
 os.environ["REDIS_URI"] = "redis://localhost:6379/1"
 
+from app.core import redis, security
 from app.main import app
-from shared.db.session import get_async_session
-from app.core import security
-from app.core import redis
+
 from shared.db.models.user import User
+from shared.db.session import get_async_session
 
 # Mocks
 mock_session = AsyncMock()
@@ -99,10 +100,12 @@ def test_login_success():
     assert response.status_code == 200
     assert response.json() == {
         "message": "Successfully logged in",
-        "token_type": "cookie"
+        "token_type": "cookie",
     }
-    
-    cookies = [val for key, val in response.headers.items() if key.lower() == "set-cookie"]
+
+    cookies = [
+        val for key, val in response.headers.items() if key.lower() == "set-cookie"
+    ]
     assert any("access_token=" in c and "HttpOnly" in c for c in cookies)
     assert any("refresh_token=" in c and "HttpOnly" in c for c in cookies)
 

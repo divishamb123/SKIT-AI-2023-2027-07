@@ -1,10 +1,12 @@
-from fastapi import Depends, HTTPException, status, Request
+from typing import Any
+
 import jwt
-from typing import Dict, Any
+from fastapi import HTTPException, Request, status
 
 from ..core.config import settings
 
-def get_current_user(request: Request) -> Dict[str, Any]:
+
+def get_current_user(request: Request) -> dict[str, Any]:
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(

@@ -1,14 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 import uuid
 
-from shared.db.session import get_async_session
-from shared.db.models.user import User
-from shared.schemas.auth import UserCreate, UserLogin, Token, RefreshTokenRequest
-from app.core import security
-from app.core import redis
+from app.core import redis, security
 from app.core.limiter import limiter
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from shared.db.models.user import User
+from shared.db.session import get_async_session
+from shared.schemas.auth import UserCreate, UserLogin
 
 router = APIRouter(tags=["auth"])
 
@@ -43,9 +43,13 @@ async def register(
 @router.post("/login")
 @limiter.limit("20/minute")
 async def login(
-    request: Request, response: Response, user_in: UserLogin, db: AsyncSession = Depends(get_async_session)
+    request: Request,
+    response: Response,
+    user_in: UserLogin,
+    db: AsyncSession = Depends(get_async_session),
 ):
     from app.core.config import settings
+
     stmt = select(User).where(User.email == user_in.email)
     result = await db.execute(stmt)
     user = result.scalars().first()
@@ -76,7 +80,7 @@ async def login(
         httponly=True,
         secure=False,
         samesite="lax",
-        path="/"
+        path="/",
     )
     response.set_cookie(
         key="refresh_token",
@@ -85,7 +89,7 @@ async def login(
         httponly=True,
         secure=False,
         samesite="lax",
-        path="/api/v1/auth"
+        path="/api/v1/auth",
     )
 
     return {"message": "Successfully logged in", "token_type": "cookie"}
@@ -96,6 +100,7 @@ async def refresh_token(
     request: Request, response: Response, db: AsyncSession = Depends(get_async_session)
 ):
     from app.core.config import settings
+
     token = request.cookies.get("refresh_token")
     if not token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
@@ -141,7 +146,7 @@ async def refresh_token(
         httponly=True,
         secure=False,
         samesite="lax",
-        path="/"
+        path="/",
     )
     response.set_cookie(
         key="refresh_token",
@@ -150,7 +155,7 @@ async def refresh_token(
         httponly=True,
         secure=False,
         samesite="lax",
-        path="/api/v1/auth"
+        path="/api/v1/auth",
     )
 
     return {"message": "Successfully refreshed", "token_type": "cookie"}
@@ -161,8 +166,8 @@ async def logout(request: Request, response: Response):
     token = request.cookies.get("refresh_token")
     if token:
         await redis.delete_refresh_token(token)
-        
+
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/api/v1/auth")
-    
+
     return {"message": "Successfully logged out"}

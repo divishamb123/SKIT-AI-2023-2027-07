@@ -1,13 +1,14 @@
 import asyncio
 import json
 import os
+import traceback
+from datetime import datetime, timezone
+
 import aio_pika
 import structlog
-from datetime import datetime, timezone
-import traceback
 
-from shared.db.session import async_session_maker
 from shared.db.models.job import Job
+from shared.db.session import async_session_maker
 
 logger = structlog.get_logger()
 

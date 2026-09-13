@@ -22,16 +22,18 @@ Usage:
 """
 
 import csv
-import sys
 import random
-from collections import defaultdict, Counter
+import sys
+from collections import Counter, defaultdict
 from pathlib import Path
 
 # Try importing datasets, fail gracefully
 try:
     from datasets import load_dataset
 except ImportError:
-    print("[ERROR] Hugging Face 'datasets' is not installed. Please pip install datasets.")
+    print(
+        "[ERROR] Hugging Face 'datasets' is not installed. Please pip install datasets."
+    )
     sys.exit(1)
 
 # --------------------------------------------------------------------------
@@ -49,6 +51,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = PROJECT_ROOT / "datasets" / "splits"
 MANIFEST_PATH = OUT_DIR / "text_manifest.csv"
 
+
 # --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------
@@ -57,6 +60,7 @@ def get_split_indices(total: int) -> tuple[int, int]:
     train_end = int(round(total * TRAIN_FRAC))
     val_end = train_end + int(round(total * VAL_FRAC))
     return train_end, val_end
+
 
 # --------------------------------------------------------------------------
 # Dataset Loading & Buffering (Streaming)
@@ -76,27 +80,27 @@ def stream_and_buffer_raid(target_per_class: int):
 
     human_buffer = []
     ai_buffer_by_gen = defaultdict(list)
-    
+
     # We want a buffer somewhat larger than target to ensure we can sort & sample
     # deterministically. We cap per generator to avoid OOM and ensure diversity.
     buffer_multiplier = 2
     max_human = target_per_class * buffer_multiplier
-    max_per_ai_gen = max(1000, (target_per_class * buffer_multiplier) // 4) 
+    max_per_ai_gen = max(1000, (target_per_class * buffer_multiplier) // 4)
 
     print("      Buffering records from stream (this may take a minute)...")
-    
+
     count = 0
     for row in dataset:
         count += 1
-        
+
         # Required fields validation
         if not row.get("generation") or not str(row["generation"]).strip():
             continue
         if not row.get("model"):
             continue
-            
+
         model = str(row["model"]).strip().lower()
-        
+
         # Prepare minimal dict for memory efficiency
         record = {
             "id": str(row.get("id", f"idx-{count}")),
@@ -104,30 +108,40 @@ def stream_and_buffer_raid(target_per_class: int):
             "model": model,
             "domain": str(row.get("domain", "unknown")),
             "attack": str(row.get("attack", "none")),
-            "text": str(row["generation"]).strip()
+            "text": str(row["generation"]).strip(),
         }
-        
+
         if model == "human":
             if len(human_buffer) < max_human:
                 human_buffer.append(record)
         else:
             if len(ai_buffer_by_gen[model]) < max_per_ai_gen:
                 ai_buffer_by_gen[model].append(record)
-                
+
         # Check if we have buffered enough
         ai_total_buffered = sum(len(v) for v in ai_buffer_by_gen.values())
-        if len(human_buffer) >= max_human and ai_total_buffered >= (target_per_class * buffer_multiplier):
+        if len(human_buffer) >= max_human and ai_total_buffered >= (
+            target_per_class * buffer_multiplier
+        ):
             break
-            
+
         if count % 50000 == 0:
-            print(f"        Scanned {count:,} records... (Human: {len(human_buffer):,}, AI: {ai_total_buffered:,})")
-            
+            print(
+                f"        Scanned {count:,} records... (Human: {len(human_buffer):,}, AI: {ai_total_buffered:,})"
+            )
+
     return human_buffer, ai_buffer_by_gen
+
 
 # --------------------------------------------------------------------------
 # Sampling
 # --------------------------------------------------------------------------
-def deterministic_sample(human_buffer: list, ai_buffer_by_gen: dict, rng: random.Random, target_per_class: int):
+def deterministic_sample(
+    human_buffer: list,
+    ai_buffer_by_gen: dict,
+    rng: random.Random,
+    target_per_class: int,
+):
     """
     Sorts the buffers deterministically by ID, then uses the RNG to sample
     the target counts. Balances AI sampling evenly across available generators.
@@ -135,34 +149,36 @@ def deterministic_sample(human_buffer: list, ai_buffer_by_gen: dict, rng: random
     # 1. Sample Human records
     human_buffer.sort(key=lambda x: x["id"])
     rng.shuffle(human_buffer)
-    
+
     if len(human_buffer) < target_per_class:
-        print(f"[ERROR] Insufficient human records. Found {len(human_buffer)}, needed {target_per_class}.")
+        print(
+            f"[ERROR] Insufficient human records. Found {len(human_buffer)}, needed {target_per_class}."
+        )
         sys.exit(1)
-        
+
     human_sample = human_buffer[:target_per_class]
-    
+
     # 2. Sample AI records (stratified by generator roughly)
     ai_generators = sorted(list(ai_buffer_by_gen.keys()))
     if not ai_generators:
         print("[ERROR] No AI generators found in dataset.")
         sys.exit(1)
-        
+
     ai_sample = []
     # Distribute quota roughly evenly across available generators
     target_per_gen = target_per_class // len(ai_generators)
     remainder = target_per_class % len(ai_generators)
-    
+
     for i, gen in enumerate(ai_generators):
         gen_list = ai_buffer_by_gen[gen]
         gen_list.sort(key=lambda x: x["id"])
         rng.shuffle(gen_list)
-        
+
         quota = target_per_gen + (1 if i < remainder else 0)
-        # If a generator doesn't have enough, we just take what it has (might slightly under-sample AI class, 
+        # If a generator doesn't have enough, we just take what it has (might slightly under-sample AI class,
         # but with raid buffer sizes it's extremely unlikely)
         ai_sample.extend(gen_list[:quota])
-        
+
     # If we fell short because some generators had too few (unlikely), fill from others
     if len(ai_sample) < target_per_class:
         deficit = target_per_class - len(ai_sample)
@@ -173,12 +189,15 @@ def deterministic_sample(human_buffer: list, ai_buffer_by_gen: dict, rng: random
         pool.sort(key=lambda x: x["id"])
         rng.shuffle(pool)
         ai_sample.extend(pool[:deficit])
-        
+
     if len(ai_sample) < target_per_class:
-        print(f"[ERROR] Insufficient AI records. Found {len(ai_sample)}, needed {target_per_class}.")
+        print(
+            f"[ERROR] Insufficient AI records. Found {len(ai_sample)}, needed {target_per_class}."
+        )
         sys.exit(1)
-        
+
     return human_sample, ai_sample
+
 
 # --------------------------------------------------------------------------
 # Splitting
@@ -188,7 +207,7 @@ def construct_splits(human_sample: list, ai_sample: list):
     Assigns splits (train, val, test) and labels (0=human, 1=ai).
     """
     all_rows = []
-    
+
     # Process Human (Label 0)
     train_end, val_end = get_split_indices(len(human_sample))
     for i, record in enumerate(human_sample):
@@ -198,17 +217,19 @@ def construct_splits(human_sample: list, ai_sample: list):
             split = "val"
         else:
             split = "test"
-            
-        all_rows.append({
-            "dataset": record["dataset"],
-            "split": split,
-            "label": 0,
-            "generator": record["model"],
-            "domain": record["domain"],
-            "attack": record["attack"],
-            "id": record["id"],
-            "text": record["text"]
-        })
+
+        all_rows.append(
+            {
+                "dataset": record["dataset"],
+                "split": split,
+                "label": 0,
+                "generator": record["model"],
+                "domain": record["domain"],
+                "attack": record["attack"],
+                "id": record["id"],
+                "text": record["text"],
+            }
+        )
 
     # Process AI (Label 1)
     train_end, val_end = get_split_indices(len(ai_sample))
@@ -219,19 +240,22 @@ def construct_splits(human_sample: list, ai_sample: list):
             split = "val"
         else:
             split = "test"
-            
-        all_rows.append({
-            "dataset": record["dataset"],
-            "split": split,
-            "label": 1,
-            "generator": record["model"],
-            "domain": record["domain"],
-            "attack": record["attack"],
-            "id": record["id"],
-            "text": record["text"]
-        })
-        
+
+        all_rows.append(
+            {
+                "dataset": record["dataset"],
+                "split": split,
+                "label": 1,
+                "generator": record["model"],
+                "domain": record["domain"],
+                "attack": record["attack"],
+                "id": record["id"],
+                "text": record["text"],
+            }
+        )
+
     return all_rows
+
 
 # --------------------------------------------------------------------------
 # Main Execution
@@ -247,23 +271,36 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # 1. Load and Buffer
-    print(f"\n[1/3] Loading / sampling RAID dataset (Target: {SAMPLES_PER_CLASS:,} per class)...")
+    print(
+        f"\n[1/3] Loading / sampling RAID dataset (Target: {SAMPLES_PER_CLASS:,} per class)..."
+    )
     human_buffer, ai_buffer_by_gen = stream_and_buffer_raid(SAMPLES_PER_CLASS)
-    
+
     # 2. Sample and Split
     print("\n[2/3] Balancing and splitting dataset...")
-    human_sample, ai_sample = deterministic_sample(human_buffer, ai_buffer_by_gen, rng, SAMPLES_PER_CLASS)
+    human_sample, ai_sample = deterministic_sample(
+        human_buffer, ai_buffer_by_gen, rng, SAMPLES_PER_CLASS
+    )
     manifest_rows = construct_splits(human_sample, ai_sample)
-    
+
     # 3. Write Manifest
     print(f"\n[3/3] Writing text manifest to: {MANIFEST_PATH}")
-    fieldnames = ["dataset", "split", "label", "generator", "domain", "attack", "id", "text"]
-    
+    fieldnames = [
+        "dataset",
+        "split",
+        "label",
+        "generator",
+        "domain",
+        "attack",
+        "id",
+        "text",
+    ]
+
     with open(MANIFEST_PATH, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(manifest_rows)
-        
+
     print(f"      Successfully saved {len(manifest_rows):,} rows.")
 
     # ----------------------------------------------------------------------
@@ -272,7 +309,7 @@ def main():
     print("\n" + "=" * 70)
     print("DATASET PARTITION SUMMARY BREAKDOWN")
     print("=" * 70)
-    
+
     # Class distribution
     total = len(manifest_rows)
     human_cnt = sum(1 for r in manifest_rows if r["label"] == 0)
@@ -280,16 +317,22 @@ def main():
     print(f"Total Records: {total:,}")
     print(f"  * Human (0): {human_cnt:>7,} ({human_cnt/total*100:.1f}%)")
     print(f"  * AI (1):    {ai_cnt:>7,} ({ai_cnt/total*100:.1f}%)")
-    
+
     # Split distribution
     print("\nSplit Distribution:")
     split_counts = Counter(r["split"] for r in manifest_rows)
     for split in ["train", "val", "test"]:
         count = split_counts.get(split, 0)
-        split_human = sum(1 for r in manifest_rows if r["split"] == split and r["label"] == 0)
-        split_ai = sum(1 for r in manifest_rows if r["split"] == split and r["label"] == 1)
-        print(f"  * {split:<10}: {count:>8,} | Human: {split_human:>7,} | AI: {split_ai:>7,}")
-        
+        split_human = sum(
+            1 for r in manifest_rows if r["split"] == split and r["label"] == 0
+        )
+        split_ai = sum(
+            1 for r in manifest_rows if r["split"] == split and r["label"] == 1
+        )
+        print(
+            f"  * {split:<10}: {count:>8,} | Human: {split_human:>7,} | AI: {split_ai:>7,}"
+        )
+
     # Generator distribution
     print("\nGenerator Distribution (AI Only):")
     gen_counts = Counter(r["generator"] for r in manifest_rows if r["label"] == 1)
@@ -303,6 +346,7 @@ def main():
 
     print("=" * 70)
     print("Sprint 1 NLP Data Preparation completed successfully.\n")
+
 
 if __name__ == "__main__":
     main()

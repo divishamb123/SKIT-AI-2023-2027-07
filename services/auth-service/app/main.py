@@ -1,7 +1,7 @@
 import structlog
-from fastapi import FastAPI
+from app.api import auth, health
 from app.core.config import settings
-from app.api import health, auth
+from fastapi import FastAPI
 
 # Configure structured logging
 structlog.configure(
@@ -16,9 +16,9 @@ structlog.configure(
 
 logger = structlog.get_logger()
 
+from app.core.limiter import limiter
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from app.core.limiter import limiter
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

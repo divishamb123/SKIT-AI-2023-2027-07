@@ -9,6 +9,22 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: forensics_user
+          POSTGRES_PASSWORD: forensics_password
+          POSTGRES_DB: forensics_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +38,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ./shared
           pip install -r services/api-gateway/requirements.txt
-          pip install ruff black
+          pip install ruff black greenlet pytest
 
       - name: Check code formatting (Black)
         run: black --check .
@@ -30,6 +46,26 @@ jobs:
       - name: Lint code (Ruff)
         run: ruff check .
 
+      - name: Apply Alembic Migrations
+        env:
+          POSTGRES_USER: forensics_user
+          POSTGRES_PASSWORD: forensics_password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: forensics_db
+        run: |
+          alembic -c shared/db/alembic.ini upgrade head
+
       - name: Verify Alembic Configuration and Syntax
+        env:
+          POSTGRES_USER: forensics_user
+          POSTGRES_PASSWORD: forensics_password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: forensics_db
         run: |
           alembic -c shared/db/alembic.ini check
+
+      - name: Run Sprint 1 Dataset Partition Tests
+        run: |
+          pytest tests/test_dataset_splits.py

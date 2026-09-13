@@ -1,0 +1,20 @@
+# Ruff configuration for Multi-Modal AI Content Forensics Platform
+target-version = "py311"
+line-length = 88
+exclude = [
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    "frontend",
+    "node_modules",
+    ".next",
+    "weekly_reports",
+]
+
+[lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",    # Line length enforced by black
+    "E402",    # Module level imports after logger configuration or env setup
+    "F821",    # SQLAlchemy forward references in type annotations
+]

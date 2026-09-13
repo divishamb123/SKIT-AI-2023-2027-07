@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from typing import Any
+
 import httpx
-from typing import Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from ..core.config import settings
 from .deps import get_current_user
@@ -8,23 +9,27 @@ from .deps import get_current_user
 router = APIRouter(tags=["auth"])
 
 
-async def proxy_request(method: str, path: str, request: Request, json_data: dict = None):
+async def proxy_request(
+    method: str, path: str, request: Request, json_data: dict = None
+):
     url = f"{settings.AUTH_SERVICE_URL}{path}"
     async with httpx.AsyncClient() as client:
         try:
-            req = client.build_request(method, url, json=json_data, cookies=request.cookies)
+            req = client.build_request(
+                method, url, json=json_data, cookies=request.cookies
+            )
             resp = await client.send(req)
-            
+
             response = Response(
                 content=resp.content,
                 status_code=resp.status_code,
                 media_type=resp.headers.get("content-type"),
             )
-            
+
             # Forward Set-Cookie headers
             for cookie in resp.headers.get_list("set-cookie"):
                 response.headers.append("Set-Cookie", cookie)
-                
+
             return response
         except httpx.RequestError as exc:
             raise HTTPException(
@@ -55,6 +60,6 @@ async def proxy_logout(request: Request):
 
 
 @router.get("/me")
-async def get_me(current_user: Dict[str, Any] = Depends(get_current_user)):
+async def get_me(current_user: dict[str, Any] = Depends(get_current_user)):
     # Simply return the JWT decoded payload
     return {"user": current_user}

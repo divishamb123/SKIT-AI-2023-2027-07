@@ -1,7 +1,8 @@
-import structlog
-import aio_pika
 import json
-from typing import Dict, Any
+from typing import Any
+
+import aio_pika
+import structlog
 
 from .config import settings
 
@@ -23,7 +24,7 @@ class QueueService:
             logger.error("rabbitmq_connection_error", error=str(e))
             raise
 
-    async def publish_message(self, routing_key: str, message_body: Dict[str, Any]):
+    async def publish_message(self, routing_key: str, message_body: dict[str, Any]):
         """Publish a JSON message to a specific routing key/queue."""
         if not self.channel:
             await self.connect()

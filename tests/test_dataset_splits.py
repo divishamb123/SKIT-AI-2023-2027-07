@@ -3,8 +3,8 @@ test_dataset_splits.py — Automated Unit & Invariant Tests for Dataset Partitio
 """
 
 import csv
-from collections import Counter
 from pathlib import Path
+
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -23,20 +23,36 @@ def manifest_rows():
 
 
 def test_manifest_schema_and_size(manifest_rows):
-    assert len(manifest_rows) == 132000, f"Expected 132,000 records, found {len(manifest_rows)}"
+    assert (
+        len(manifest_rows) == 132000
+    ), f"Expected 132,000 records, found {len(manifest_rows)}"
     required_cols = {"dataset", "split", "label", "generator", "path"}
     for r in manifest_rows[:50]:
-        assert required_cols.issubset(set(r.keys())), "Missing required column headers in row"
+        assert required_cols.issubset(
+            set(r.keys())
+        ), "Missing required column headers in row"
 
 
 def test_cifake_train_val_test_counts(manifest_rows):
-    cifake_train = [r for r in manifest_rows if r["dataset"] == "cifake" and r["split"] == "train"]
-    cifake_val = [r for r in manifest_rows if r["dataset"] == "cifake" and r["split"] == "val"]
-    cifake_test = [r for r in manifest_rows if r["dataset"] == "cifake" and r["split"] == "test"]
+    cifake_train = [
+        r for r in manifest_rows if r["dataset"] == "cifake" and r["split"] == "train"
+    ]
+    cifake_val = [
+        r for r in manifest_rows if r["dataset"] == "cifake" and r["split"] == "val"
+    ]
+    cifake_test = [
+        r for r in manifest_rows if r["dataset"] == "cifake" and r["split"] == "test"
+    ]
 
-    assert len(cifake_train) == 90000, f"Train split count should be 90k, got {len(cifake_train)}"
-    assert len(cifake_val) == 10000, f"Validation split count should be 10k, got {len(cifake_val)}"
-    assert len(cifake_test) == 20000, f"Test split count should be 20k, got {len(cifake_test)}"
+    assert (
+        len(cifake_train) == 90000
+    ), f"Train split count should be 90k, got {len(cifake_train)}"
+    assert (
+        len(cifake_val) == 10000
+    ), f"Validation split count should be 10k, got {len(cifake_val)}"
+    assert (
+        len(cifake_test) == 20000
+    ), f"Test split count should be 20k, got {len(cifake_test)}"
 
 
 def test_strict_50_50_class_balancing(manifest_rows):
@@ -44,25 +60,35 @@ def test_strict_50_50_class_balancing(manifest_rows):
         sub = [r for r in manifest_rows if r["split"] == split_name]
         reals = sum(1 for r in sub if r["label"] == "0")
         fakes = sum(1 for r in sub if r["label"] == "1")
-        assert reals == fakes, f"Split '{split_name}' is unbalanced! Real: {reals}, Fake: {fakes}"
+        assert (
+            reals == fakes
+        ), f"Split '{split_name}' is unbalanced! Real: {reals}, Fake: {fakes}"
 
 
 def test_zero_data_leakage(manifest_rows):
     splits = {"train", "val", "test", "holdout"}
-    paths_by_split = {s: set(r["path"] for r in manifest_rows if r["split"] == s) for s in splits}
+    paths_by_split = {
+        s: set(r["path"] for r in manifest_rows if r["split"] == s) for s in splits
+    }
 
     for s1 in splits:
         for s2 in splits:
             if s1 != s2:
                 overlap = paths_by_split[s1].intersection(paths_by_split[s2])
-                assert len(overlap) == 0, f"Data leakage between {s1} and {s2}: {len(overlap)} duplicate paths"
+                assert (
+                    len(overlap) == 0
+                ), f"Data leakage between {s1} and {s2}: {len(overlap)} duplicate paths"
 
 
 def test_genimage_holdout_isolation(manifest_rows):
     genimage_rows = [r for r in manifest_rows if r["dataset"] == "genimage"]
-    assert len(genimage_rows) == 12000, f"Expected 12k GenImage records, got {len(genimage_rows)}"
+    assert (
+        len(genimage_rows) == 12000
+    ), f"Expected 12k GenImage records, got {len(genimage_rows)}"
     for r in genimage_rows:
-        assert r["split"] == "holdout", f"GenImage image marked as '{r['split']}' instead of 'holdout'"
+        assert (
+            r["split"] == "holdout"
+        ), f"GenImage image marked as '{r['split']}' instead of 'holdout'"
 
 
 def test_path_resolution(manifest_rows):

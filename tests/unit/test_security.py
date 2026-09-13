@@ -1,7 +1,6 @@
-from datetime import timedelta
-
 # We need to set env vars before importing settings
 import os
+from datetime import timedelta
 
 os.environ["JWT_SECRET_KEY"] = "test_secret_key"
 os.environ["POSTGRES_PASSWORD"] = "test"

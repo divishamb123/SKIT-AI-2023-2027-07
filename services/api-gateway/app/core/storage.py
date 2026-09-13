@@ -1,7 +1,8 @@
+import io
+
 import structlog
 from minio import Minio
 from minio.error import S3Error
-import io
 
 from .config import settings
 
