@@ -7,6 +7,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -35,6 +36,7 @@ class Report(Base):
     __tablename__ = "reports"
     __table_args__ = (
         UniqueConstraint("job_id", "report_type", name="uq_reports_job_report_type"),
+        Index("idx_reports_job_id", "job_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

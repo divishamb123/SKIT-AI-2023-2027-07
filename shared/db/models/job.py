@@ -8,9 +8,11 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     SmallInteger,
     String,
     Text,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -44,6 +46,12 @@ class Job(Base):
         ),
         CheckConstraint("priority BETWEEN 1 AND 10", name="chk_job_priority"),
         CheckConstraint("input_type IN ('text', 'file')", name="chk_job_input_type"),
+        Index("idx_jobs_user_id", "user_id"),
+        Index(
+            "idx_jobs_status",
+            "status",
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
