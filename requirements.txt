@@ -1,4 +1,4 @@
-# Core Image Data Preparation & Verification Dependencies
+# Core Data Preparation & Verification Dependencies
 pandas>=2.0.0
 numpy>=1.24.0
 scikit-learn>=1.3.0
@@ -6,9 +6,11 @@ pillow>=10.0.0
 pytest>=8.0.0
 tqdm>=4.66.0
 
-# Sprint 2: Image Inference Service & Deep Learning Dependencies
+# Text Dataset & Model Dependencies (Aryansh Agarwal)
+datasets>=2.19.0
+transformers>=4.40.0
+
+# Sprint 2: Image Inference Service & Deep Learning Dependencies (Divisha Manak Bohra)
 torch>=2.0.0
 torchvision>=0.15.0
 pydantic>=2.0.0
-
-

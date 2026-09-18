@@ -1,12 +1,18 @@
 # Multi-Model AI System for Detecting AI-Generated Content (Text, Image & Audio)
 
-**Member 1:** Divisha Manak Bohra (`23ESKCA038`)  
+**Project ID:** `SKIT/AI/2023-2027/07`  
 **Department:** Computer Science & Engineering (Artificial Intelligence)  
 **Institution:** Swami Keshvanand Institute of Technology, Management & Gramothan (SKIT), Jaipur  
 **Academic Year:** 2026–27 (Phase-II, 7th Semester)  
-**Project Role:** Image Modality Detection Engine & Image Detection User Interface  
+
+### 👥 Team Members & Roles (Form – 2)
+- **Team Lead:** Dev Khandelwal (`23ESKCA035`) — Backend Infrastructure & Audio Detection Module
+- **Member 1:** Divisha Manak Bohra (`23ESKCA038`) — Image Detection Modality & Image Interface
+- **Member 2:** Aryansh Agarwal (`23ESKCA021`) — Frontend Architecture & Text Detection Module
 
 ---
+
+# Member 1: Divisha Manak Bohra (`23ESKCA038`)
 
 ## 📌 Form – 2 Sprint Progress & Milestone Tracker
 
@@ -121,6 +127,46 @@ All partition metadata is stored in [`datasets/splits/manifest.csv`](datasets/sp
 
 ---
 
+# Member 2: Aryansh Agarwal (`23ESKCA021`)
+
+## Sprint 1 — Frontend Architecture & Text Dataset Preparation
+*User Story: Preparing text data and frontend architecture*
+
+### 📌 Milestone Overview
+- **Form-2 Task 1:** *Implementing core frontend architecture and preparing the Robust AI Detection (RAID) text benchmark.*
+
+### 📁 Deliverables & Architecture
+
+| Component | Path | Description |
+|---|---|---|
+| **Frontend Foundation** | [`frontend/`](frontend/) | Next.js 16 (App Router), TypeScript, Tailwind CSS, Axios API client. |
+| **UI & Layout** | [`frontend/src/components/`](frontend/src/components/) | Reusable `Navbar`, `Footer`, `UploadDropzone`, `JobStatusCard`, `Button`, `Modal`, `LoadingSpinner`. |
+| **Application Pages** | [`frontend/src/app/`](frontend/src/app/) | Initial routes: `/`, `/login`, `/register`, `/dashboard`, `/health`. |
+| **Text Data Pipeline** | [`scripts/prepare_text_dataset.py`](scripts/prepare_text_dataset.py) | Streams HF `liamdugan/raid`, balances classes, generates text manifest. |
+| **Text Manifest** | [`datasets/splits/text_manifest.csv`](datasets/splits/text_manifest.csv) | Final 20,000-record text split (80/10/10). |
+
+### 🗂️ Dataset Sources & Organisation
+- 10,000 human-written samples, 10,000 AI-generated samples across 11 generators (ChatGPT, Cohere, LLaMA, Mistral, GPT-4, etc.).
+- 80/10/10 split: Train (16,000), Validation (2,000), Test (2,000).
+
+---
+
+# Team Lead: Dev Khandelwal (`23ESKCA035`)
+
+## Sprint 1 — Foundation & Infrastructure
+*User Story: Setting up backend infrastructure*
+
+Detailed Sprint 1 documentation and architecture available in [`docs/dev-khandelwal/SPRINT_1_STATUS.md`](docs/dev-khandelwal/SPRINT_1_STATUS.md).
+
+### 📁 Backend Microservices & Infrastructure
+- **API Gateway:** [`services/api-gateway/`](services/api-gateway/) (FastAPI, reverse proxy, upload pipeline, MinIO, RabbitMQ dispatch).
+- **Auth Service:** [`services/auth-service/`](services/auth-service/) (FastAPI, JWT authentication, Argon2 hashing, Redis rate limiter).
+- **Stub Consumer:** [`services/stub-consumer/`](services/stub-consumer/) (Asynchronous RabbitMQ message processing worker).
+- **Database & Migrations:** [`shared/db/`](shared/db/) (PostgreSQL models, Alembic migrations for Users, Jobs, Reports).
+- **Orchestration:** [`docker-compose.yml`](docker-compose.yml) (PostgreSQL, RabbitMQ, Redis, MinIO, microservices).
+
+---
+
 ## 🚀 Execution & Verification Instructions
 
 ### 1. Install Dependencies
@@ -141,13 +187,13 @@ python3 scripts/verify_sprint2_week1.py
 pytest tests/test_image_inference_service.py -v
 ```
 
-### 3. Run Sprint 1 Dataset & Auth Verification Suites
+### 3. Run Sprint 1 Verification Suites
 ```bash
-# Dataset splits and partition invariants
+# Image dataset splits and partition invariants
 python3 scripts/verify_sprint1_splits.py
 pytest tests/test_dataset_splits.py -v
 
-# Run all pytest suites simultaneously
+# Run all unit tests
 pytest tests/ -v
 
 # Frontend auth verification
