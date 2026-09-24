@@ -16,7 +16,7 @@ def detect_audio_anomalies(audio_bytes: bytes, ai_probability: float) -> list[st
     rms = librosa.feature.rms(y=y)[0]
     silences = np.where(rms < rms.mean() * 0.1)[0]
     if len(silences) > 0:
-        spec = np.abs(librosa.stft(y))
+        # spec variable was removed because it was unused
         harmonic_ratio = librosa.effects.harmonic(y).var() / (y.var() + 1e-8)
         if harmonic_ratio > 0.85:
             flags.append("harmonic_discontinuity")

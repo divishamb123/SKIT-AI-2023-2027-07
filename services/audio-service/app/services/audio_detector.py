@@ -1,8 +1,7 @@
-import io, time, asyncio, torch, torchaudio
-import torchaudio.transforms as AT
+import time
+import torch
 import json
 from app.models.aasist import Model as AASIST
-from app.core.config import settings
 
 WEIGHTS_PATH = "/models/aasist_l_v1.0/AASIST-L.pth"
 CONFIG_PATH = "/models/aasist_l_v1.0/AASIST-L.conf"
