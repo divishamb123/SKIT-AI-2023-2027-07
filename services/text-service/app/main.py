@@ -33,9 +33,11 @@ app.add_middleware(
 app.include_router(health.router, prefix="/internal")
 app.include_router(detect.router, prefix="/api/v1/detect")
 
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("text_service_starting", version="1.0.0")
+
 
 @app.get("/")
 async def root():
