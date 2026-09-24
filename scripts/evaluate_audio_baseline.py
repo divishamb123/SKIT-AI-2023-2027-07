@@ -27,7 +27,6 @@ Score direction (AASIST-L):
 import argparse
 import hashlib
 import json
-import os
 import sys
 import time
 from collections import Counter
@@ -415,7 +414,7 @@ def main() -> None:
             indent=2,
         )
     )
-    print(f"[Smoke test OK] 5 utterances processed without error.")
+    print("[Smoke test OK] 5 utterances processed without error.")
 
     # -------------------------------------------------------------------
     # Full evaluation – batch processing

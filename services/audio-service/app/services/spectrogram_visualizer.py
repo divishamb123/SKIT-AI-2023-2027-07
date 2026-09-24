@@ -1,4 +1,8 @@
-import io, asyncio, numpy as np, librosa, librosa.display
+import io
+import asyncio
+import numpy as np
+import librosa
+import librosa.display
 import matplotlib
 
 matplotlib.use("Agg")
