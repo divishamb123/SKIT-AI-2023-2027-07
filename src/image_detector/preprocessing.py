@@ -31,34 +31,44 @@ DEFAULT_IMAGE_SIZE = (224, 224)
 # --------------------------------------------------------------------------
 class ImageProcessingError(Exception):
     """Base exception for image processing errors."""
+
     pass
 
 
 class EmptyImageError(ImageProcessingError):
     """Raised when the provided image payload is empty or zero-byte."""
+
     pass
 
 
 class CorruptedImageError(ImageProcessingError):
     """Raised when the image bytes cannot be decoded or verified."""
+
     pass
 
 
 class UnsupportedFormatError(ImageProcessingError):
     """Raised when an image format is outside the supported set."""
+
     pass
 
 
 # --------------------------------------------------------------------------
 # Transformation Pipeline
 # --------------------------------------------------------------------------
-def get_inference_transform(target_size: Tuple[int, int] = DEFAULT_IMAGE_SIZE) -> T.Compose:
+def get_inference_transform(
+    target_size: Tuple[int, int] = DEFAULT_IMAGE_SIZE
+) -> T.Compose:
     """Build deterministic standard torchvision transformation pipeline."""
-    return T.Compose([
-        T.Resize(target_size, interpolation=T.InterpolationMode.BICUBIC, antialias=True),
-        T.ToTensor(),
-        T.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-    ])
+    return T.Compose(
+        [
+            T.Resize(
+                target_size, interpolation=T.InterpolationMode.BICUBIC, antialias=True
+            ),
+            T.ToTensor(),
+            T.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+        ]
+    )
 
 
 # --------------------------------------------------------------------------
@@ -96,7 +106,9 @@ def decode_image(
                 image_bytes = base64.b64decode(base64_data)
                 return decode_image(image_bytes)
             except Exception as e:
-                raise CorruptedImageError(f"Failed to decode base64 data URI: {e}") from e
+                raise CorruptedImageError(
+                    f"Failed to decode base64 data URI: {e}"
+                ) from e
         elif os.path.exists(path_or_str):
             if os.path.getsize(path_or_str) == 0:
                 raise EmptyImageError(f"Image file is empty (0 bytes): {path_or_str}")
@@ -107,14 +119,18 @@ def decode_image(
             except ImageProcessingError:
                 raise
             except Exception as e:
-                raise CorruptedImageError(f"Failed to read image file from disk: {e}") from e
+                raise CorruptedImageError(
+                    f"Failed to read image file from disk: {e}"
+                ) from e
         else:
             # Attempt plain base64 decode if string is not a valid file path
             try:
                 image_bytes = base64.b64decode(path_or_str, validate=True)
                 return decode_image(image_bytes)
             except Exception as e:
-                raise CorruptedImageError(f"Input is neither an existing file path nor valid base64: {e}") from e
+                raise CorruptedImageError(
+                    f"Input is neither an existing file path nor valid base64: {e}"
+                ) from e
     elif isinstance(image_input, bytes):
         if len(image_input) == 0:
             raise EmptyImageError("Image payload contains 0 bytes.")
@@ -124,13 +140,19 @@ def decode_image(
             pil_img.load()  # Force decode to catch truncated/corrupted files
             raw_format = pil_img.format or "PNG"
         except (UnidentifiedImageError, OSError, SyntaxError) as e:
-            raise CorruptedImageError(f"Corrupted or unrecognizable image payload: {e}") from e
+            raise CorruptedImageError(
+                f"Corrupted or unrecognizable image payload: {e}"
+            ) from e
     else:
         raise ImageProcessingError(f"Unsupported image input type: {type(image_input)}")
 
     orig_width, orig_height = pil_img.size
     orig_mode = pil_img.mode
-    channels = len(orig_mode) if orig_mode in ("RGB", "RGBA", "CMYK") else (1 if orig_mode in ("L", "1") else 3)
+    channels = (
+        len(orig_mode)
+        if orig_mode in ("RGB", "RGBA", "CMYK")
+        else (1 if orig_mode in ("L", "1") else 3)
+    )
 
     if raw_format.upper() not in SUPPORTED_FORMATS:
         raise UnsupportedFormatError(

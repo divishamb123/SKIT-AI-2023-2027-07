@@ -65,7 +65,10 @@ def test_prediction_with_pil_image(inference_service, sample_rgb_image):
     assert 0.0 <= response.confidence <= 1.0
     assert 0.0 <= response.probabilities.real <= 1.0
     assert 0.0 <= response.probabilities.ai_generated <= 1.0
-    assert abs((response.probabilities.real + response.probabilities.ai_generated) - 1.0) < 0.01
+    assert (
+        abs((response.probabilities.real + response.probabilities.ai_generated) - 1.0)
+        < 0.01
+    )
     assert response.latency_ms > 0.0
     assert response.image_metadata.width == 64
     assert response.image_metadata.height == 64
@@ -81,7 +84,9 @@ def test_prediction_with_bytes(inference_service, sample_png_bytes):
 
 def test_prediction_with_base64_uri(inference_service, sample_base64_data_uri):
     """Verify inference pipeline accepting data:image/...;base64 URI string."""
-    response = inference_service.predict(sample_base64_data_uri, filename="b64_test.png")
+    response = inference_service.predict(
+        sample_base64_data_uri, filename="b64_test.png"
+    )
     assert isinstance(response, ImageInferenceResponse)
     assert response.verdict in [PredictionVerdict.REAL, PredictionVerdict.AI_GENERATED]
 

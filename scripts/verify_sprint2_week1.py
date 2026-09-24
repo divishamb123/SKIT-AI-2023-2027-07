@@ -77,8 +77,12 @@ def main() -> int:
         assert 0.0 <= resp.probabilities.ai_generated <= 1.0
         print(f"  ✓ Verdict:          {resp.verdict.value}")
         print(f"  ✓ Confidence:       {resp.confidence:.4f}")
-        print(f"  ✓ Probabilities:    Real={resp.probabilities.real:.4f}, AI={resp.probabilities.ai_generated:.4f}")
-        print(f"  ✓ Metadata:         {resp.image_metadata.width}x{resp.image_metadata.height} ({resp.image_metadata.format})")
+        print(
+            f"  ✓ Probabilities:    Real={resp.probabilities.real:.4f}, AI={resp.probabilities.ai_generated:.4f}"
+        )
+        print(
+            f"  ✓ Metadata:         {resp.image_metadata.width}x{resp.image_metadata.height} ({resp.image_metadata.format})"
+        )
         print(f"  ✓ Latency:          {resp.latency_ms:.2f} ms")
         passed_checks += 1
     except Exception as e:
@@ -116,13 +120,17 @@ def main() -> int:
     # ----------------------------------------------------------------------
     print("\n[Check 4/6] Verifying Deterministic Prediction Invariance...")
     try:
-        runs = [service.predict(sample_img, filename="deterministic.png") for _ in range(3)]
+        runs = [
+            service.predict(sample_img, filename="deterministic.png") for _ in range(3)
+        ]
         c0 = runs[0].confidence
         v0 = runs[0].verdict
         for idx, r in enumerate(runs[1:], 1):
             assert r.verdict == v0, f"Verdict mismatch in run {idx}"
             assert abs(r.confidence - c0) < 1e-4, f"Confidence mismatch in run {idx}"
-        print("  ✓ Verified 100% deterministic outputs across repeated inference cycles.")
+        print(
+            "  ✓ Verified 100% deterministic outputs across repeated inference cycles."
+        )
         passed_checks += 1
     except Exception as e:
         print(f"  ✗ FAILED determinism check: {e}")
@@ -143,7 +151,9 @@ def main() -> int:
 
         # Corrupted payload
         try:
-            service.predict(b"\x89PNG\r\n\x1a\ncorrupted_noise_payload", filename="bad.png")
+            service.predict(
+                b"\x89PNG\r\n\x1a\ncorrupted_noise_payload", filename="bad.png"
+            )
             print("  ✗ Corrupted payload failed to raise CorruptedImageError")
             return 1
         except CorruptedImageError:
@@ -167,7 +177,9 @@ def main() -> int:
 
         avg_latency = sum(latencies) / len(latencies)
         min_latency = min(latencies)
-        print(f"  ✓ Avg Latency (5 iterations): {avg_latency:.2f} ms (Min: {min_latency:.2f} ms)")
+        print(
+            f"  ✓ Avg Latency (5 iterations): {avg_latency:.2f} ms (Min: {min_latency:.2f} ms)"
+        )
         passed_checks += 1
     except Exception as e:
         print(f"  ✗ FAILED latency benchmark: {e}")
@@ -176,8 +188,12 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Summary
     # ----------------------------------------------------------------------
-    print_banner(f"VERIFICATION PASSED: ALL {passed_checks}/{total_checks} CHECKS SUCCEEDED")
-    print(f"Status: Sprint 2 Week 1 (Task 1 Foundation) is 100% complete ({passed_checks}/{total_checks} checks passed).\n")
+    print_banner(
+        f"VERIFICATION PASSED: ALL {passed_checks}/{total_checks} CHECKS SUCCEEDED"
+    )
+    print(
+        f"Status: Sprint 2 Week 1 (Task 1 Foundation) is 100% complete ({passed_checks}/{total_checks} checks passed).\n"
+    )
     return 0
 
 
