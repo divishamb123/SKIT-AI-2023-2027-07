@@ -38,7 +38,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ./shared
           pip install -r services/api-gateway/requirements.txt
-          pip install ruff black greenlet pytest
+          pip install "black==24.10.0" ruff greenlet pytest
 
       - name: Check code formatting (Black)
         run: black --check .
