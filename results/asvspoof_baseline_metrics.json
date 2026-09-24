@@ -1,0 +1,11 @@
+{
+  "eer_percent": 0.991705773120823,
+  "eer_threshold": 1.7632560729980469,
+  "eer_cross_check_percent": 0.9917057731208221,
+  "score_direction": "single score = logits[:,1]; target=bonafide(1), nontarget=spoof(0)",
+  "total_samples": 71237,
+  "failed_samples": 0,
+  "batch_size": 64,
+  "total_inference_time_sec": 1298.4112405776978,
+  "throughput_sec_per_sample": 0.018226641219839378
+}

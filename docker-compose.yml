@@ -128,6 +128,30 @@ services:
       init-db:
         condition: service_completed_successfully
 
+  audio-service:
+    build:
+      context: .
+      dockerfile: services/audio-service/Dockerfile
+    container_name: forensics-audio-service
+    restart: unless-stopped
+    networks:
+      - forensics_net
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-forensics_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-forensics_db}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-forensics}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      init-db:
+        condition: service_completed_successfully
+        
   api-gateway:
     build:
       context: .
