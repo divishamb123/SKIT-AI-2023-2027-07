@@ -10,4 +10,7 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("services.image_service.app.main:app", host="0.0.0.0", port=8004, reload=True)
+
+    uvicorn.run(
+        "services.image_service.app.main:app", host="0.0.0.0", port=8004, reload=True
+    )

@@ -182,7 +182,11 @@ def validate_image_payload(
             detail=APIErrorResponse(
                 error_code="CORRUPTED_IMAGE",
                 message=f"Failed to decode image structure: {e!s}",
-                details=[ErrorDetail(field="file", issue="Image stream is corrupted or truncated.")],
+                details=[
+                    ErrorDetail(
+                        field="file", issue="Image stream is corrupted or truncated."
+                    )
+                ],
             ).model_dump(),
         ) from e
 
@@ -198,11 +202,16 @@ def validate_image_payload(
         400: {"model": APIErrorResponse, "description": "Empty image payload"},
         413: {"model": APIErrorResponse, "description": "Payload exceeds 15 MB limit"},
         415: {"model": APIErrorResponse, "description": "Unsupported format or MIME"},
-        422: {"model": APIErrorResponse, "description": "Corrupted or invalid dimensions"},
+        422: {
+            "model": APIErrorResponse,
+            "description": "Corrupted or invalid dimensions",
+        },
     },
 )
 async def detect_image(
-    file: UploadFile = File(..., description="Multipart image upload (PNG, JPEG, WEBP)"),
+    file: UploadFile = File(
+        ..., description="Multipart image upload (PNG, JPEG, WEBP)"
+    ),
 ) -> JSONResponse:
     """
     Execute image detection inference on a multipart form-data upload.
@@ -240,7 +249,9 @@ async def detect_image(
             device=base_resp.device,
             request_id=str(uuid.uuid4()),
         )
-        return JSONResponse(status_code=status.HTTP_200_OK, content=api_resp.model_dump())
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, content=api_resp.model_dump()
+        )
     except (EmptyImageError, UnsupportedFormatError, CorruptedImageError) as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -268,7 +279,10 @@ async def detect_image(
         400: {"model": APIErrorResponse, "description": "Invalid Base64 payload"},
         413: {"model": APIErrorResponse, "description": "Payload exceeds 15 MB limit"},
         415: {"model": APIErrorResponse, "description": "Unsupported media format"},
-        422: {"model": APIErrorResponse, "description": "Corrupted or invalid dimensions"},
+        422: {
+            "model": APIErrorResponse,
+            "description": "Corrupted or invalid dimensions",
+        },
     },
 )
 async def detect_image_base64(payload: ImageBase64Payload) -> JSONResponse:
@@ -300,7 +314,9 @@ async def detect_image_base64(payload: ImageBase64Payload) -> JSONResponse:
             detail=APIErrorResponse(
                 error_code="INVALID_BASE64",
                 message=f"Invalid Base64 encoding: {e!s}",
-                details=[ErrorDetail(field="image_data", issue="Failed base64 decoding.")],
+                details=[
+                    ErrorDetail(field="image_data", issue="Failed base64 decoding.")
+                ],
             ).model_dump(),
         ) from e
 
@@ -322,7 +338,9 @@ async def detect_image_base64(payload: ImageBase64Payload) -> JSONResponse:
             device=base_resp.device,
             request_id=str(uuid.uuid4()),
         )
-        return JSONResponse(status_code=status.HTTP_200_OK, content=api_resp.model_dump())
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, content=api_resp.model_dump()
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -362,7 +380,9 @@ def create_app() -> FastAPI:
 
     app_instance.include_router(router)
 
-    @app_instance.get("/internal/health", status_code=status.HTTP_200_OK, tags=["Internal"])
+    @app_instance.get(
+        "/internal/health", status_code=status.HTTP_200_OK, tags=["Internal"]
+    )
     async def internal_health():
         service = get_service()
         info = service.get_service_info()
@@ -387,4 +407,3 @@ def create_app() -> FastAPI:
         }
 
     return app_instance
-

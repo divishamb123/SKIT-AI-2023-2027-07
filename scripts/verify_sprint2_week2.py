@@ -39,10 +39,14 @@ def create_test_image(color: tuple, size: tuple = (64, 64), fmt: str = "PNG") ->
 
 
 def main() -> int:
-    print_banner("SPRINT 2 WEEK 2 — I/O API SPECIFICATION & STRICT VALIDATION VERIFICATION")
+    print_banner(
+        "SPRINT 2 WEEK 2 — I/O API SPECIFICATION & STRICT VALIDATION VERIFICATION"
+    )
     print("Member:    Divisha Manak Bohra (23ESKCA038)")
     print("Story:     Building the image detection module")
-    print("Task 1:    I/O API Specification & /api/detect/image Endpoint Implementation")
+    print(
+        "Task 1:    I/O API Specification & /api/detect/image Endpoint Implementation"
+    )
 
     passed_checks = 0
     total_checks = 8
@@ -57,9 +61,15 @@ def main() -> int:
         schema = resp.json()
         paths = schema.get("paths", {})
         assert "/api/detect/image" in paths, "Missing /api/detect/image route"
-        assert "/api/detect/image/base64" in paths, "Missing /api/detect/image/base64 route"
-        assert "/api/detect/image/health" in paths, "Missing /api/detect/image/health route"
-        print(f"  ✓ OpenAPI Title:      {schema['info']['title']} v{schema['info']['version']}")
+        assert (
+            "/api/detect/image/base64" in paths
+        ), "Missing /api/detect/image/base64 route"
+        assert (
+            "/api/detect/image/health" in paths
+        ), "Missing /api/detect/image/health route"
+        print(
+            f"  ✓ OpenAPI Title:      {schema['info']['title']} v{schema['info']['version']}"
+        )
         print(f"  ✓ Total Routes:       {len(paths)} documented routes found.")
         passed_checks += 1
     except Exception as e:
@@ -93,7 +103,9 @@ def main() -> int:
             "/api/detect/image",
             files={"file": ("test_sample.png", png_bytes, "image/png")},
         )
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+        assert (
+            resp.status_code == 200
+        ), f"Expected 200, got {resp.status_code}: {resp.text}"
         data = resp.json()
         assert data["filename"] == "test_sample.png"
         assert data["verdict"] in ["REAL", "AI_GENERATED"]
@@ -140,7 +152,9 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Check 5: Base64 JSON Payload Detection
     # ----------------------------------------------------------------------
-    print("\n[Check 5/8] Testing Base64 Payload Ingestion (/api/detect/image/base64)...")
+    print(
+        "\n[Check 5/8] Testing Base64 Payload Ingestion (/api/detect/image/base64)..."
+    )
     try:
         b64_raw = base64.b64encode(png_bytes).decode("ascii")
         data_uri = f"data:image/png;base64,{b64_raw}"
@@ -148,7 +162,9 @@ def main() -> int:
             "/api/detect/image/base64",
             json={"image_data": data_uri, "filename": "base64_upload.png"},
         )
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+        assert (
+            resp.status_code == 200
+        ), f"Expected 200, got {resp.status_code}: {resp.text}"
         data = resp.json()
         assert data["filename"] == "base64_upload.png"
         assert data["status"] == "success"
@@ -184,7 +200,13 @@ def main() -> int:
         # Unsupported extension
         resp_ext = client.post(
             "/api/detect/image",
-            files={"file": ("malicious.exe", b"MZ\x90\x00fake_executable", "application/octet-stream")},
+            files={
+                "file": (
+                    "malicious.exe",
+                    b"MZ\x90\x00fake_executable",
+                    "application/octet-stream",
+                )
+            },
         )
         assert resp_ext.status_code == 415, f"Expected 415, got {resp_ext.status_code}"
         assert resp_ext.json()["detail"]["error_code"] == "UNSUPPORTED_EXTENSION"
@@ -194,7 +216,9 @@ def main() -> int:
             "/api/detect/image",
             files={"file": ("spoofed.png", b"Not a PNG image header", "image/png")},
         )
-        assert resp_spoof.status_code == 415, f"Expected 415, got {resp_spoof.status_code}"
+        assert (
+            resp_spoof.status_code == 415
+        ), f"Expected 415, got {resp_spoof.status_code}"
         assert resp_spoof.json()["detail"]["error_code"] == "INVALID_MAGIC_BYTES"
 
         print("  ✓ Properly rejected unsupported file extension with HTTP 415.")
@@ -215,7 +239,9 @@ def main() -> int:
             "/api/detect/image",
             files={"file": ("broken.png", corrupt_bytes, "image/png")},
         )
-        assert resp_corrupt.status_code == 422, f"Expected 422, got {resp_corrupt.status_code}"
+        assert (
+            resp_corrupt.status_code == 422
+        ), f"Expected 422, got {resp_corrupt.status_code}"
         assert resp_corrupt.json()["detail"]["error_code"] == "CORRUPTED_IMAGE"
 
         # Resolution too small (< 16x16)
@@ -224,7 +250,9 @@ def main() -> int:
             "/api/detect/image",
             files={"file": ("tiny.png", tiny_bytes, "image/png")},
         )
-        assert resp_tiny.status_code == 422, f"Expected 422, got {resp_tiny.status_code}"
+        assert (
+            resp_tiny.status_code == 422
+        ), f"Expected 422, got {resp_tiny.status_code}"
         assert resp_tiny.json()["detail"]["error_code"] == "DIMENSION_TOO_SMALL"
 
         print("  ✓ Successfully rejected corrupted image stream with HTTP 422.")
@@ -237,8 +265,12 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Final Summary
     # ----------------------------------------------------------------------
-    print_banner(f"VERIFICATION PASSED: ALL {passed_checks}/{total_checks} CHECKS SUCCEEDED")
-    print(f"Status: Sprint 2 Week 2 (I/O API Specification) is 100% complete ({passed_checks}/{total_checks} checks passed).\n")
+    print_banner(
+        f"VERIFICATION PASSED: ALL {passed_checks}/{total_checks} CHECKS SUCCEEDED"
+    )
+    print(
+        f"Status: Sprint 2 Week 2 (I/O API Specification) is 100% complete ({passed_checks}/{total_checks} checks passed).\n"
+    )
     return 0
 
 

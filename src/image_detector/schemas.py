@@ -122,14 +122,18 @@ class ImageDetectionAPIResponse(ImageInferenceResponse):
 class ErrorDetail(BaseModel):
     """Specific error descriptor."""
 
-    field: Optional[str] = Field(None, description="Associated request parameter or field")
+    field: Optional[str] = Field(
+        None, description="Associated request parameter or field"
+    )
     issue: str = Field(..., description="Explanation of validation failure or error")
 
 
 class APIErrorResponse(BaseModel):
     """RFC 7807 compliant standardized API error response."""
 
-    error_code: str = Field(..., description="Machine-readable error classification code")
+    error_code: str = Field(
+        ..., description="Machine-readable error classification code"
+    )
     message: str = Field(..., description="Human-readable error explanation")
     details: Optional[List[ErrorDetail]] = Field(
         None, description="Granular error breakdowns"
@@ -138,7 +142,9 @@ class APIErrorResponse(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         description="ISO-8601 UTC timestamp of error event",
     )
-    extra: Optional[Dict[str, Any]] = Field(None, description="Contextual debugging info")
+    extra: Optional[Dict[str, Any]] = Field(
+        None, description="Contextual debugging info"
+    )
 
 
 class ServiceInfo(BaseModel):
