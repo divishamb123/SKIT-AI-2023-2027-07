@@ -33,10 +33,11 @@
 
 | S.No. | Form-2 Sprint 2 Task | Implementation | Status |
 |---|---|---|---|
-| 1 | **Developing an image inference service with a defined input/output interface** | Production-ready `ImageDetectionService` with strictly typed Pydantic contracts, multi-input decoder, ResNet-18 baseline, and hardware acceleration (`mps`/`cuda`/`cpu`). | **Completed & Verified (Week 1)** |
-| 2 | **Designing batch-processing logic for multiple image inputs** | Batched tensor collation, chunking ($B \le 32$), and multi-file pipeline. | Scheduled (Weeks 2–3) |
+| 1 | **Developing an image inference service with a defined input/output interface** | **Week 1:** Production-ready `ImageDetectionService` (ResNet-18, MPS/CUDA/CPU).<br/>**Week 2:** I/O API Specification, `/api/detect/image` endpoint with strict validation & `services/image-service` microservice. | **Completed & Verified (Weeks 1 & 2)** |
+| 2 | **Designing batch-processing logic for multiple image inputs** | Batched tensor collation, chunking ($B \le 32$), and multi-file pipeline. | Scheduled (Week 3) |
 | 3 | **Testing image inference using grouped input samples** | Grouped evaluation on Sprint 1 test & holdout partitions from `manifest.csv`. | Scheduled (Week 4) |
 | 4 | **Designing image upload and result interaction components** | Interactive Next.js multi-file drag-and-drop uploader, verdict gauges, and batch results gallery. | Scheduled (Weeks 5–7) |
+
 
 ---
 
@@ -101,6 +102,64 @@ flowchart TD
 ```
 
 ---
+
+## 🚀 Sprint 2 Week 2 Deliverables: I/O API Specification & Strict Validation (`/api/detect/image`)
+
+In Week 2 of Sprint 2, we built the public-facing REST API specification and containerized microservice:
+
+### 📁 Architecture & File Layout
+
+| Component | Path | Description |
+|---|---|---|
+| **API Endpoints & Router** | [`src/image_detector/api.py`](src/image_detector/api.py) | FastAPI router implementing `/api/detect/image` (multipart) and `/api/detect/image/base64` with multi-tier validation guardrails. |
+| **API Data Contracts** | [`src/image_detector/schemas.py`](src/image_detector/schemas.py) | Enriched API schemas: `ImageDetectionAPIResponse` with UUID `request_id`, ISO UTC timestamp, and RFC 7807 `APIErrorResponse`. |
+| **Microservice Entrypoint** | [`services/image-service/app/main.py`](services/image-service/app/main.py) | Standalone FastAPI microservice on port 8004 with CORS, `/internal/health`, and interactive Swagger UI (`/docs`). |
+| **Containerization** | [`services/image-service/Dockerfile`](services/image-service/Dockerfile) | Multi-stage production container image running as non-root user. |
+| **Docker Compose** | [`docker-compose.yml`](docker-compose.yml) | Integrated `image-service` on port `8004:8004` within `forensics_net`. |
+| **Automated API Tests** | [`tests/test_image_detection_api.py`](tests/test_image_detection_api.py) | 15 unit and integration tests covering happy paths, edge cases, and all HTTP error codes. |
+| **Verification Suite** | [`scripts/verify_sprint2_week2.py`](scripts/verify_sprint2_week2.py) | Standalone 8-point automated verification suite. |
+
+### 🛡️ Strict Validation Rules & HTTP Status Codes
+
+| Rule / Condition | HTTP Code | Error Code | Description |
+|---|---|---|---|
+| **Valid Image Upload** | `200 OK` | — | Inference succeeds; returns verdict, confidence, probabilities, telemetry. |
+| **Empty Payload** | `400 Bad Request` | `EMPTY_PAYLOAD` | File has 0 bytes or empty base64 string. |
+| **Payload Too Large** | `413 Payload Too Large` | `PAYLOAD_TOO_LARGE` | File exceeds maximum upload limit of 15 MB. |
+| **Unsupported Extension** | `415 Unsupported Media` | `UNSUPPORTED_EXTENSION` | Extension not in `.png`, `.jpg`, `.jpeg`, `.webp`. |
+| **Spoofed Magic Bytes** | `415 Unsupported Media` | `INVALID_MAGIC_BYTES` | File header does not match PNG/JPEG/WEBP binary signatures. |
+| **Corrupted Payload** | `422 Unprocessable` | `CORRUPTED_IMAGE` | Image stream cannot be loaded or is truncated. |
+| **Dimension Out of Bounds** | `422 Unprocessable` | `DIMENSION_TOO_SMALL` / `DIMENSION_TOO_LARGE` | Image resolution below 16x16 or above 8192x8192. |
+
+### 📋 API Output Response Contract Example
+
+```json
+{
+  "filename": "sample.png",
+  "verdict": "REAL",
+  "is_ai": false,
+  "confidence": 0.9962,
+  "probabilities": {
+    "real": 0.9962,
+    "ai_generated": 0.0038
+  },
+  "image_metadata": {
+    "width": 200,
+    "height": 200,
+    "channels": 3,
+    "format": "PNG"
+  },
+  "latency_ms": 5.45,
+  "model_version": "baseline-resnet18-v1.0",
+  "device": "mps",
+  "request_id": "7c616730-dac6-40a4-ae1a-d42a591168f4",
+  "timestamp": "2026-09-26T10:02:18.123456+00:00",
+  "status": "success"
+}
+```
+
+---
+
 
 ## 📁 Sprint 1 Architecture & Archive (Data Preparation & Interface)
 
@@ -178,13 +237,18 @@ pip install -r requirements.txt
 cd frontend && npm install && cd ..
 ```
 
-### 2. Run Sprint 2 Week 1 Inference Service Verification
+### 2. Run Sprint 2 Verification Suites (Week 1 & Week 2)
 ```bash
-# Standalone 6-point verification suite
+# Week 1: Standalone inference engine verification
 python3 scripts/verify_sprint2_week1.py
-
-# Pytest suite for image inference service
 pytest tests/test_image_inference_service.py -v
+
+# Week 2: Standalone API & strict validation verification
+python3 scripts/verify_sprint2_week2.py
+pytest tests/test_image_detection_api.py -v
+
+# Run all 30 unit tests across Sprint 1 & Sprint 2
+pytest tests/test_dataset_splits.py tests/test_image_inference_service.py tests/test_image_detection_api.py -v
 ```
 
 ### 3. Run Sprint 1 Verification Suites
@@ -193,14 +257,12 @@ pytest tests/test_image_inference_service.py -v
 python3 scripts/verify_sprint1_splits.py
 pytest tests/test_dataset_splits.py -v
 
-# Run all unit tests
-pytest tests/ -v
-
 # Frontend auth verification
 node scripts/verify_auth_components.mjs
 ```
 
 ### 4. Code Quality & Formatting
 ```bash
-ruff check src/ scripts/ tests/
+ruff check src/ services/ scripts/ tests/
 ```
+

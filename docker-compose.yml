@@ -152,6 +152,17 @@ services:
       init-db:
         condition: service_completed_successfully
         
+  image-service:
+    build:
+      context: .
+      dockerfile: services/image-service/Dockerfile
+    container_name: forensics-image-service
+    restart: unless-stopped
+    networks:
+      - forensics_net
+    ports:
+      - "8004:8004"
+
   api-gateway:
     build:
       context: .

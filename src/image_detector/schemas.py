@@ -3,10 +3,14 @@ schemas.py — Strictly Defined Input/Output Interface for Image Detection Servi
 
 Sprint 2: Baseline Detection Service (Member 1: Divisha Manak Bohra - 23ESKCA038)
 Task 1: Developing an image inference service with a defined input/output interface
+Week 2: I/O API Specification and /api/detect/image endpoint schemas
 """
 
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional, List
+from typing import Any, Dict, List, Optional
+import uuid
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -57,6 +61,19 @@ class ImageInferenceRequest(BaseModel):
     )
 
 
+class ImageBase64Payload(BaseModel):
+    """JSON payload for Base64 image detection request."""
+
+    image_data: str = Field(
+        ...,
+        description="Base64-encoded image string or RFC 2397 Data URI (e.g. data:image/png;base64,...)",
+    )
+    filename: str = Field(
+        default="upload.png",
+        description="Optional client-provided filename identifier",
+    )
+
+
 class ImageInferenceResponse(BaseModel):
     """Standardized output response contract conforming to Form-2 specification."""
 
@@ -86,6 +103,42 @@ class ImageInferenceResponse(BaseModel):
     device: str = Field(
         ..., description="Computing hardware used for inference (cpu, cuda, mps)"
     )
+
+
+class ImageDetectionAPIResponse(ImageInferenceResponse):
+    """Enhanced public API response payload with tracking metadata."""
+
+    request_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()),
+        description="Unique UUID tracking ID for this inference request",
+    )
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="ISO-8601 UTC timestamp of prediction execution",
+    )
+    status: str = Field(default="success", description="API response execution status")
+
+
+class ErrorDetail(BaseModel):
+    """Specific error descriptor."""
+
+    field: Optional[str] = Field(None, description="Associated request parameter or field")
+    issue: str = Field(..., description="Explanation of validation failure or error")
+
+
+class APIErrorResponse(BaseModel):
+    """RFC 7807 compliant standardized API error response."""
+
+    error_code: str = Field(..., description="Machine-readable error classification code")
+    message: str = Field(..., description="Human-readable error explanation")
+    details: Optional[List[ErrorDetail]] = Field(
+        None, description="Granular error breakdowns"
+    )
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="ISO-8601 UTC timestamp of error event",
+    )
+    extra: Optional[Dict[str, Any]] = Field(None, description="Contextual debugging info")
 
 
 class ServiceInfo(BaseModel):
