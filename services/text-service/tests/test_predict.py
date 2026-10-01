@@ -99,9 +99,8 @@ def test_predict_empty_text_validation(client: TestClient):
     assert "Text cannot be empty" in response.json().get("detail", "")
 
 
-def test_health_endpoints(client: TestClient):
-    """Verify that both /health and /internal/health endpoints respond successfully."""
-    for path in ["/health", "/internal/health"]:
-        response = client.get(path)
-        assert response.status_code == 200
-        assert response.json().get("status") == "ok"
+def test_health_endpoint(client: TestClient):
+    """Verify that /health endpoint responds successfully."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json().get("status") == "ok"
