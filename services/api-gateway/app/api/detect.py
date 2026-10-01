@@ -1,7 +1,9 @@
 import uuid
 from typing import Any
 
+import httpx
 import magic
+import structlog
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,9 +14,11 @@ from ..core.config import settings
 from ..core.limiter import limiter
 from ..core.queue import queue_service
 from ..core.storage import storage
+from ..schemas import TextDetectionRequest, TextDetectionResponse
 from .deps import get_current_user
 
 router = APIRouter()
+logger = structlog.get_logger()
 
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -97,3 +101,51 @@ async def detect_image(
         "status": new_job.status,
         "message": "Image successfully uploaded and queued for detection.",
     }
+
+
+@router.post("/text", response_model=TextDetectionResponse)
+@limiter.limit("30/minute")
+async def detect_text(
+    request: Request,
+    payload: TextDetectionRequest,
+):
+    if not payload.text or not payload.text.strip():
+        logger.warning("empty_text_detection_request")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Text cannot be empty.",
+        )
+
+    target_url = f"{settings.TEXT_SERVICE_URL.rstrip('/')}/detect"
+    logger.info(
+        "proxying_text_detection",
+        target_url=target_url,
+        text_len=len(payload.text),
+    )
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            resp = await client.post(target_url, json={"text": payload.text})
+            if resp.status_code >= 400:
+                try:
+                    error_detail = resp.json().get("detail", resp.text)
+                except Exception:
+                    error_detail = resp.text
+                raise HTTPException(status_code=resp.status_code, detail=error_detail)
+
+            result = resp.json()
+            return TextDetectionResponse(**result)
+        except HTTPException:
+            raise
+        except httpx.RequestError as exc:
+            logger.error("text_service_unavailable", error=str(exc), url=target_url)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Text detection service unavailable: {exc}",
+            )
+        except Exception as exc:
+            logger.error("text_detection_proxy_error", error=str(exc))
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to process text detection: {exc}",
+            )
