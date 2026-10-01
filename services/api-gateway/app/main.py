@@ -44,7 +44,6 @@ app.add_middleware(
 app.include_router(health.router, prefix="/internal")
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth")
 app.include_router(detect.router, prefix=f"{settings.API_V1_STR}/detect")
-app.include_router(detect.router, prefix="/detect")
 app.include_router(jobs.router, prefix=f"{settings.API_V1_STR}/jobs")
 
 from .core.queue import queue_service
