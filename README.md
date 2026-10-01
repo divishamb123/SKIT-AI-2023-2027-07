@@ -210,6 +210,36 @@ All partition metadata is stored in [`datasets/splits/manifest.csv`](datasets/sp
 
 ---
 
+## Sprint 2 — Part 2: Text-Service Integration (Oct 1, 2026)
+*User Story: Integrating text detection microservice, API Gateway proxy routing, and test coverage*
+
+### 📌 Milestone Overview
+- **Form-2 Task 2:** *Integrating the standalone text detection service into the platform architecture, establishing gateway proxy routing, containerization orchestration, and automated unit testing.*
+
+### 📁 Deliverables & Architecture
+
+| Component | Path | Description |
+|---|---|---|
+| **API Gateway Proxy Route** | [`services/api-gateway/app/api/detect.py`](services/api-gateway/app/api/detect.py) | Proxies incoming `POST /api/v1/detect/text` requests directly to `services/text-service` with rate limiting, error propagation, and HTTP status code handling. |
+| **Gateway Settings** | [`services/api-gateway/app/core/config.py`](services/api-gateway/app/core/config.py) | Configurable `TEXT_SERVICE_URL` environment setting for microservice discovery. |
+| **Text Detection Microservice** | [`services/text-service/`](services/text-service/) | Standalone FastAPI microservice wrapping pretrained `microsoft/deberta-v3-base` model on port 8007 with `/detect` and `/health` endpoints. |
+| **I/O Schema Specification** | [`services/text-service/app/schemas.py`](services/text-service/app/schemas.py) | Strictly typed `TextDetectionRequest` and `TextDetectionResponse` (`label: Literal["ai", "human"]`, `confidence: float`, `model_version: str`). |
+| **Automated Unit Tests** | [`services/text-service/tests/test_predict.py`](services/text-service/tests/test_predict.py) | Pytest test suite validating `/detect` interface contract compliance for human and AI text samples. |
+| **Gateway Unit Tests** | [`tests/unit/test_api_gateway_text.py`](tests/unit/test_api_gateway_text.py) | Unit tests verifying proxy routing, empty input validation (400), and service unavailability handling (503). |
+| **Container Orchestration** | [`docker-compose.yml`](docker-compose.yml) | Integrated `text-service` (port `8007:8007`) in `forensics_net` bridge network with `api-gateway` dependency linkage. |
+
+### 📋 Standardized Text Detection Contract
+
+```json
+{
+  "label": "human",
+  "confidence": 0.8523,
+  "model_version": "microsoft/deberta-v3-base-pretrained"
+}
+```
+
+---
+
 # Team Lead: Dev Khandelwal (`23ESKCA035`)
 
 ## Sprint 1 — Foundation & Infrastructure
