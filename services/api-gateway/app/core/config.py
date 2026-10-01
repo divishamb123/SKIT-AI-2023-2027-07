@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     AUTH_SERVICE_URL: str = "http://localhost:8000/api/v1/auth"
+    TEXT_SERVICE_URL: str = "http://localhost:8007"
 
     # Storage Config
     MINIO_ENDPOINT: str = "localhost:9000"
