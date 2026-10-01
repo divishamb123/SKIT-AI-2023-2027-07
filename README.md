@@ -240,6 +240,37 @@ All partition metadata is stored in [`datasets/splits/manifest.csv`](datasets/sp
 
 ---
 
+## Sprint 2 — Part 3: Text Detection UI Wiring (real backend integration)
+*User Story: Connecting frontend text detection interface to real API Gateway endpoint*
+
+### 📌 Milestone Overview
+- **Form-2 Task 3:** *Connecting the previously scaffolded Next.js text detection UI to the live backend API Gateway endpoint, replacing the mock `setTimeout` simulation with real asynchronous inference requests, client-side adapter normalization, and comprehensive error handling.*
+
+### 📁 Deliverables & Architecture
+
+| Component | Path | Description |
+|---|---|---|
+| **API Client Integration** | [`frontend/src/lib/api.ts`](frontend/src/lib/api.ts) | Added `detectText(text: string)` function with client-side adapter transforming backend response into `DetectionVerdict`. |
+| **Page Component Wiring** | [`frontend/src/app/text-detection/page.tsx`](frontend/src/app/text-detection/page.tsx) | Replaced `setTimeout` mock with real `detectText` invocation inside `try/catch/finally` lifecycle. |
+| **Error Handling & Feedback** | [`frontend/src/app/text-detection/page.tsx`](frontend/src/app/text-detection/page.tsx) | Integrated `FormAlert` displaying categorized error states (HTTP 400 validation, HTTP 503 service unavailable, general failures). |
+| **Canonical Endpoint** | `POST /api/v1/detect/text` | Connected frontend requests to API Gateway's canonical route. |
+
+### 🔄 Client-Side Adapter Flow
+
+```mermaid
+flowchart LR
+    UI["TextInputPanel<br/>(User Input Text)"] --> Page["TextDetectionPage<br/>(handleAnalyzeText)"]
+    Page --> Client["detectText()<br/>(Axios Client)"]
+    Client --> Gateway["POST /api/v1/detect/text<br/>(API Gateway)"]
+    Gateway --> Service["POST /detect<br/>(text-service)"]
+    Service --> Gateway
+    Gateway --> Client
+    Client --> Adapter["Adapter Normalization<br/>(label/confidence → isAI/confidence/label)"]
+    Adapter --> Verdict["VerdictDisplay<br/>(Gauge & Confidence Bar)"]
+```
+
+---
+
 # Team Lead: Dev Khandelwal (`23ESKCA035`)
 
 ## Sprint 1 — Foundation & Infrastructure
