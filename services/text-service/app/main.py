@@ -31,7 +31,9 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix="/internal")
+app.include_router(health.router)
 app.include_router(detect.router, prefix="/api/v1/detect")
+app.include_router(detect.router, prefix="/detect")
 
 
 @app.on_event("startup")
