@@ -17,13 +17,16 @@ from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
+
 class QueueConsumer:
-    def __init__(self, connection: aio_pika.RobustConnection, queue_name: str, detector: Any):
+    def __init__(
+        self, connection: aio_pika.RobustConnection, queue_name: str, detector: Any
+    ):
         self._connection = connection
         self._queue_name = queue_name
         self._detector = detector
         self.s3_client = boto3.client(
-            's3',
+            "s3",
             endpoint_url=os.getenv("MINIO_ENDPOINT", "http://minio:9000"),
             aws_access_key_id=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
             aws_secret_access_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
@@ -40,7 +43,7 @@ class QueueConsumer:
             arguments={
                 "x-dead-letter-exchange": "forensics.dlx",
                 "x-dead-letter-routing-key": "dlx.failed",
-            }
+            },
         )
         logger.info(f"Consuming from {self._queue_name}")
         await queue.consume(self._process_message)
@@ -49,7 +52,7 @@ class QueueConsumer:
         async with message.process(requeue=False):
             try:
                 payload = json.loads(message.body.decode())
-                job_id = payload['job_id']
+                job_id = payload["job_id"]
                 logger.info(f"Processing audio job {job_id}")
 
                 async with async_session_maker() as session:
@@ -58,16 +61,20 @@ class QueueConsumer:
                         job.status = "processing"
                         job.started_at = datetime.now(timezone.utc)
                         await session.commit()
-                
-                response = self.s3_client.get_object(Bucket=self.bucket, Key=payload["input_object_key"])
-                audio_bytes = response['Body'].read()
 
-                waveform, meta = await asyncio.to_thread(AudioPreprocessor.process_bytes, audio_bytes)
-                
+                response = self.s3_client.get_object(
+                    Bucket=self.bucket, Key=payload["input_object_key"]
+                )
+                audio_bytes = response["Body"].read()
+
+                waveform, meta = await asyncio.to_thread(
+                    AudioPreprocessor.process_bytes, audio_bytes
+                )
+
                 result = await asyncio.to_thread(self._detector.predict_sync, waveform)
-                
+
                 ai_prob = result["ai_probability"]
-                
+
                 # Explanation / Visualization
                 spectrogram_key = None
                 flags = []
@@ -78,9 +85,11 @@ class QueueConsumer:
                         Bucket=self.bucket,
                         Key=spectrogram_key,
                         Body=spec_bytes,
-                        ContentType="image/png"
+                        ContentType="image/png",
                     )
-                    flags = await asyncio.to_thread(detect_audio_anomalies, audio_bytes, ai_prob)
+                    flags = await asyncio.to_thread(
+                        detect_audio_anomalies, audio_bytes, ai_prob
+                    )
 
                 async with async_session_maker() as session:
                     job = await session.get(Job, job_id)
@@ -93,25 +102,25 @@ class QueueConsumer:
                             verdict=result["verdict"],
                             model_name="AASIST-L",
                             processing_time_ms=result["processing_time_ms"],
-                            device_used=result["device_used"]
+                            device_used=result["device_used"],
                         )
                         session.add(det)
                         await session.flush()
-                        
+
                         if payload.get("options", {}).get("explain", True):
                             exp = Explanation(
                                 result_id=det.id,
                                 method="SPECTROGRAM",
                                 artifact_type="image_png",
                                 artifact_object_key=spectrogram_key,
-                                artifact_data={"anomaly_flags": flags}
+                                artifact_data={"anomaly_flags": flags},
                             )
                             session.add(exp)
-                            
+
                         job.status = "completed"
                         job.completed_at = datetime.now(timezone.utc)
                         await session.commit()
-                        
+
             except Exception as exc:
                 logger.error(f"Handler failed: {exc}")
                 raise

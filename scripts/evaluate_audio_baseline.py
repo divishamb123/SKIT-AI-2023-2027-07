@@ -51,12 +51,15 @@ sys.path.insert(0, str(_PROJECT_ROOT))
 
 from audio.model.aasist_loader import AASISTLoader
 from audio.preprocessing.audio_preprocessor import AudioPreprocessor
-from aasist_official.evaluation import compute_eer  # (target_scores, nontarget_scores) -> (eer_fraction, threshold)
+from aasist_official.evaluation import (
+    compute_eer,
+)  # (target_scores, nontarget_scores) -> (eer_fraction, threshold)
 
 
 # ---------------------------------------------------------------------------
 # Utility functions
 # ---------------------------------------------------------------------------
+
 
 def sha256_file(path: Path) -> str:
     """Return the SHA-256 hex digest of a file."""
@@ -121,9 +124,7 @@ def verify_dataset(
     return len(matched) + len(missing), matched, missing
 
 
-def cross_check_eer(
-    bonafide_scores: np.ndarray, spoof_scores: np.ndarray
-) -> float:
+def cross_check_eer(bonafide_scores: np.ndarray, spoof_scores: np.ndarray) -> float:
     """Cross-check EER using sklearn if available; fall back to official implementation.
     Always returns EER as a percentage.
     """
@@ -147,6 +148,7 @@ def cross_check_eer(
 # Batch inference helper
 # ---------------------------------------------------------------------------
 
+
 def run_batch(
     batch_ids: List[str],
     eval_flac_dir: Path,
@@ -168,7 +170,7 @@ def run_batch(
         audio_path = eval_flac_dir / f"{b_uid}.flac"
         try:
             proc = AudioPreprocessor.process_file(str(audio_path))  # [1, 64600]
-            batch_wavs.append(proc.float().squeeze(0))               # [64600]
+            batch_wavs.append(proc.float().squeeze(0))  # [64600]
             valid_ids.append(b_uid)
         except Exception as exc:
             errors.append({"utt_id": b_uid, "error": str(exc)})
@@ -177,12 +179,14 @@ def run_batch(
         return
 
     try:
-        batch_tensor = torch.stack(batch_wavs).to(device)   # [B, 64600]
+        batch_tensor = torch.stack(batch_wavs).to(device)  # [B, 64600]
         with torch.no_grad():
-            _, batch_logits = model(batch_tensor)            # last_hidden discarded; logits [B, 2]
+            _, batch_logits = model(
+                batch_tensor
+            )  # last_hidden discarded; logits [B, 2]
         for i, b_uid in enumerate(valid_ids):
-            spoof_logit = batch_logits[i, 0].item()          # col 0 = spoof
-            bonafide_logit = batch_logits[i, 1].item()       # col 1 = bonafide
+            spoof_logit = batch_logits[i, 0].item()  # col 0 = spoof
+            bonafide_logit = batch_logits[i, 1].item()  # col 1 = bonafide
             label = protocol_id_to_label[b_uid]
             all_scores.append([b_uid, label, spoof_logit, bonafide_logit])
     except Exception as exc:
@@ -190,11 +194,10 @@ def run_batch(
             errors.append({"utt_id": b_uid, "error": str(exc)})
 
 
-
-
 # ---------------------------------------------------------------------------
 # Main evaluation routine
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -237,7 +240,9 @@ def main() -> None:
     env_info = {
         "torch_version": torch.__version__,
         "cuda_available": torch.cuda.is_available(),
-        "cuda_device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+        "cuda_device": (
+            torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+        ),
         "seed": args.seed,
         "batch_size": args.batch_size,
         "project_root": str(_PROJECT_ROOT),
@@ -247,7 +252,9 @@ def main() -> None:
     # -------------------------------------------------------------------
     # Checkpoint hash (pre-evaluation)
     # -------------------------------------------------------------------
-    ckpt_path = _PROJECT_ROOT / "checkpoints" / "pretrained" / "aasist-l" / "AASIST-L.pth"
+    ckpt_path = (
+        _PROJECT_ROOT / "checkpoints" / "pretrained" / "aasist-l" / "AASIST-L.pth"
+    )
     if not ckpt_path.is_file():
         sys.exit(f"[FATAL] Checkpoint not found: {ckpt_path}")
     pre_hash = sha256_file(ckpt_path)
@@ -274,8 +281,13 @@ def main() -> None:
 
     _preproc_src = preproc_path.read_text()
     _uses_zero_pad = (
-        "zero" in _preproc_src.lower() and "pad" in _preproc_src.lower()
-        and ("torch.zeros" in _preproc_src or "np.zeros" in _preproc_src or "F.pad" in _preproc_src)
+        "zero" in _preproc_src.lower()
+        and "pad" in _preproc_src.lower()
+        and (
+            "torch.zeros" in _preproc_src
+            or "np.zeros" in _preproc_src
+            or "F.pad" in _preproc_src
+        )
     )
     _uses_repeat = (".repeat(" in _preproc_src) or ("tile" in _preproc_src.lower())
 
@@ -296,8 +308,10 @@ def main() -> None:
             "mismatched preprocessor. Check that you extracted the correct "
             "project zip and did not overwrite this file."
         )
-    print("[Preprocessing self-check OK] audio_preprocessor.py source uses repeat/tile "
-          "padding, no zero-fill padding call found.")
+    print(
+        "[Preprocessing self-check OK] audio_preprocessor.py source uses repeat/tile "
+        "padding, no zero-fill padding call found."
+    )
 
     # -------------------------------------------------------------------
     # Dataset layout
@@ -309,9 +323,9 @@ def main() -> None:
     protocol_path = protocol_dir / "ASVspoof2019.LA.cm.eval.trl.txt"
 
     for p, desc in [
-        (protocol_dir,  "Protocol directory"),
+        (protocol_dir, "Protocol directory"),
         (protocol_path, "Protocol file"),
-        (eval_dir,      "Eval directory"),
+        (eval_dir, "Eval directory"),
         (eval_flac_dir, "Eval FLAC directory"),
     ]:
         if not p.exists():
@@ -377,25 +391,29 @@ def main() -> None:
         # AudioPreprocessor returns [1, 64600]. The model's forward() does
         # x = x.unsqueeze(1) internally, so it expects [B, 64600] — NOT [B, 1, 64600].
         # proc is already [1, 64600] == [B=1, 64600]; send it directly.
-        tensor = proc.float().to(device)                        # shape [1, 64600]
+        tensor = proc.float().to(device)  # shape [1, 64600]
         assert tensor.shape == (1, 64600), f"Unexpected tensor shape: {tensor.shape}"
         with torch.no_grad():
-            _, logits = model(tensor)                           # last_hidden, logits; discard last_hidden
+            _, logits = model(tensor)  # last_hidden, logits; discard last_hidden
         assert logits.shape == (1, 2), f"Unexpected logits shape: {logits.shape}"
         if torch.isnan(logits).any() or torch.isinf(logits).any():
             sys.exit(f"[FATAL] Smoke-test NaN/Inf logits for {uid}")
-        smoke_results.append({
-            "utt_id": uid,
-            "label": "bonafide" if protocol_id_to_label[uid] == 1 else "spoof",
-            "tensor_shape": list(tensor.shape),
-            "logits_shape": list(logits.shape),
-            "spoof_logit":    logits[0, 0].item(),
-            "bonafide_logit": logits[0, 1].item(),
-        })
-
+        smoke_results.append(
+            {
+                "utt_id": uid,
+                "label": "bonafide" if protocol_id_to_label[uid] == 1 else "spoof",
+                "tensor_shape": list(tensor.shape),
+                "logits_shape": list(logits.shape),
+                "spoof_logit": logits[0, 0].item(),
+                "bonafide_logit": logits[0, 1].item(),
+            }
+        )
 
     (evidence_dir / "phase5_smoke_test.txt").write_text(
-        json.dumps({"seed": args.seed, "selected_ids": smoke_ids, "results": smoke_results}, indent=2)
+        json.dumps(
+            {"seed": args.seed, "selected_ids": smoke_ids, "results": smoke_results},
+            indent=2,
+        )
     )
     print(f"[Smoke test OK] 5 utterances processed without error.")
 
@@ -416,8 +434,13 @@ def main() -> None:
 
     for batch in tqdm(batches, desc="Evaluating"):
         run_batch(
-            batch, eval_flac_dir, protocol_id_to_label,
-            model, device, all_scores, errors
+            batch,
+            eval_flac_dir,
+            protocol_id_to_label,
+            model,
+            device,
+            all_scores,
+            errors,
         )
 
     total_time = time.time() - start
@@ -449,8 +472,12 @@ def main() -> None:
     # Multiply fraction by 100 to get EER percent.
     # -------------------------------------------------------------------
     # row[3] is bonafide_logit, row[1] is label
-    bonafide_scores = np.array([row[3] for row in all_scores if row[1] == 1], dtype=np.float64)
-    spoof_scores    = np.array([row[3] for row in all_scores if row[1] == 0], dtype=np.float64)
+    bonafide_scores = np.array(
+        [row[3] for row in all_scores if row[1] == 1], dtype=np.float64
+    )
+    spoof_scores = np.array(
+        [row[3] for row in all_scores if row[1] == 0], dtype=np.float64
+    )
 
     eer_frac, eer_threshold = compute_eer(bonafide_scores, spoof_scores)
     eer_percent = float(eer_frac * 100.0)
@@ -462,17 +489,19 @@ def main() -> None:
     # Save metrics
     # -------------------------------------------------------------------
     metrics = {
-        "eer_percent":               eer_percent,
-        "eer_threshold":             float(eer_threshold),
-        "eer_cross_check_percent":   eer_cross_percent,
-        "score_direction":           "single score = logits[:,1]; target=bonafide(1), nontarget=spoof(0)",
-        "total_samples":             len(all_scores),
-        "failed_samples":            len(errors),
-        "batch_size":                args.batch_size,
-        "total_inference_time_sec":  total_time,
+        "eer_percent": eer_percent,
+        "eer_threshold": float(eer_threshold),
+        "eer_cross_check_percent": eer_cross_percent,
+        "score_direction": "single score = logits[:,1]; target=bonafide(1), nontarget=spoof(0)",
+        "total_samples": len(all_scores),
+        "failed_samples": len(errors),
+        "batch_size": args.batch_size,
+        "total_inference_time_sec": total_time,
         "throughput_sec_per_sample": total_time / max(1, len(all_scores)),
     }
-    (results_dir / "asvspoof_baseline_metrics.json").write_text(json.dumps(metrics, indent=2))
+    (results_dir / "asvspoof_baseline_metrics.json").write_text(
+        json.dumps(metrics, indent=2)
+    )
 
     # -------------------------------------------------------------------
     # Write evidence/baseline/phase5_eer.txt (required output)
@@ -529,7 +558,9 @@ def main() -> None:
     print(f"  Smoke-test IDs (seed={args.seed}): {smoke_ids}")
     print(f"  Batch size                : {args.batch_size}")
     print(f"  Total inference time (s)  : {total_time:.2f}")
-    print(f"  EER                       : {eer_percent:.3f}%  (threshold={eer_threshold:.4f})")
+    print(
+        f"  EER                       : {eer_percent:.3f}%  (threshold={eer_threshold:.4f})"
+    )
     print(f"  EER cross-check           : {eer_cross_percent:.3f}%")
     print(f"  Results saved to          : {results_dir}")
     print(f"  Evidence saved to         : {evidence_dir}")

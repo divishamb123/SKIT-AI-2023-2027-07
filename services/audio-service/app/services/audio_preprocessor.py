@@ -4,6 +4,7 @@ import torchaudio.transforms as AT
 import io
 import warnings
 
+
 class AudioPreprocessor:
     """
     Standardized audio preprocessing pipeline.
@@ -57,7 +58,7 @@ class AudioPreprocessor:
             warnings.warn("Audio exceeds maximum duration of 60 seconds; truncated.")
 
         # Work in 1D from here
-        waveform = waveform.squeeze(0)          # (n_samples,)
+        waveform = waveform.squeeze(0)  # (n_samples,)
         n_samples = waveform.shape[0]
 
         if n_samples < cls.EXPECTED_SAMPLES:
@@ -71,4 +72,3 @@ class AudioPreprocessor:
 
         # Return shape [1, 64600] as expected by AASIST
         return waveform.unsqueeze(0)
-
