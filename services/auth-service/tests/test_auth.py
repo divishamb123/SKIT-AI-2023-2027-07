@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-# We need to set env vars before importing anything that uses them
+# Set environment variables for standalone test execution
 os.environ["JWT_SECRET_KEY"] = "test_secret_key"
 os.environ["POSTGRES_PASSWORD"] = "test"
 os.environ["RABBITMQ_PASSWORD"] = "test"
@@ -19,7 +19,6 @@ from app.main import app
 from shared.db.models.user import User
 from shared.db.session import get_async_session
 
-# Mocks
 mock_session = AsyncMock()
 
 
@@ -35,14 +34,12 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def reset_mocks():
     mock_session.reset_mock()
-    # Also patch redis locally
     redis.store_refresh_token = AsyncMock()
     redis.delete_refresh_token = AsyncMock()
     redis.verify_and_delete_refresh_token = AsyncMock(return_value="user_id_123")
 
 
 def test_user_registration_success(monkeypatch):
-    # Mocking db query
     mock_result = MagicMock()
     mock_result.scalars().first.return_value = None
     mock_session.execute.return_value = mock_result
@@ -60,7 +57,6 @@ def test_user_registration_success(monkeypatch):
 
 
 def test_duplicate_email_rejection():
-    # Mock existing user
     mock_user = User(email="existing@test.com")
     mock_result = MagicMock()
     mock_result.scalars().first.return_value = mock_user
@@ -133,7 +129,6 @@ def test_login_invalid_password():
 
 
 def test_logout_token_invalidation():
-    # Calling logout
     response = client.post(
         "/api/v1/auth/logout", json={"refresh_token": "some_token_here"}
     )

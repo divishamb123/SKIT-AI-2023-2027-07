@@ -156,3 +156,118 @@ class ServiceInfo(BaseModel):
     device: str
     supported_formats: List[str]
     status: str = "healthy"
+
+
+# --------------------------------------------------------------------------
+# Sprint 2 Week 3: Batch Processing Schemas
+# --------------------------------------------------------------------------
+
+
+class BatchItemError(BaseModel):
+    """Failure descriptor for an individual image item within a batch."""
+
+    index: int = Field(
+        ..., description="0-indexed position of the item in the submitted batch"
+    )
+    filename: str = Field(..., description="Filename identifier of the failed image")
+    error_code: str = Field(
+        ..., description="Machine-readable error classification code"
+    )
+    message: str = Field(..., description="Explanation of processing failure")
+
+
+class BatchSummary(BaseModel):
+    """Aggregated analytical summary of batch inference results."""
+
+    total_submitted: int = Field(
+        ..., ge=0, description="Total number of images submitted in the batch"
+    )
+    successful_count: int = Field(
+        ..., ge=0, description="Number of images successfully processed"
+    )
+    failed_count: int = Field(
+        ..., ge=0, description="Number of images that failed processing"
+    )
+    real_count: int = Field(
+        ..., ge=0, description="Number of images classified as authentic REAL"
+    )
+    ai_generated_count: int = Field(
+        ..., ge=0, description="Number of images classified as synthetic AI_GENERATED"
+    )
+    mean_confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Mean confidence across successful predictions"
+    )
+
+    @field_validator("mean_confidence")
+    @classmethod
+    def round_mean_confidence(cls, v: float) -> float:
+        return round(float(v), 4)
+
+
+class BatchImageInferenceResponse(BaseModel):
+    """Standardized batch inference output contract (Form-2 Sprint 2 Task 2)."""
+
+    results: List[ImageInferenceResponse] = Field(
+        default_factory=list,
+        description="Individual inference predictions for successfully processed images",
+    )
+    errors: List[BatchItemError] = Field(
+        default_factory=list,
+        description="Details of any failed images in the batch",
+    )
+    summary: BatchSummary = Field(
+        ..., description="Aggregated summary statistics for the processed batch"
+    )
+    batch_latency_ms: float = Field(
+        ..., ge=0.0, description="Total batch execution time in milliseconds"
+    )
+    avg_latency_per_image_ms: float = Field(
+        ...,
+        ge=0.0,
+        description="Average execution latency per successfully processed image",
+    )
+    chunk_size_used: int = Field(
+        ..., gt=0, description="Tensor collation chunk size applied during inference"
+    )
+    model_version: str = Field(
+        ..., description="Identifier and version of the detection model"
+    )
+    device: str = Field(
+        ..., description="Computing hardware used for inference (cpu, cuda, mps)"
+    )
+
+
+class BatchImageDetectionAPIResponse(BatchImageInferenceResponse):
+    """Public API batch response contract with tracking metadata."""
+
+    batch_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()),
+        description="Unique UUID tracking ID for this batch request",
+    )
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="ISO-8601 UTC timestamp of batch execution",
+    )
+    status: str = Field(
+        default="success", description="API batch response execution status"
+    )
+
+
+class BatchBase64Item(BaseModel):
+    """Single item entry for Base64 batch submission."""
+
+    image_data: str = Field(
+        ..., description="Base64-encoded image string or RFC 2397 Data URI"
+    )
+    filename: Optional[str] = Field(
+        default=None, description="Optional filename identifier"
+    )
+
+
+class BatchBase64Payload(BaseModel):
+    """Request payload for multi-image Base64 batch inference."""
+
+    images: List[BatchBase64Item] = Field(
+        ...,
+        description="List of base64-encoded images to process in batch (1 to 32 items)",
+    )

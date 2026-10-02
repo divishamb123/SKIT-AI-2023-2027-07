@@ -43,3 +43,9 @@ def test_expired_token():
     token = create_access_token(data, expires_delta=timedelta(seconds=-1))
     decoded = verify_token(token)
     assert decoded is None
+
+
+def test_invalid_token():
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid.payload"
+    decoded = verify_token(token)
+    assert decoded is None
