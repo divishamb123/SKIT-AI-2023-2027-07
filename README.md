@@ -33,10 +33,12 @@
 
 | S.No. | Form-2 Sprint 2 Task | Implementation | Status |
 |---|---|---|---|
-| 1 | **Developing an image inference service with a defined input/output interface** | Production-ready `ImageDetectionService` with strictly typed Pydantic contracts, multi-input decoder, ResNet-18 baseline, and hardware acceleration (`mps`/`cuda`/`cpu`). | **Completed & Verified (Week 1)** |
-| 2 | **Designing batch-processing logic for multiple image inputs** | Batched tensor collation, chunking ($B \le 32$), and multi-file pipeline. | Scheduled (Weeks 2–3) |
+| 1 | **Developing an image inference service with a defined input/output interface** | **Week 1:** Production-ready `ImageDetectionService` (ResNet-18, MPS/CUDA/CPU).<br/>**Week 2:** I/O API Specification, `/api/detect/image` endpoint with strict validation & `services/image-service` microservice. | **Completed & Verified (Weeks 1 & 2)** |
+| 2 | **Designing batch-processing logic for multiple image inputs** | **Week 3:** Batched tensor collation `(B, 3, 224, 224)`, dynamic chunking ($B \le 32$), vectorized acceleration (~2.3x speedup), fault-isolated partial failure handling, and `/api/detect/image/batch` endpoints. | **Completed & Verified (Week 3)** |
 | 3 | **Testing image inference using grouped input samples** | Grouped evaluation on Sprint 1 test & holdout partitions from `manifest.csv`. | Scheduled (Week 4) |
 | 4 | **Designing image upload and result interaction components** | Interactive Next.js multi-file drag-and-drop uploader, verdict gauges, and batch results gallery. | Scheduled (Weeks 5–7) |
+
+
 
 ---
 
@@ -102,6 +104,166 @@ flowchart TD
 
 ---
 
+## 🚀 Sprint 2 Week 2 Deliverables: I/O API Specification & Strict Validation (`/api/detect/image`)
+
+In Week 2 of Sprint 2, we built the public-facing REST API specification and containerized microservice:
+
+### 📁 Architecture & File Layout
+
+| Component | Path | Description |
+|---|---|---|
+| **API Endpoints & Router** | [`src/image_detector/api.py`](src/image_detector/api.py) | FastAPI router implementing `/api/detect/image` (multipart) and `/api/detect/image/base64` with multi-tier validation guardrails. |
+| **API Data Contracts** | [`src/image_detector/schemas.py`](src/image_detector/schemas.py) | Enriched API schemas: `ImageDetectionAPIResponse` with UUID `request_id`, ISO UTC timestamp, and RFC 7807 `APIErrorResponse`. |
+| **Microservice Entrypoint** | [`services/image-service/app/main.py`](services/image-service/app/main.py) | Standalone FastAPI microservice on port 8004 with CORS, `/internal/health`, and interactive Swagger UI (`/docs`). |
+| **Containerization** | [`services/image-service/Dockerfile`](services/image-service/Dockerfile) | Multi-stage production container image running as non-root user. |
+| **Docker Compose** | [`docker-compose.yml`](docker-compose.yml) | Integrated `image-service` on port `8004:8004` within `forensics_net`. |
+| **Automated API Tests** | [`tests/test_image_detection_api.py`](tests/test_image_detection_api.py) | 15 unit and integration tests covering happy paths, edge cases, and all HTTP error codes. |
+| **Verification Suite** | [`scripts/verify_sprint2_week2.py`](scripts/verify_sprint2_week2.py) | Standalone 8-point automated verification suite. |
+
+### 🛡️ Strict Validation Rules & HTTP Status Codes
+
+| Rule / Condition | HTTP Code | Error Code | Description |
+|---|---|---|---|
+| **Valid Image Upload** | `200 OK` | — | Inference succeeds; returns verdict, confidence, probabilities, telemetry. |
+| **Empty Payload** | `400 Bad Request` | `EMPTY_PAYLOAD` | File has 0 bytes or empty base64 string. |
+| **Payload Too Large** | `413 Payload Too Large` | `PAYLOAD_TOO_LARGE` | File exceeds maximum upload limit of 15 MB. |
+| **Unsupported Extension** | `415 Unsupported Media` | `UNSUPPORTED_EXTENSION` | Extension not in `.png`, `.jpg`, `.jpeg`, `.webp`. |
+| **Spoofed Magic Bytes** | `415 Unsupported Media` | `INVALID_MAGIC_BYTES` | File header does not match PNG/JPEG/WEBP binary signatures. |
+| **Corrupted Payload** | `422 Unprocessable` | `CORRUPTED_IMAGE` | Image stream cannot be loaded or is truncated. |
+| **Dimension Out of Bounds** | `422 Unprocessable` | `DIMENSION_TOO_SMALL` / `DIMENSION_TOO_LARGE` | Image resolution below 16x16 or above 8192x8192. |
+
+### 📋 API Output Response Contract Example
+
+```json
+{
+  "filename": "sample.png",
+  "verdict": "REAL",
+  "is_ai": false,
+  "confidence": 0.9962,
+  "probabilities": {
+    "real": 0.9962,
+    "ai_generated": 0.0038
+  },
+  "image_metadata": {
+    "width": 200,
+    "height": 200,
+    "channels": 3,
+    "format": "PNG"
+  },
+  "latency_ms": 5.45,
+  "model_version": "baseline-resnet18-v1.0",
+  "device": "mps",
+  "request_id": "7c616730-dac6-40a4-ae1a-d42a591168f4",
+  "timestamp": "2026-09-26T10:02:18.123456+00:00",
+  "status": "success"
+}
+```
+
+---
+
+## 🚀 Sprint 2 Week 3 Deliverables: High-Throughput Batch-Processing Logic for Multiple Image Inputs
+
+In Week 3 of Sprint 2, we designed and implemented the high-throughput batch-processing engine and endpoints under [`src/image_detector/`](src/image_detector/):
+
+```mermaid
+flowchart TD
+    subgraph INGESTION ["1. Batch Ingestion & Dynamic Chunking"]
+        Input["Multi-Image Input<br/>(Files List / Base64 Array)"] --> Sizer{"Batch Size Check<br/>1 ≤ B ≤ 32"}
+        Sizer -->|Exceeds 32| Err400["HTTP 400: BATCH_TOO_LARGE"]
+        Sizer -->|Valid| Collate["Decode & Collate<br/>Stack into (3, 224, 224) Tensors"]
+        Collate --> Fault["Partial Failure Isolator<br/>(Captures malformed items into errors)"]
+        Collate --> Chunker["Dynamic Chunking<br/>Split into sub-batches of size ≤ 32"]
+    end
+
+    subgraph ENGINE ["2. Vectorized Batched Neural Inference"]
+        Chunker --> TensorStack["torch.stack()<br/>4D Tensor (B_chunk, 3, 224, 224)"]
+        TensorStack --> GPU["GPU / MPS / CPU Dispatch"]
+        GPU --> ForwardPass["Single Batched Model Forward Pass<br/>logits = model(chunk_tensor)"]
+        ForwardPass --> VectorSoftmax["Vectorized F.softmax(dim=1)<br/>Parallel Class Probability Matrix"]
+    end
+
+    subgraph RESPONSE ["3. Standardized Batch Response Contract"]
+        VectorSoftmax --> ResultsList["List[ImageInferenceResponse]<br/>Individual Predictions & Confidences"]
+        Fault --> ErrorsList["List[BatchItemError]<br/>Detailed Per-Item Diagnostic Codes"]
+        ResultsList --> Aggregator["BatchSummary Aggregator<br/>(Real/AI counts, mean confidence, latency)"]
+        Aggregator --> FinalContract["BatchImageDetectionAPIResponse<br/>(batch_id, timestamp, telemetry)"]
+    end
+```
+
+### 📁 Architecture & File Layout
+
+| Component | Path | Description |
+|---|---|---|
+| **Batch Inference Engine** | [`src/image_detector/service.py`](src/image_detector/service.py) | High-performance `predict_batch()` method with tensor collation, dynamic chunking ($B \le 32$), and vectorized neural forward passes. |
+| **Batch Data Contracts** | [`src/image_detector/schemas.py`](src/image_detector/schemas.py) | Strongly typed Pydantic models: `BatchSummary`, `BatchItemError`, `BatchImageInferenceResponse`, `BatchImageDetectionAPIResponse`, and `BatchBase64Payload`. |
+| **Batch REST Endpoints** | [`src/image_detector/api.py`](src/image_detector/api.py) | `POST /api/detect/image/batch` (multipart) and `POST /api/detect/image/batch/base64` with batch size limit ($B \le 32$) and fault isolation. |
+| **Microservice Routing** | [`services/image-service/app/main.py`](services/image-service/app/main.py) | Root route documentation updated with batch endpoints. |
+| **Automated Batch Tests** | [`tests/test_batch_processing.py`](tests/test_batch_processing.py) | 11 unit & integration tests covering tensor collation, chunking, speedup, fault isolation, and API routes. |
+| **Verification Suite** | [`scripts/verify_sprint2_week3.py`](scripts/verify_sprint2_week3.py) | Standalone 8-point automated verification suite. |
+
+### ⚡ Batch Acceleration & Benchmarks
+
+| Metric | Sequential Processing (`predict`) | Batch Processing (`predict_batch`) | Vectorized Improvement |
+|---|---|---|---|
+| **8-Image Execution Time** | ~240 ms (30.0 ms/image) | ~106 ms (13.3 ms/image) | **~2.27x Throughput Acceleration** |
+| **VRAM / Memory Safety** | Single item allocation | Dynamic chunking ($B \le 32$) | Zero OOM risk under heavy payloads |
+| **Fault Resilience** | Aborts pipeline on error | Isolated per-item errors | Valid items complete with full fidelity |
+
+### 📋 Standardized Batch API Output Contract
+
+```json
+{
+  "batch_id": "a8687a89-ad15-4c86-b9d3-bf8d6e0839da",
+  "timestamp": "2026-10-02T12:35:10.123456+00:00",
+  "status": "success",
+  "summary": {
+    "total_submitted": 4,
+    "successful_count": 3,
+    "failed_count": 1,
+    "real_count": 2,
+    "ai_generated_count": 1,
+    "mean_confidence": 0.9982
+  },
+  "results": [
+    {
+      "filename": "upload_1.png",
+      "verdict": "REAL",
+      "is_ai": false,
+      "confidence": 0.9991,
+      "probabilities": {
+        "real": 0.9991,
+        "ai_generated": 0.0009
+      },
+      "image_metadata": {
+        "width": 64,
+        "height": 64,
+        "channels": 3,
+        "format": "PNG"
+      },
+      "latency_ms": 13.35,
+      "model_version": "baseline-resnet18-v1.0",
+      "device": "mps"
+    }
+  ],
+  "errors": [
+    {
+      "index": 3,
+      "filename": "corrupt.png",
+      "error_code": "CORRUPTED_IMAGE",
+      "message": "Failed to decode image structure: cannot identify image file"
+    }
+  ],
+  "batch_latency_ms": 40.05,
+  "avg_latency_per_image_ms": 13.35,
+  "chunk_size_used": 16,
+  "model_version": "baseline-resnet18-v1.0",
+  "device": "mps"
+}
+```
+
+---
+
+
 ## 📁 Sprint 1 Architecture & Archive (Data Preparation & Interface)
 
 ### 🗂️ Dataset Partitioning & Stratification (Task 1 & Task 2)
@@ -151,6 +313,36 @@ All partition metadata is stored in [`datasets/splits/manifest.csv`](datasets/sp
 
 ---
 
+## Sprint 2 — Part 2: Text-Service Integration (Oct 1, 2026)
+*User Story: Integrating text detection microservice, API Gateway proxy routing, and test coverage*
+
+### 📌 Milestone Overview
+- **Form-2 Task 2:** *Integrating the standalone text detection service into the platform architecture, establishing gateway proxy routing, containerization orchestration, and automated unit testing.*
+
+### 📁 Deliverables & Architecture
+
+| Component | Path | Description |
+|---|---|---|
+| **API Gateway Proxy Route** | [`services/api-gateway/app/api/detect.py`](services/api-gateway/app/api/detect.py) | Proxies incoming `POST /api/v1/detect/text` requests directly to `services/text-service` with rate limiting, error propagation, and HTTP status code handling. |
+| **Gateway Settings** | [`services/api-gateway/app/core/config.py`](services/api-gateway/app/core/config.py) | Configurable `TEXT_SERVICE_URL` environment setting for microservice discovery. |
+| **Text Detection Microservice** | [`services/text-service/`](services/text-service/) | Standalone FastAPI microservice wrapping pretrained `microsoft/deberta-v3-base` model on port 8007 with `/detect` and `/health` endpoints. |
+| **I/O Schema Specification** | [`services/text-service/app/schemas.py`](services/text-service/app/schemas.py) | Strictly typed `TextDetectionRequest` and `TextDetectionResponse` (`label: Literal["ai", "human"]`, `confidence: float`, `model_version: str`). |
+| **Automated Unit Tests** | [`services/text-service/tests/test_predict.py`](services/text-service/tests/test_predict.py) | Pytest test suite validating `/detect` interface contract compliance for human and AI text samples. |
+| **Gateway Unit Tests** | [`tests/unit/test_api_gateway_text.py`](tests/unit/test_api_gateway_text.py) | Unit tests verifying proxy routing, empty input validation (400), and service unavailability handling (503). |
+| **Container Orchestration** | [`docker-compose.yml`](docker-compose.yml) | Integrated `text-service` (port `8007:8007`) in `forensics_net` bridge network with `api-gateway` dependency linkage. |
+
+### 📋 Standardized Text Detection Contract
+
+```json
+{
+  "label": "human",
+  "confidence": 0.8523,
+  "model_version": "microsoft/deberta-v3-base-pretrained"
+}
+```
+
+---
+
 # Team Lead: Dev Khandelwal (`23ESKCA035`)
 
 ## Sprint 1 — Foundation & Infrastructure
@@ -178,13 +370,22 @@ pip install -r requirements.txt
 cd frontend && npm install && cd ..
 ```
 
-### 2. Run Sprint 2 Week 1 Inference Service Verification
+### 2. Run Sprint 2 Verification Suites (Weeks 1, 2 & 3)
 ```bash
-# Standalone 6-point verification suite
+# Week 1: Standalone inference engine verification
 python3 scripts/verify_sprint2_week1.py
-
-# Pytest suite for image inference service
 pytest tests/test_image_inference_service.py -v
+
+# Week 2: Standalone API & strict validation verification
+python3 scripts/verify_sprint2_week2.py
+pytest tests/test_image_detection_api.py -v
+
+# Week 3: Standalone batch-processing logic & throughput verification
+python3 scripts/verify_sprint2_week3.py
+pytest tests/test_batch_processing.py -v
+
+# Run all 41 unit tests across Sprint 1 & Sprint 2
+pytest tests/test_dataset_splits.py tests/test_image_inference_service.py tests/test_image_detection_api.py tests/test_batch_processing.py -v
 ```
 
 ### 3. Run Sprint 1 Verification Suites
@@ -193,14 +394,12 @@ pytest tests/test_image_inference_service.py -v
 python3 scripts/verify_sprint1_splits.py
 pytest tests/test_dataset_splits.py -v
 
-# Run all unit tests
-pytest tests/ -v
-
 # Frontend auth verification
 node scripts/verify_auth_components.mjs
 ```
 
 ### 4. Code Quality & Formatting
 ```bash
-ruff check src/ scripts/ tests/
+ruff check src/ services/ scripts/ tests/
 ```
+

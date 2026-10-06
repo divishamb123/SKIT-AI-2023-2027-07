@@ -54,7 +54,6 @@ from aasist_official.evaluation import (
     compute_eer,
 )  # (target_scores, nontarget_scores) -> (eer_fraction, threshold)
 
-
 # ---------------------------------------------------------------------------
 # Utility functions
 # ---------------------------------------------------------------------------

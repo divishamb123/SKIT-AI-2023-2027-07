@@ -57,7 +57,7 @@ class UnsupportedFormatError(ImageProcessingError):
 # Transformation Pipeline
 # --------------------------------------------------------------------------
 def get_inference_transform(
-    target_size: Tuple[int, int] = DEFAULT_IMAGE_SIZE
+    target_size: Tuple[int, int] = DEFAULT_IMAGE_SIZE,
 ) -> T.Compose:
     """Build deterministic standard torchvision transformation pipeline."""
     return T.Compose(
@@ -75,7 +75,7 @@ def get_inference_transform(
 # Image Decoding & Validation
 # --------------------------------------------------------------------------
 def decode_image(
-    image_input: Union[bytes, str, Path, Image.Image]
+    image_input: Union[bytes, str, Path, Image.Image],
 ) -> Tuple[Image.Image, ImageMetadata]:
     """
     Decodes diverse input types (raw bytes, base64 data URI, filesystem path,

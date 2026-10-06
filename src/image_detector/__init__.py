@@ -6,7 +6,17 @@ Department of CSE (Artificial Intelligence), SKIT Jaipur
 """
 
 from src.image_detector.schemas import (
+    APIErrorResponse,
+    BatchBase64Item,
+    BatchBase64Payload,
+    BatchImageDetectionAPIResponse,
+    BatchImageInferenceResponse,
+    BatchItemError,
+    BatchSummary,
     ClassProbabilities,
+    ErrorDetail,
+    ImageBase64Payload,
+    ImageDetectionAPIResponse,
     ImageInferenceRequest,
     ImageInferenceResponse,
     ImageMetadata,
@@ -27,12 +37,23 @@ from src.image_detector.model import (
     load_baseline_model,
 )
 from src.image_detector.service import ImageDetectionService
+from src.image_detector.api import router as image_detection_router
 
 __all__ = [
     "ImageDetectionService",
     "BaselineImageClassifier",
     "ImageInferenceRequest",
     "ImageInferenceResponse",
+    "ImageDetectionAPIResponse",
+    "ImageBase64Payload",
+    "BatchItemError",
+    "BatchSummary",
+    "BatchImageInferenceResponse",
+    "BatchImageDetectionAPIResponse",
+    "BatchBase64Item",
+    "BatchBase64Payload",
+    "APIErrorResponse",
+    "ErrorDetail",
     "ImageMetadata",
     "PredictionVerdict",
     "ClassProbabilities",
@@ -45,4 +66,5 @@ __all__ = [
     "EmptyImageError",
     "CorruptedImageError",
     "UnsupportedFormatError",
+    "image_detection_router",
 ]

@@ -13,7 +13,6 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
-
 MODEL_VERSION = "baseline-resnet18-v1.0"
 NUM_CLASSES = 2  # Class 0: REAL, Class 1: AI_GENERATED
 
