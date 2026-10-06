@@ -103,7 +103,15 @@ async def detect_image(
     }
 
 
-ALLOWED_AUDIO_MIME_TYPES = {"audio/wav", "audio/x-wav", "audio/flac", "audio/ogg", "audio/mpeg", "audio/mp3"}
+ALLOWED_AUDIO_MIME_TYPES = {
+    "audio/wav",
+    "audio/x-wav",
+    "audio/flac",
+    "audio/ogg",
+    "audio/mpeg",
+    "audio/mp3",
+}
+
 
 @router.post("/audio", status_code=status.HTTP_202_ACCEPTED)
 @limiter.limit("20/minute")
@@ -181,6 +189,8 @@ async def detect_audio(
         "status": new_job.status,
         "message": "Audio successfully uploaded and queued for detection.",
     }
+
+
 @router.post("/text", response_model=TextDetectionResponse)
 @limiter.limit("30/minute")
 async def detect_text(
