@@ -1,7 +1,6 @@
 import io
 import torch
 import torchaudio
-import pytest
 from app.services.audio_preprocessor import AudioPreprocessor
 
 
