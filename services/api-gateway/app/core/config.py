@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     # Queue Config
     RABBITMQ_URL: str
     QUEUE_IMAGE_DETECTION: str = "image-detection-queue"
+    QUEUE_AUDIO_DETECTION: str = "forensics.audio.detect"
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
