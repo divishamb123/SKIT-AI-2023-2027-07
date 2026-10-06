@@ -189,3 +189,26 @@ Based strictly on Form 1, Form 2, the Functional Requirements, the Engineering B
  -   B u i l d   t h e   f u s i o n   m o d u l e   ( S p r i n t   5 ) .  
  * * N e x t   w e e k ' s   p l a n n e d   w o r k : * *   M a k e   t h e   A A S I S T - L   a u d i o   s e r v i c e   a n d   w o r k e r   e x e c u t a b l e   v i a   D o c k e r   b y   f i x i n g   t h e   m o d e l   m o u n t s .  
  
+
+### Week-1 Finalization
+**Week 1 completion date:** 08 October 2026
+**Implementation commit SHA(s):** a27c42**Report commit SHA:** \c33d349**PR number:** #2
+**PR URL:** https://github.com/divishamb123/SKIT-AI-2023-2027-07/pull/2
+**Merge commit SHA:** \aebd8d**Merge date:** 06 October 2026
+**Source branch:** \dev-khandelwal/sprint-2-audio**Target branch:** \main**Tests:** Executed unit tests for AudioPreprocessor via pytest (3 passed, 0 failed).
+**Final verified Sprint-1 percentage:** 100%
+**Final verified Sprint-2 percentage:** 77%
+**Overall percentage:** 48% (Calculation: Sprint 1 [100%], Sprint 2 [77%], Sprint 4 [80%]. Others [0-5%])
+**Production-code additions:** +84 lines
+**Test-code additions:** +36 lines
+**Documentation additions:** +35 lines
+**Total additions/deletions:** 155 additions / 3 deletions (excluding report updates)
+**Remaining Sprint-2 work:**
+- Mount the pretrained AASIST-L weights in Docker configuration to enable container execution.
+- End-to-end testing of the complete audio pipeline running under Docker Compose.
+**Future sprint work:**
+- Sprint 3: Threshold tuning, ASVspoof 2019 LA evaluation, In-the-Wild generalisation testing, Retry/timeout handling.
+- Sprint 4: Final API endpoint integration for MinIO Mel-spectrogram references (currently partially complete).
+- Sprint 5: Weighted text/image/audio fusion, Weight calibration.
+- Sprint 6: Security review, Final installation documentation, Final report.
+**Exact Week-2 plan:** Make the AASIST-L audio service and worker completely executable via Docker. I will focus on fixing the Docker configuration for the AASIST-L pretrained weights, modifying docker-compose.yml and model loading to properly load the model without hardcoded absolute paths, and ensure the container starts successfully.
