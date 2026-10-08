@@ -63,11 +63,11 @@ class QueueConsumer:
                         await session.commit()
 
                 response = self.s3_client.get_object(
-                    Bucket=self.bucket, Key=payload["input_object_key"]
+                    Bucket=self.bucket, Key=payload["object_key"]
                 )
                 audio_bytes = response["Body"].read()
 
-                waveform, meta = await asyncio.to_thread(
+                waveform = await asyncio.to_thread(
                     AudioPreprocessor.process_bytes, audio_bytes
                 )
 

@@ -9,7 +9,7 @@ Week 2: I/O API Specification and /api/detect/image endpoint with strict validat
 import base64
 import os
 import uuid
-from typing import Tuple
+from typing import List, Tuple
 
 from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
@@ -22,6 +22,8 @@ from src.image_detector.preprocessing import (
 )
 from src.image_detector.schemas import (
     APIErrorResponse,
+    BatchBase64Payload,
+    BatchImageDetectionAPIResponse,
     ErrorDetail,
     ImageBase64Payload,
     ImageDetectionAPIResponse,
@@ -35,6 +37,7 @@ router = APIRouter(prefix="/api/detect/image", tags=["Image Detection"])
 # Validation Constants
 # --------------------------------------------------------------------------
 MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024  # 15 MB
+MAX_BATCH_SIZE = 32  # Form-2 Sprint 2 Task 2: Chunking & batch ceiling B <= 32
 ALLOWED_MIME_TYPES = {"image/png", "image/jpeg", "image/webp"}
 ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 MIN_DIMENSION = 16
@@ -351,6 +354,174 @@ async def detect_image_base64(payload: ImageBase64Payload) -> JSONResponse:
         ) from e
 
 
+# --------------------------------------------------------------------------
+# Sprint 2 Week 3: Batch Detection Endpoints
+# --------------------------------------------------------------------------
+@router.post(
+    "/batch",
+    response_model=BatchImageDetectionAPIResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: {
+            "model": APIErrorResponse,
+            "description": "Empty batch or exceeds maximum batch limit",
+        },
+    },
+)
+async def detect_image_batch(
+    files: List[UploadFile] = File(
+        ...,
+        description="Multiple multipart image uploads (1 to 32 files) for batched inference",
+    ),
+) -> JSONResponse:
+    """
+    Executes high-throughput batch inference across multiple uploaded images.
+    Implements tensor collation, dynamic chunking (B <= 32), and resilient per-item failure isolation.
+    """
+    if not files or len(files) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=APIErrorResponse(
+                error_code="EMPTY_BATCH",
+                message="No image files provided in batch upload.",
+                details=[ErrorDetail(field="files", issue="Batch list is empty.")],
+            ).model_dump(),
+        )
+
+    if len(files) > MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=APIErrorResponse(
+                error_code="BATCH_TOO_LARGE",
+                message=f"Batch size {len(files)} exceeds maximum limit of {MAX_BATCH_SIZE} images.",
+                details=[
+                    ErrorDetail(
+                        field="files",
+                        issue=f"Allowed batch range: 1 to {MAX_BATCH_SIZE} images.",
+                    )
+                ],
+            ).model_dump(),
+        )
+
+    # Ingest payloads asynchronously
+    payloads = []
+    filenames = []
+    for f in files:
+        safe_name = os.path.basename(f.filename or "upload.png")
+        filenames.append(safe_name)
+        try:
+            content = await f.read()
+            payloads.append(content)
+        except Exception:
+            payloads.append(b"")
+
+    service = get_service()
+    batch_res = service.predict_batch(
+        images=payloads,
+        filenames=filenames,
+        chunk_size=16,
+        return_errors=True,
+    )
+
+    api_resp = BatchImageDetectionAPIResponse(
+        batch_id=str(uuid.uuid4()),
+        results=batch_res.results,
+        errors=batch_res.errors,
+        summary=batch_res.summary,
+        batch_latency_ms=batch_res.batch_latency_ms,
+        avg_latency_per_image_ms=batch_res.avg_latency_per_image_ms,
+        chunk_size_used=batch_res.chunk_size_used,
+        model_version=batch_res.model_version,
+        device=batch_res.device,
+    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content=api_resp.model_dump())
+
+
+@router.post(
+    "/batch/base64",
+    response_model=BatchImageDetectionAPIResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: {
+            "model": APIErrorResponse,
+            "description": "Empty batch or exceeds maximum batch limit",
+        },
+    },
+)
+async def detect_image_batch_base64(
+    payload: BatchBase64Payload,
+) -> JSONResponse:
+    """
+    Executes high-throughput batch inference across multiple Base64 encoded images.
+    """
+    if not payload.images or len(payload.images) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=APIErrorResponse(
+                error_code="EMPTY_BATCH",
+                message="No images provided in Base64 batch payload.",
+                details=[
+                    ErrorDetail(field="images", issue="Image list cannot be empty.")
+                ],
+            ).model_dump(),
+        )
+
+    if len(payload.images) > MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=APIErrorResponse(
+                error_code="BATCH_TOO_LARGE",
+                message=f"Batch size {len(payload.images)} exceeds maximum limit of {MAX_BATCH_SIZE} images.",
+                details=[
+                    ErrorDetail(
+                        field="images",
+                        issue=f"Allowed batch range: 1 to {MAX_BATCH_SIZE} images.",
+                    )
+                ],
+            ).model_dump(),
+        )
+
+    payloads = []
+    filenames = []
+    for idx, item in enumerate(payload.images):
+        raw_name = item.filename or f"image_{idx + 1:03d}.png"
+        filenames.append(os.path.basename(raw_name))
+        raw_str = item.image_data.strip() if item.image_data else ""
+        if not raw_str:
+            payloads.append(b"")
+            continue
+        if ";base64," in raw_str:
+            raw_b64 = raw_str.split(";base64,")[-1]
+        else:
+            raw_b64 = raw_str
+        try:
+            content = base64.b64decode(raw_b64, validate=True)
+            payloads.append(content)
+        except Exception:
+            payloads.append(b"corrupted_base64_marker")
+
+    service = get_service()
+    batch_res = service.predict_batch(
+        images=payloads,
+        filenames=filenames,
+        chunk_size=16,
+        return_errors=True,
+    )
+
+    api_resp = BatchImageDetectionAPIResponse(
+        batch_id=str(uuid.uuid4()),
+        results=batch_res.results,
+        errors=batch_res.errors,
+        summary=batch_res.summary,
+        batch_latency_ms=batch_res.batch_latency_ms,
+        avg_latency_per_image_ms=batch_res.avg_latency_per_image_ms,
+        chunk_size_used=batch_res.chunk_size_used,
+        model_version=batch_res.model_version,
+        device=batch_res.device,
+    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content=api_resp.model_dump())
+
+
 @router.get("/health", response_model=ServiceInfo, status_code=status.HTTP_200_OK)
 async def health_check() -> ServiceInfo:
     """Returns runtime telemetry, model version, and acceleration hardware status."""
@@ -402,6 +573,8 @@ def create_app() -> FastAPI:
             "endpoints": {
                 "detect_multipart": "POST /api/detect/image",
                 "detect_base64": "POST /api/detect/image/base64",
+                "detect_batch_multipart": "POST /api/detect/image/batch",
+                "detect_batch_base64": "POST /api/detect/image/batch/base64",
                 "health": "GET /api/detect/image/health",
             },
         }

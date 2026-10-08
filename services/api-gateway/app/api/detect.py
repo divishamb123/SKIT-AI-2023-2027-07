@@ -103,6 +103,94 @@ async def detect_image(
     }
 
 
+ALLOWED_AUDIO_MIME_TYPES = {
+    "audio/wav",
+    "audio/x-wav",
+    "audio/flac",
+    "audio/ogg",
+    "audio/mpeg",
+    "audio/mp3",
+}
+
+
+@router.post("/audio", status_code=status.HTTP_202_ACCEPTED)
+@limiter.limit("20/minute")
+async def detect_audio(
+    request: Request,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: dict[str, Any] = Depends(get_current_user),
+):
+    # 1. Validate file size
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File too large. Max size is {MAX_FILE_SIZE / 1024 / 1024} MB.",
+        )
+
+    # 2. Validate MIME type using python-magic
+    mime_type = magic.from_buffer(file_bytes, mime=True)
+    if mime_type not in ALLOWED_AUDIO_MIME_TYPES and not mime_type.startswith("audio/"):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"Unsupported file type '{mime_type}'. Allowed audio formats only.",
+        )
+
+    # 3. Generate UUID-based MinIO object key
+    object_key = f"{uuid.uuid4()}-{file.filename}"
+
+    # 4. Upload to MinIO
+    try:
+        await storage.upload_file(object_key, file_bytes, mime_type)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload file to storage.",
+        )
+
+    # 5. Create Database Job Record
+    new_job = Job(
+        user_id=uuid.UUID(current_user["sub"]),
+        status=JobStatus.QUEUED,
+        modality=ModalityType.AUDIO,
+        input_type="file",
+        input_object_key=object_key,
+        file_name=file.filename,
+        file_size_bytes=len(file_bytes),
+        file_mime_type=mime_type,
+    )
+    db.add(new_job)
+    await db.commit()
+    await db.refresh(new_job)
+
+    # 6. Publish to RabbitMQ
+    message_payload = {
+        "job_id": str(new_job.id),
+        "object_key": object_key,
+        "modality": "audio",
+    }
+
+    try:
+        await queue_service.publish_message(
+            settings.QUEUE_AUDIO_DETECTION, message_payload
+        )
+    except Exception as e:
+        new_job.status = JobStatus.FAILED
+        new_job.error_message = f"Queue publish failed: {e!s}"
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to queue job for processing.",
+        )
+
+    return {
+        "job_id": new_job.id,
+        "status": new_job.status,
+        "message": "Audio successfully uploaded and queued for detection.",
+    }
+
+
 @router.post("/text", response_model=TextDetectionResponse)
 @limiter.limit("30/minute")
 async def detect_text(
