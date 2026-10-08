@@ -1,9 +1,7 @@
 """
 schemas.py — Strictly Defined Input/Output Interface for Image Detection Service
 
-Sprint 2: Baseline Detection Service (Member 1: Divisha Manak Bohra - 23ESKCA038)
-Task 1: Developing an image inference service with a defined input/output interface
-Week 2: I/O API Specification and /api/detect/image endpoint schemas
+Production Pydantic schema contracts for single and batched image forensic inference.
 """
 
 from datetime import datetime, timezone
@@ -159,7 +157,7 @@ class ServiceInfo(BaseModel):
 
 
 # --------------------------------------------------------------------------
-# Sprint 2 Week 3: Batch Processing Schemas
+# Batch Processing Schemas
 # --------------------------------------------------------------------------
 
 
@@ -205,7 +203,7 @@ class BatchSummary(BaseModel):
 
 
 class BatchImageInferenceResponse(BaseModel):
-    """Standardized batch inference output contract (Form-2 Sprint 2 Task 2)."""
+    """Standardized batch inference output contract."""
 
     results: List[ImageInferenceResponse] = Field(
         default_factory=list,

@@ -1,8 +1,7 @@
 """
 service.py — Core Inference Service Orchestrator for Image Detection
 
-Sprint 2: Baseline Detection Service (Member 1: Divisha Manak Bohra - 23ESKCA038)
-Task 1: Developing an image inference service with a defined input/output interface
+Production service orchestrator providing single-item and batched deep learning inference.
 """
 
 import time
@@ -135,7 +134,7 @@ class ImageDetectionService:
         return_errors: bool = True,
     ) -> BatchImageInferenceResponse:
         """
-        Executes high-throughput batch inference across multiple image inputs (Form-2 Sprint 2 Task 2).
+        Executes high-throughput batch inference across multiple image inputs.
 
         Features:
         - Batched tensor collation into 4D tensor (B, 3, 224, 224).

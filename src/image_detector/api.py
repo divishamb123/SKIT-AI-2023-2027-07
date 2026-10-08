@@ -1,9 +1,7 @@
 """
 api.py — FastAPI Router for Image Detection Service
 
-Sprint 2: Baseline Detection Service (Member 1: Divisha Manak Bohra - 23ESKCA038)
-Task 1: Developing an image inference service with a defined input/output interface
-Week 2: I/O API Specification and /api/detect/image endpoint with strict validation
+Production REST API endpoints for single and batched image forensic analysis.
 """
 
 import base64
@@ -37,7 +35,7 @@ router = APIRouter(prefix="/api/detect/image", tags=["Image Detection"])
 # Validation Constants
 # --------------------------------------------------------------------------
 MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024  # 15 MB
-MAX_BATCH_SIZE = 32  # Form-2 Sprint 2 Task 2: Chunking & batch ceiling B <= 32
+MAX_BATCH_SIZE = 32  # Dynamic chunking and maximum batch ceiling B <= 32
 ALLOWED_MIME_TYPES = {"image/png", "image/jpeg", "image/webp"}
 ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 MIN_DIMENSION = 16
@@ -355,7 +353,7 @@ async def detect_image_base64(payload: ImageBase64Payload) -> JSONResponse:
 
 
 # --------------------------------------------------------------------------
-# Sprint 2 Week 3: Batch Detection Endpoints
+# Batch Detection Endpoints
 # --------------------------------------------------------------------------
 @router.post(
     "/batch",
@@ -535,7 +533,7 @@ def create_app() -> FastAPI:
 
     app_instance = FastAPI(
         title="Image Detection Service",
-        description="Deep Learning microservice for AI-generated synthetic image detection (Form-2 Sprint 2)",
+        description="High-performance deep learning microservice for AI-generated synthetic image detection and digital forensics.",
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",

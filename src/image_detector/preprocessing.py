@@ -1,8 +1,7 @@
 """
 preprocessing.py — Robust Image Ingestion, Validation, and Preprocessing Pipeline
 
-Sprint 2: Baseline Detection Service (Member 1: Divisha Manak Bohra - 23ESKCA038)
-Task 1: Developing an image inference service with a defined input/output interface
+Production pipeline for format validation, channel normalization, and tensor transformation.
 """
 
 import base64

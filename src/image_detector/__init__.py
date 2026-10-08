@@ -1,8 +1,7 @@
 """
-Image Detection Module — Sprint 2: Baseline Detection Service
+Image Detection Module — Deep Learning Forensic Detection Engine
 
-Member 1: Divisha Manak Bohra (23ESKCA038)
-Department of CSE (Artificial Intelligence), SKIT Jaipur
+Production module providing neural image classification for real vs. AI-generated imagery.
 """
 
 from src.image_detector.schemas import (

@@ -1,8 +1,10 @@
-"""
-main.py — Entrypoint for Standalone Image Detection Microservice
+import sys
+from pathlib import Path
 
-Sprint 2: Baseline Detection Service (Member 1: Divisha Manak Bohra - 23ESKCA038)
-"""
+# Ensure project root is in sys.path when running locally without docker
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.image_detector.api import create_app
 
@@ -11,6 +13,4 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(
-        "services.image_service.app.main:app", host="0.0.0.0", port=8004, reload=True
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8004)

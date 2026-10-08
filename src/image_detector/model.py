@@ -1,8 +1,7 @@
 """
 model.py — Baseline Neural Architecture & Model Loader for Image AI Detection
 
-Sprint 2: Baseline Detection Service (Member 1: Divisha Manak Bohra - 23ESKCA038)
-Task 1: Developing an image inference service with a defined input/output interface
+Forensic image classifier using deep residual neural networks with hardware acceleration.
 """
 
 import os
