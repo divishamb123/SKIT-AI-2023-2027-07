@@ -32,7 +32,9 @@ def evaluator(service: ImageDetectionService) -> GroupedImageEvaluator:
     return GroupedImageEvaluator(service=service, default_chunk_size=8)
 
 
-def create_in_memory_image(color: tuple = (120, 180, 240), size: tuple = (64, 64), fmt: str = "PNG") -> bytes:
+def create_in_memory_image(
+    color: tuple = (120, 180, 240), size: tuple = (64, 64), fmt: str = "PNG"
+) -> bytes:
     """Helper creating in-memory image bytes."""
     buf = io.BytesIO()
     img = Image.new("RGB", size, color=color)
@@ -204,7 +206,9 @@ def test_benchmark_group_sizes(evaluator: GroupedImageEvaluator):
         assert res.total_latency_ms > 0
 
 
-def test_fault_tolerant_grouped_evaluation(evaluator: GroupedImageEvaluator, tmp_path: Path):
+def test_fault_tolerant_grouped_evaluation(
+    evaluator: GroupedImageEvaluator, tmp_path: Path
+):
     """Verifies that inaccessible / corrupt images in a group do not crash evaluation."""
     # Create 2 valid images and 1 corrupted file
     img1_path = tmp_path / "valid1.png"
@@ -222,7 +226,10 @@ def test_fault_tolerant_grouped_evaluation(evaluator: GroupedImageEvaluator, tmp
     ]
 
     metrics = evaluator.evaluate_group(
-        mixed_samples, group_name="Fault Tolerance Test", group_type="robustness", chunk_size=2
+        mixed_samples,
+        group_name="Fault Tolerance Test",
+        group_type="robustness",
+        chunk_size=2,
     )
 
     assert metrics.sample_count == 3
@@ -231,7 +238,9 @@ def test_fault_tolerant_grouped_evaluation(evaluator: GroupedImageEvaluator, tmp
     assert metrics.confusion_matrix.tn + metrics.confusion_matrix.fp == 2
 
 
-def test_report_serialization_and_markdown(evaluator: GroupedImageEvaluator, tmp_path: Path):
+def test_report_serialization_and_markdown(
+    evaluator: GroupedImageEvaluator, tmp_path: Path
+):
     """Verifies report Markdown formatting and JSON saving."""
     samples = evaluator.load_manifest_samples(
         MANIFEST_PATH, split="test", limit_per_class=4, balance_classes=True

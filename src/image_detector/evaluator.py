@@ -58,7 +58,9 @@ class GroupedImageEvaluator:
         if not manifest_file.is_file():
             raise FileNotFoundError(f"Manifest not found: {manifest_file}")
 
-        root_dir = Path(project_root) if project_root else manifest_file.parent.parent.parent
+        root_dir = (
+            Path(project_root) if project_root else manifest_file.parent.parent.parent
+        )
 
         rows: List[Dict[str, Any]] = []
         with open(manifest_file, "r", encoding="utf-8") as f:
@@ -68,16 +70,22 @@ class GroupedImageEvaluator:
                     continue
 
                 raw_path = row["path"].strip()
-                abs_path = (root_dir / raw_path).resolve() if not Path(raw_path).is_absolute() else Path(raw_path)
+                abs_path = (
+                    (root_dir / raw_path).resolve()
+                    if not Path(raw_path).is_absolute()
+                    else Path(raw_path)
+                )
 
-                rows.append({
-                    "dataset": row.get("dataset", "unknown"),
-                    "split": row.get("split", "unknown"),
-                    "label": int(row["label"]),
-                    "generator": row.get("generator", "unknown"),
-                    "path": str(abs_path),
-                    "filename": abs_path.name,
-                })
+                rows.append(
+                    {
+                        "dataset": row.get("dataset", "unknown"),
+                        "split": row.get("split", "unknown"),
+                        "label": int(row["label"]),
+                        "generator": row.get("generator", "unknown"),
+                        "path": str(abs_path),
+                        "filename": abs_path.name,
+                    }
+                )
 
         if limit_per_generator is not None:
             stratified: List[Dict[str, Any]] = []
@@ -97,7 +105,6 @@ class GroupedImageEvaluator:
             return rows[: limit_per_class * 2]
 
         return rows
-
 
     @staticmethod
     def group_samples_by(
@@ -143,13 +150,9 @@ class GroupedImageEvaluator:
             if (precision + recall) > 0
             else 0.0
         )
-        mean_conf = (
-            sum(confidences) / len(confidences) if len(confidences) > 0 else 0.0
-        )
+        mean_conf = sum(confidences) / len(confidences) if len(confidences) > 0 else 0.0
 
-        avg_latency = (
-            total_latency_ms / total_evaluated if total_evaluated > 0 else 0.0
-        )
+        avg_latency = total_latency_ms / total_evaluated if total_evaluated > 0 else 0.0
         throughput_fps = (
             (total_evaluated / (total_latency_ms / 1000.0))
             if total_latency_ms > 0
@@ -190,7 +193,9 @@ class GroupedImageEvaluator:
             )
 
         active_chunk = chunk_size or self.default_chunk_size
-        image_inputs = [(s.get("filename", Path(s["path"]).name), s["path"]) for s in samples]
+        image_inputs = [
+            (s.get("filename", Path(s["path"]).name), s["path"]) for s in samples
+        ]
 
         start_time = time.perf_counter()
         batch_resp = self.service.predict_batch(
@@ -248,8 +253,12 @@ class GroupedImageEvaluator:
         class_samples = self.group_samples_by(samples, "label")
         class_metrics: List[GroupEvaluationMetrics] = []
         for label_key, group_items in sorted(class_samples.items()):
-            name = "Real (Class 0)" if str(label_key) == "0" else "AI-Generated (Class 1)"
-            m = self.evaluate_group(group_items, group_name=name, group_type="class", chunk_size=chunk_size)
+            name = (
+                "Real (Class 0)" if str(label_key) == "0" else "AI-Generated (Class 1)"
+            )
+            m = self.evaluate_group(
+                group_items, group_name=name, group_type="class", chunk_size=chunk_size
+            )
             class_metrics.append(m)
         breakdowns["by_class"] = class_metrics
 
@@ -348,9 +357,7 @@ class GroupedImageEvaluator:
             lines.append(
                 "| Group Name | Samples | Accuracy | Precision | Recall | F1 | Mean Conf | Latency (ms) | Throughput (FPS) |"
             )
-            lines.append(
-                "|---|---|---|---|---|---|---|---|---|"
-            )
+            lines.append("|---|---|---|---|---|---|---|---|---|")
             for m in b_metrics:
                 lines.append(
                     f"| **{m.group_name}** | {m.successful_count} | {m.accuracy * 100:.1f}% | {m.precision * 100:.1f}% | {m.recall * 100:.1f}% | {m.f1_score:.3f} | {m.mean_confidence:.3f} | {m.total_latency_ms:.1f} | {m.throughput_fps:.1f} |"
@@ -358,14 +365,16 @@ class GroupedImageEvaluator:
             lines.append("")
 
         if report.notes:
-            lines.extend([
-                "---",
-                "",
-                "## 3. Engineering Notes & Analysis",
-                "",
-                report.notes,
-                "",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## 3. Engineering Notes & Analysis",
+                    "",
+                    report.notes,
+                    "",
+                ]
+            )
 
         return "\n".join(lines)
 

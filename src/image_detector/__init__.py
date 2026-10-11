@@ -75,4 +75,3 @@ __all__ = [
     "UnsupportedFormatError",
     "image_detection_router",
 ]
-

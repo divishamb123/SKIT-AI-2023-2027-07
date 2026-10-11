@@ -88,14 +88,20 @@ def main():
         limit_per_generator=args.holdout_limit,
         project_root=PROJECT_ROOT,
     )
-    print(f"  ✓ Loaded Out-of-Domain Holdout:    {len(holdout_samples)} samples (GenImage: MJ, BigGAN, SD, Real)")
+    print(
+        f"  ✓ Loaded Out-of-Domain Holdout:    {len(holdout_samples)} samples (GenImage: MJ, BigGAN, SD, Real)"
+    )
 
     all_samples = test_samples + holdout_samples
     total_count = len(all_samples)
-    print(f"  ✓ Total Grouped Evaluation Pool:   {total_count} samples (loaded in {(time.perf_counter() - start_load)*1000:.1f} ms)")
+    print(
+        f"  ✓ Total Grouped Evaluation Pool:   {total_count} samples (loaded in {(time.perf_counter() - start_load)*1000:.1f} ms)"
+    )
 
     # 2. Run Grouped Evaluation
-    print("\n[Step 2] Executing grouped inference across classes, splits, and generators...")
+    print(
+        "\n[Step 2] Executing grouped inference across classes, splits, and generators..."
+    )
     start_eval = time.perf_counter()
 
     notes = (
@@ -114,7 +120,9 @@ def main():
     eval_duration_sec = time.perf_counter() - start_eval
 
     # 3. Benchmark Batch Scaling
-    print("\n[Step 3] Profiling batch collation scaling and throughput across group sizes...")
+    print(
+        "\n[Step 3] Profiling batch collation scaling and throughput across group sizes..."
+    )
     scaling_metrics = evaluator.benchmark_group_sizes(
         all_samples[: min(64, total_count)], group_sizes=[1, 4, 8, 16, 32]
     )
@@ -136,11 +144,15 @@ def main():
 
     print("\nGenerator Breakdown:")
     for m in report.group_breakdowns.get("by_generator", []):
-        print(f"  * {m.group_name:<30} | N={m.successful_count:<4} | Acc={m.accuracy*100:5.1f}% | Latency={m.total_latency_ms:6.1f} ms | {m.throughput_fps:5.1f} FPS")
+        print(
+            f"  * {m.group_name:<30} | N={m.successful_count:<4} | Acc={m.accuracy*100:5.1f}% | Latency={m.total_latency_ms:6.1f} ms | {m.throughput_fps:5.1f} FPS"
+        )
 
     print("\nBatch Scaling Benchmark (64 samples):")
     for m in scaling_metrics:
-        print(f"  * {m.group_name:<18} | Latency={m.total_latency_ms:6.1f} ms | Throughput={m.throughput_fps:6.1f} FPS")
+        print(
+            f"  * {m.group_name:<18} | Latency={m.total_latency_ms:6.1f} ms | Throughput={m.throughput_fps:6.1f} FPS"
+        )
 
     # 5. Save Artifacts
     print("\n[Step 4] Exporting evaluation artifacts...")

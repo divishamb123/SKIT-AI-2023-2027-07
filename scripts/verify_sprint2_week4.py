@@ -35,7 +35,9 @@ def print_banner(title: str) -> None:
     print("=" * 78)
 
 
-def create_synthetic_image(color: tuple = (100, 150, 200), size: tuple = (64, 64), fmt: str = "PNG") -> bytes:
+def create_synthetic_image(
+    color: tuple = (100, 150, 200), size: tuple = (64, 64), fmt: str = "PNG"
+) -> bytes:
     """Helper creating in-memory image bytes."""
     buf = io.BytesIO()
     img = Image.new("RGB", size, color=color)
@@ -100,7 +102,9 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Check 2: Core Evaluator Engine Initialization & Metric Math
     # ----------------------------------------------------------------------
-    print("\n[Check 2/8] Verifying Evaluator Initialization & Mathematical Invariants...")
+    print(
+        "\n[Check 2/8] Verifying Evaluator Initialization & Mathematical Invariants..."
+    )
     try:
         service = ImageDetectionService(device="cpu")
         evaluator = GroupedImageEvaluator(service=service)
@@ -125,7 +129,9 @@ def main() -> int:
         )
 
         assert computed.accuracy == 0.75, f"Expected acc 0.75, got {computed.accuracy}"
-        assert computed.specificity == 0.8, f"Expected spec 0.8, got {computed.specificity}"
+        assert (
+            computed.specificity == 0.8
+        ), f"Expected spec 0.8, got {computed.specificity}"
         assert computed.confusion_matrix.tp == 10
         assert computed.confusion_matrix.fp == 5
         assert computed.confusion_matrix.tn == 20
@@ -155,7 +161,9 @@ def main() -> int:
         for s in test_samples[:5]:
             assert Path(s["path"]).exists(), f"Path does not exist: {s['path']}"
 
-        print(f"  ✓ In-Domain test partition successfully sampled: {len(test_samples)} items")
+        print(
+            f"  ✓ In-Domain test partition successfully sampled: {len(test_samples)} items"
+        )
         print("  ✓ Exact 50/50 class balance confirmed (25 Real : 25 AI)")
         passed_checks += 1
     except Exception as e:
@@ -165,7 +173,9 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Check 4: Out-of-Domain Holdout Partition Stratification (GenImage)
     # ----------------------------------------------------------------------
-    print("\n[Check 4/8] Loading and Stratifying Out-of-Domain Holdout Samples (GenImage)...")
+    print(
+        "\n[Check 4/8] Loading and Stratifying Out-of-Domain Holdout Samples (GenImage)..."
+    )
     try:
         evaluator = GroupedImageEvaluator()
         holdout_samples = evaluator.load_manifest_samples(
@@ -177,7 +187,9 @@ def main() -> int:
         assert "stable-diffusion" in generators, "Missing stable-diffusion in holdout"
         assert "real" in generators, "Missing real in holdout"
 
-        print(f"  ✓ Out-of-domain holdout partition loaded: {len(holdout_samples)} items")
+        print(
+            f"  ✓ Out-of-domain holdout partition loaded: {len(holdout_samples)} items"
+        )
         print(f"  ✓ Stratified generators present: {sorted(list(generators))}")
         passed_checks += 1
     except Exception as e:
@@ -187,7 +199,9 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Check 5: Grouped Inference Execution & Multi-Dimensional Breakdowns
     # ----------------------------------------------------------------------
-    print("\n[Check 5/8] Executing Grouped Inference & Generating Multi-Dimensional Breakdowns...")
+    print(
+        "\n[Check 5/8] Executing Grouped Inference & Generating Multi-Dimensional Breakdowns..."
+    )
     try:
         evaluator = GroupedImageEvaluator()
         pool = test_samples[:20] + holdout_samples[:20]
@@ -199,10 +213,18 @@ def main() -> int:
         assert "by_class" in report.group_breakdowns
         assert "by_generator" in report.group_breakdowns
         assert "by_split" in report.group_breakdowns
-        print(f"  ✓ Evaluated total samples:     {report.overall_metrics.successful_count}")
-        print(f"  ✓ Overall Throughput:           {report.overall_metrics.throughput_fps:.1f} FPS")
-        print(f"  ✓ Generator groups evaluated:   {len(report.group_breakdowns['by_generator'])}")
-        print(f"  ✓ Split groups evaluated:       {len(report.group_breakdowns['by_split'])}")
+        print(
+            f"  ✓ Evaluated total samples:     {report.overall_metrics.successful_count}"
+        )
+        print(
+            f"  ✓ Overall Throughput:           {report.overall_metrics.throughput_fps:.1f} FPS"
+        )
+        print(
+            f"  ✓ Generator groups evaluated:   {len(report.group_breakdowns['by_generator'])}"
+        )
+        print(
+            f"  ✓ Split groups evaluated:       {len(report.group_breakdowns['by_split'])}"
+        )
         passed_checks += 1
     except Exception as e:
         print(f"  ✗ FAILED Check 5: {e}")
@@ -211,17 +233,33 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Check 6: Group Batch Scaling & Throughput Profiling
     # ----------------------------------------------------------------------
-    print("\n[Check 6/8] Profiling Batch Collation Scaling Across Group Sizes (1, 4, 8, 16)...")
+    print(
+        "\n[Check 6/8] Profiling Batch Collation Scaling Across Group Sizes (1, 4, 8, 16)..."
+    )
     try:
         evaluator = GroupedImageEvaluator()
         scaling_pool = test_samples[:16]
-        scaling_metrics = evaluator.benchmark_group_sizes(scaling_pool, group_sizes=[1, 4, 8, 16])
+        scaling_metrics = evaluator.benchmark_group_sizes(
+            scaling_pool, group_sizes=[1, 4, 8, 16]
+        )
 
         assert len(scaling_metrics) == 4
-        print("  ✓ Group Size 1:  Latency = " + f"{scaling_metrics[0].total_latency_ms:.1f} ms | Throughput = {scaling_metrics[0].throughput_fps:.1f} FPS")
-        print("  ✓ Group Size 4:  Latency = " + f"{scaling_metrics[1].total_latency_ms:.1f} ms | Throughput = {scaling_metrics[1].throughput_fps:.1f} FPS")
-        print("  ✓ Group Size 8:  Latency = " + f"{scaling_metrics[2].total_latency_ms:.1f} ms | Throughput = {scaling_metrics[2].throughput_fps:.1f} FPS")
-        print("  ✓ Group Size 16: Latency = " + f"{scaling_metrics[3].total_latency_ms:.1f} ms | Throughput = {scaling_metrics[3].throughput_fps:.1f} FPS")
+        print(
+            "  ✓ Group Size 1:  Latency = "
+            + f"{scaling_metrics[0].total_latency_ms:.1f} ms | Throughput = {scaling_metrics[0].throughput_fps:.1f} FPS"
+        )
+        print(
+            "  ✓ Group Size 4:  Latency = "
+            + f"{scaling_metrics[1].total_latency_ms:.1f} ms | Throughput = {scaling_metrics[1].throughput_fps:.1f} FPS"
+        )
+        print(
+            "  ✓ Group Size 8:  Latency = "
+            + f"{scaling_metrics[2].total_latency_ms:.1f} ms | Throughput = {scaling_metrics[2].throughput_fps:.1f} FPS"
+        )
+        print(
+            "  ✓ Group Size 16: Latency = "
+            + f"{scaling_metrics[3].total_latency_ms:.1f} ms | Throughput = {scaling_metrics[3].throughput_fps:.1f} FPS"
+        )
         passed_checks += 1
     except Exception as e:
         print(f"  ✗ FAILED Check 6: {e}")
@@ -230,7 +268,9 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Check 7: Fault-Isolated Group Evaluation (Corrupted Image Resilience)
     # ----------------------------------------------------------------------
-    print("\n[Check 7/8] Verifying Group Fault Isolation with Mixed Corrupted Inputs...")
+    print(
+        "\n[Check 7/8] Verifying Group Fault Isolation with Mixed Corrupted Inputs..."
+    )
     try:
         evaluator = GroupedImageEvaluator()
         scratch_dir = PROJECT_ROOT / "scratch_test_group"
@@ -247,14 +287,19 @@ def main() -> int:
         ]
 
         group_metrics = evaluator.evaluate_group(
-            mixed_group, group_name="Resilience Group", group_type="fault_test", chunk_size=2
+            mixed_group,
+            group_name="Resilience Group",
+            group_type="fault_test",
+            chunk_size=2,
         )
 
         assert group_metrics.sample_count == 2
         assert group_metrics.successful_count == 1
         assert group_metrics.failed_count == 1
         print("  ✓ Group completed without unhandled exceptions")
-        print("  ✓ 1 valid sample scored, 1 corrupt sample safely isolated in failed_count")
+        print(
+            "  ✓ 1 valid sample scored, 1 corrupt sample safely isolated in failed_count"
+        )
 
         # Cleanup scratch files
         valid_img.unlink(missing_ok=True)
@@ -269,7 +314,9 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Check 8: Artifact Generation & Persistence
     # ----------------------------------------------------------------------
-    print("\n[Check 8/8] Verifying Evaluation Artifacts (JSON & Markdown Documentation)...")
+    print(
+        "\n[Check 8/8] Verifying Evaluation Artifacts (JSON & Markdown Documentation)..."
+    )
     try:
         assert RESULTS_JSON_PATH.is_file(), f"Missing {RESULTS_JSON_PATH}"
         assert RESULTS_MD_PATH.is_file(), f"Missing {RESULTS_MD_PATH}"
@@ -284,8 +331,12 @@ def main() -> int:
         assert "Grouped Breakdown Analysis" in md_text
         assert "Overall Accuracy" in md_text
 
-        print(f"  ✓ Verified results JSON: {RESULTS_JSON_PATH.name} ({json_bytes:,} bytes)")
-        print(f"  ✓ Verified results Markdown: {RESULTS_MD_PATH.name} ({md_bytes:,} bytes)")
+        print(
+            f"  ✓ Verified results JSON: {RESULTS_JSON_PATH.name} ({json_bytes:,} bytes)"
+        )
+        print(
+            f"  ✓ Verified results Markdown: {RESULTS_MD_PATH.name} ({md_bytes:,} bytes)"
+        )
         passed_checks += 1
     except Exception as e:
         print(f"  ✗ FAILED Check 8: {e}")
@@ -294,7 +345,9 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Summary
     # ----------------------------------------------------------------------
-    print_banner(f"VERIFICATION COMPLETE: {passed_checks}/{total_checks} CHECKS PASSED (100%)")
+    print_banner(
+        f"VERIFICATION COMPLETE: {passed_checks}/{total_checks} CHECKS PASSED (100%)"
+    )
     print("  Sprint:     Sprint 2 — Baseline Detection Service")
     print("  Week:       Week 4")
     print("  Member:     Divisha Manak Bohra (23ESKCA038)")

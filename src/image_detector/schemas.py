@@ -353,4 +353,3 @@ class GroupedEvaluationReport(BaseModel):
     notes: Optional[str] = Field(
         None, description="Qualitative evaluation observations and notes"
     )
-
