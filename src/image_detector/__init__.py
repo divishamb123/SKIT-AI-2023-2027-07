@@ -13,7 +13,10 @@ from src.image_detector.schemas import (
     BatchItemError,
     BatchSummary,
     ClassProbabilities,
+    ConfusionMatrixMetrics,
     ErrorDetail,
+    GroupEvaluationMetrics,
+    GroupedEvaluationReport,
     ImageBase64Payload,
     ImageDetectionAPIResponse,
     ImageInferenceRequest,
@@ -36,10 +39,12 @@ from src.image_detector.model import (
     load_baseline_model,
 )
 from src.image_detector.service import ImageDetectionService
+from src.image_detector.evaluator import GroupedImageEvaluator
 from src.image_detector.api import router as image_detection_router
 
 __all__ = [
     "ImageDetectionService",
+    "GroupedImageEvaluator",
     "BaselineImageClassifier",
     "ImageInferenceRequest",
     "ImageInferenceResponse",
@@ -51,6 +56,9 @@ __all__ = [
     "BatchImageDetectionAPIResponse",
     "BatchBase64Item",
     "BatchBase64Payload",
+    "ConfusionMatrixMetrics",
+    "GroupEvaluationMetrics",
+    "GroupedEvaluationReport",
     "APIErrorResponse",
     "ErrorDetail",
     "ImageMetadata",
@@ -67,3 +75,4 @@ __all__ = [
     "UnsupportedFormatError",
     "image_detection_router",
 ]
+

@@ -35,8 +35,9 @@
 |---|---|---|---|
 | 1 | **Developing an image inference service with a defined input/output interface** | **Week 1:** Production-ready `ImageDetectionService` (ResNet-18, MPS/CUDA/CPU).<br/>**Week 2:** I/O API Specification, `/api/detect/image` endpoint with strict validation & `services/image-service` microservice. | **Completed & Verified (Weeks 1 & 2)** |
 | 2 | **Designing batch-processing logic for multiple image inputs** | **Week 3:** Batched tensor collation `(B, 3, 224, 224)`, dynamic chunking ($B \le 32$), vectorized acceleration (~2.3x speedup), fault-isolated partial failure handling, and `/api/detect/image/batch` endpoints. | **Completed & Verified (Week 3)** |
-| 3 | **Testing image inference using grouped input samples** | Grouped evaluation on Sprint 1 test & holdout partitions from `manifest.csv`. | Scheduled (Week 4) |
+| 3 | **Testing image inference using grouped input samples** | **Week 4:** Grouped evaluation engine (`GroupedImageEvaluator`), multi-dimensional stratification across in-domain (`cifake` test) and out-of-domain (`genimage` holdout), generator breakdowns (`cifar10`, `stable-diffusion`, `midjourney`, `biggan`), and batch throughput scaling. | **Completed & Verified (Week 4)** |
 | 4 | **Designing image upload and result interaction components** | Interactive Next.js multi-file drag-and-drop uploader, verdict gauges, and batch results gallery. | Scheduled (Weeks 5–7) |
+
 
 ---
 
@@ -121,8 +122,20 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
   - `POST /api/detect/image/batch/base64` (Submit a JSON array of Base64 images)
 - **Verification:** Run `python3 scripts/verify_sprint2_week3.py` or `pytest tests/test_batch_processing.py`.
 
-### Weeks 4 to 7: Upcoming Planned Work (Tasks 3 & 4)
-- **Week 4 (Task 3):** Grouped evaluation tests using real samples from the Sprint 1 test and holdout dataset splits.
+### Week 4: Grouped Input Sample Testing & Baseline Evaluation (Task 3)
+- **The Problem:** Image detection models should not be evaluated as a monolithic black box. Forensic performance varies drastically depending on the generative architecture (e.g. Diffusion models vs GANs) and the domain distribution (in-domain vs unseen holdouts). We need structured grouped evaluation across partitions, generators, and batch sizes.
+- **Our Grouped Evaluation Solution (`GroupedImageEvaluator` in [`src/image_detector/evaluator.py`](src/image_detector/evaluator.py)):**
+  1. **Multi-Dimensional Group Partitioning:** Automatically stratifies samples by:
+     - *Ground Truth Class:* Real (`0`) vs AI-Generated (`1`).
+     - *Dataset Split:* In-domain test (`cifake`) vs out-of-domain holdout (`genimage`).
+     - *Generator Architecture:* CIFAR-10 real, ImageNet real, Stable Diffusion v1.4, Stable Diffusion (GenImage), Midjourney, and BigGAN.
+     - *Batch Size Scaling:* Throughput and latency profiling across group sizes $1, 4, 8, 16, 32$.
+  2. **Comprehensive Forensic Metric Computation:** For every group, calculates Accuracy, Precision, Recall, Specificity, F1-Score, Mean Confidence, Confusion Matrix ($TP, FP, TN, FN$), Total Latency, and Throughput (FPS).
+  3. **High-Throughput Vectorized Execution:** Leverages our Week 3 `predict_batch()` engine with hardware acceleration (`mps` on Apple Silicon), processing samples at **176 to 364 FPS**.
+  4. **Documented Baseline Reference:** Establishes the formal pre-fine-tuning baseline benchmark on 400 real dataset samples, saved in [`docs/image_baseline_results.md`](docs/image_baseline_results.md) and [`results/image_baseline_evaluation.json`](results/image_baseline_evaluation.json), ready for Sprint 3 fine-tuning and ensemble tuning.
+- **Verification:** Run `python3 scripts/verify_sprint2_week4.py`, `python3 scripts/evaluate_image_baseline.py`, or `pytest tests/test_grouped_image_evaluation.py`.
+
+### Weeks 5 to 7: Upcoming Planned Work (Task 4)
 - **Weeks 5–7 (Task 4):** Building the interactive frontend multi-file drag-and-drop uploader in Next.js with visual verdict gauges and a batch results gallery.
 
 ---
@@ -131,19 +144,29 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 
 | File Path | Description |
 |---|---|
-| [`src/image_detector/schemas.py`](src/image_detector/schemas.py) | Pydantic data models for single and batch requests, responses, errors, and metadata. |
+| [`src/image_detector/schemas.py`](src/image_detector/schemas.py) | Pydantic data models for single, batch, and grouped evaluation requests, metrics, and reports. |
 | [`src/image_detector/preprocessing.py`](src/image_detector/preprocessing.py) | Decodes bytes/base64/PIL, normalizes to 3-channel RGB, 224x224 resize, ImageNet normalization. |
 | [`src/image_detector/model.py`](src/image_detector/model.py) | ResNet-18 classifier architecture with hardware device detection (`mps`, `cuda`, `cpu`). |
 | [`src/image_detector/service.py`](src/image_detector/service.py) | High-performance inference orchestrator with `predict()` and `predict_batch()`. |
+| [`src/image_detector/evaluator.py`](src/image_detector/evaluator.py) | Grouped evaluation engine with multi-dimensional stratification, metric math, and reports. |
 | [`src/image_detector/api.py`](src/image_detector/api.py) | FastAPI endpoints with 6-tier validation and batch support. |
-| [`src/image_detector/__init__.py`](src/image_detector/__init__.py) | Clean exports for all image detection classes and exceptions. |
+| [`src/image_detector/__init__.py`](src/image_detector/__init__.py) | Clean exports for all image detection classes, evaluator, and exceptions. |
 | [`services/image-service/app/main.py`](services/image-service/app/main.py) | Standalone microservice entrypoint running on port 8004. |
 | [`services/image-service/Dockerfile`](services/image-service/Dockerfile) | Production Docker container configuration. |
 | [`datasets/splits/manifest.csv`](datasets/splits/manifest.csv) | 132,000 image dataset manifest with 50/50 balanced splits. |
+| [`scripts/evaluate_image_baseline.py`](scripts/evaluate_image_baseline.py) | Standalone script evaluating grouped manifest samples across generators and splits. |
+| [`scripts/verify_sprint2_week1.py`](scripts/verify_sprint2_week1.py) | Standalone 6-check verification suite for Week 1 inference engine. |
+| [`scripts/verify_sprint2_week2.py`](scripts/verify_sprint2_week2.py) | Standalone 8-check verification suite for Week 2 REST API & validation. |
+| [`scripts/verify_sprint2_week3.py`](scripts/verify_sprint2_week3.py) | Standalone 8-check verification suite for Week 3 batch collation & throughput. |
+| [`scripts/verify_sprint2_week4.py`](scripts/verify_sprint2_week4.py) | Standalone 8-check verification suite for Week 4 grouped evaluation. |
+| [`docs/image_baseline_results.md`](docs/image_baseline_results.md) | Documented baseline metrics, confusion matrices, and generator breakdowns. |
+| [`results/image_baseline_evaluation.json`](results/image_baseline_evaluation.json) | Exported machine-readable grouped evaluation metrics report. |
 | [`tests/test_dataset_splits.py`](tests/test_dataset_splits.py) | 6 unit tests for dataset integrity and zero data leakage. |
 | [`tests/test_image_inference_service.py`](tests/test_image_inference_service.py) | 9 unit tests for ResNet-18 inference, determinism, and formats. |
 | [`tests/test_image_detection_api.py`](tests/test_image_detection_api.py) | 15 integration tests verifying all API responses and HTTP error codes. |
 | [`tests/test_batch_processing.py`](tests/test_batch_processing.py) | 11 tests verifying batch collation, chunking, speedup, and fault isolation. |
+| [`tests/test_grouped_image_evaluation.py`](tests/test_grouped_image_evaluation.py) | 11 tests verifying grouped evaluation, generator stratification, and scaling. |
+
 
 ---
 
@@ -235,7 +258,7 @@ pip install -r requirements.txt
 cd frontend && npm install && cd ..
 ```
 
-### 2. Run Sprint 2 Verification Suites (Weeks 1, 2 & 3)
+### 2. Run Sprint 2 Verification Suites (Weeks 1, 2, 3 & 4)
 ```bash
 # Week 1: Standalone inference engine verification
 python3 scripts/verify_sprint2_week1.py
@@ -249,9 +272,15 @@ pytest tests/test_image_detection_api.py -v
 python3 scripts/verify_sprint2_week3.py
 pytest tests/test_batch_processing.py -v
 
-# Run all 41 unit tests across Sprint 1 & Sprint 2
+# Week 4: Grouped input sample testing & baseline evaluation
+python3 scripts/verify_sprint2_week4.py
+python3 scripts/evaluate_image_baseline.py
+pytest tests/test_grouped_image_evaluation.py -v
+
+# Run all 52 unit & integration tests across Sprint 1 & Sprint 2
 pytest tests/ -v
 ```
+
 
 ### 3. Run Sprint 1 Verification Suites
 ```bash

@@ -1,0 +1,369 @@
+{
+  "report_id": "87499b5c-aa9b-4313-ac7f-aa2437cb76c2",
+  "timestamp": "2026-10-11T11:53:28.054976+00:00",
+  "model_version": "baseline-resnet18-v1.0",
+  "device": "mps",
+  "overall_metrics": {
+    "group_name": "All Samples Combined",
+    "group_type": "overall",
+    "sample_count": 400,
+    "successful_count": 400,
+    "failed_count": 0,
+    "accuracy": 0.6275,
+    "precision": 0.6266,
+    "recall": 1.0,
+    "specificity": 0.0067,
+    "f1_score": 0.7704,
+    "mean_confidence": 0.9903,
+    "confusion_matrix": {
+      "tp": 250,
+      "fp": 149,
+      "tn": 1,
+      "fn": 0
+    },
+    "total_latency_ms": 2270.7,
+    "avg_latency_ms": 5.68,
+    "throughput_fps": 176.16
+  },
+  "group_breakdowns": {
+    "by_class": [
+      {
+        "group_name": "Real (Class 0)",
+        "group_type": "class",
+        "sample_count": 150,
+        "successful_count": 150,
+        "failed_count": 0,
+        "accuracy": 0.0067,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 0.0067,
+        "f1_score": 0.0,
+        "mean_confidence": 0.9853,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 149,
+          "tn": 1,
+          "fn": 0
+        },
+        "total_latency_ms": 565.1,
+        "avg_latency_ms": 3.77,
+        "throughput_fps": 265.44
+      },
+      {
+        "group_name": "AI-Generated (Class 1)",
+        "group_type": "class",
+        "sample_count": 250,
+        "successful_count": 250,
+        "failed_count": 0,
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "f1_score": 1.0,
+        "mean_confidence": 0.9933,
+        "confusion_matrix": {
+          "tp": 250,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 1597.6,
+        "avg_latency_ms": 6.39,
+        "throughput_fps": 156.48
+      }
+    ],
+    "by_split": [
+      {
+        "group_name": "split:holdout",
+        "group_type": "split",
+        "sample_count": 200,
+        "successful_count": 200,
+        "failed_count": 0,
+        "accuracy": 0.75,
+        "precision": 0.75,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "f1_score": 0.8571,
+        "mean_confidence": 0.9892,
+        "confusion_matrix": {
+          "tp": 150,
+          "fp": 50,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 1565.94,
+        "avg_latency_ms": 7.83,
+        "throughput_fps": 127.72
+      },
+      {
+        "group_name": "split:test",
+        "group_type": "split",
+        "sample_count": 200,
+        "successful_count": 200,
+        "failed_count": 0,
+        "accuracy": 0.505,
+        "precision": 0.5025,
+        "recall": 1.0,
+        "specificity": 0.01,
+        "f1_score": 0.6689,
+        "mean_confidence": 0.9914,
+        "confusion_matrix": {
+          "tp": 100,
+          "fp": 99,
+          "tn": 1,
+          "fn": 0
+        },
+        "total_latency_ms": 548.94,
+        "avg_latency_ms": 2.74,
+        "throughput_fps": 364.34
+      }
+    ],
+    "by_generator": [
+      {
+        "group_name": "generator:biggan",
+        "group_type": "generator",
+        "sample_count": 50,
+        "successful_count": 50,
+        "failed_count": 0,
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "f1_score": 1.0,
+        "mean_confidence": 0.9911,
+        "confusion_matrix": {
+          "tp": 50,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 196.29,
+        "avg_latency_ms": 3.93,
+        "throughput_fps": 254.73
+      },
+      {
+        "group_name": "generator:cifar10",
+        "group_type": "generator",
+        "sample_count": 100,
+        "successful_count": 100,
+        "failed_count": 0,
+        "accuracy": 0.01,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 0.01,
+        "f1_score": 0.0,
+        "mean_confidence": 0.9862,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 99,
+          "tn": 1,
+          "fn": 0
+        },
+        "total_latency_ms": 296.52,
+        "avg_latency_ms": 2.97,
+        "throughput_fps": 337.25
+      },
+      {
+        "group_name": "generator:midjourney",
+        "group_type": "generator",
+        "sample_count": 50,
+        "successful_count": 50,
+        "failed_count": 0,
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "f1_score": 1.0,
+        "mean_confidence": 0.9936,
+        "confusion_matrix": {
+          "tp": 50,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 823.97,
+        "avg_latency_ms": 16.48,
+        "throughput_fps": 60.68
+      },
+      {
+        "group_name": "generator:real",
+        "group_type": "generator",
+        "sample_count": 50,
+        "successful_count": 50,
+        "failed_count": 0,
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 0.0,
+        "f1_score": 0.0,
+        "mean_confidence": 0.9837,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 50,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 213.26,
+        "avg_latency_ms": 4.27,
+        "throughput_fps": 234.46
+      },
+      {
+        "group_name": "generator:stable-diffusion",
+        "group_type": "generator",
+        "sample_count": 50,
+        "successful_count": 50,
+        "failed_count": 0,
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "f1_score": 1.0,
+        "mean_confidence": 0.9996,
+        "confusion_matrix": {
+          "tp": 50,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 337.02,
+        "avg_latency_ms": 6.74,
+        "throughput_fps": 148.36
+      },
+      {
+        "group_name": "generator:stable-diffusion-1.4",
+        "group_type": "generator",
+        "sample_count": 100,
+        "successful_count": 100,
+        "failed_count": 0,
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "f1_score": 1.0,
+        "mean_confidence": 0.9966,
+        "confusion_matrix": {
+          "tp": 100,
+          "fp": 0,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 264.59,
+        "avg_latency_ms": 2.65,
+        "throughput_fps": 377.94
+      }
+    ],
+    "batch_size_scaling": [
+      {
+        "group_name": "Group Size 1",
+        "group_type": "batch_size_scaling",
+        "sample_count": 64,
+        "successful_count": 64,
+        "failed_count": 0,
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 0.0,
+        "f1_score": 0.0,
+        "mean_confidence": 0.988,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 64,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 294.43,
+        "avg_latency_ms": 4.6,
+        "throughput_fps": 217.37
+      },
+      {
+        "group_name": "Group Size 4",
+        "group_type": "batch_size_scaling",
+        "sample_count": 64,
+        "successful_count": 64,
+        "failed_count": 0,
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 0.0,
+        "f1_score": 0.0,
+        "mean_confidence": 0.988,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 64,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 179.65,
+        "avg_latency_ms": 2.81,
+        "throughput_fps": 356.25
+      },
+      {
+        "group_name": "Group Size 8",
+        "group_type": "batch_size_scaling",
+        "sample_count": 64,
+        "successful_count": 64,
+        "failed_count": 0,
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 0.0,
+        "f1_score": 0.0,
+        "mean_confidence": 0.988,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 64,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 175.44,
+        "avg_latency_ms": 2.74,
+        "throughput_fps": 364.79
+      },
+      {
+        "group_name": "Group Size 16",
+        "group_type": "batch_size_scaling",
+        "sample_count": 64,
+        "successful_count": 64,
+        "failed_count": 0,
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 0.0,
+        "f1_score": 0.0,
+        "mean_confidence": 0.988,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 64,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 178.85,
+        "avg_latency_ms": 2.79,
+        "throughput_fps": 357.84
+      },
+      {
+        "group_name": "Group Size 32",
+        "group_type": "batch_size_scaling",
+        "sample_count": 64,
+        "successful_count": 64,
+        "failed_count": 0,
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 0.0,
+        "f1_score": 0.0,
+        "mean_confidence": 0.988,
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 64,
+          "tn": 0,
+          "fn": 0
+        },
+        "total_latency_ms": 182.63,
+        "avg_latency_ms": 2.85,
+        "throughput_fps": 350.44
+      }
+    ]
+  },
+  "notes": "Baseline ResNet-18 classifier evaluated with initial weights on both in-domain (CIFAKE test) and out-of-domain (GenImage holdout) grouped partitions. Throughput and scaling confirmed across batch sizes up to 32. Supervised fine-tuning and ensemble tuning scheduled for Sprint 3."
+}

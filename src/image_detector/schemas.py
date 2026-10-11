@@ -269,3 +269,88 @@ class BatchBase64Payload(BaseModel):
         ...,
         description="List of base64-encoded images to process in batch (1 to 32 items)",
     )
+
+
+# --------------------------------------------------------------------------
+# Grouped Evaluation Schemas (Sprint 2 Week 4)
+# --------------------------------------------------------------------------
+
+
+class ConfusionMatrixMetrics(BaseModel):
+    """Confusion matrix metrics for binary classification."""
+
+    tp: int = Field(..., ge=0, description="True Positives (AI correctly identified)")
+    fp: int = Field(..., ge=0, description="False Positives (Real misclassified as AI)")
+    tn: int = Field(..., ge=0, description="True Negatives (Real correctly identified)")
+    fn: int = Field(..., ge=0, description="False Negatives (AI misclassified as Real)")
+
+
+class GroupEvaluationMetrics(BaseModel):
+    """Granular evaluation metrics computed across a defined sample group."""
+
+    group_name: str = Field(..., description="Identifier name of the evaluated group")
+    group_type: str = Field(
+        ...,
+        description="Grouping dimension (e.g. generator, class, split, batch_size, format)",
+    )
+    sample_count: int = Field(..., ge=0, description="Total samples in this group")
+    successful_count: int = Field(
+        ..., ge=0, description="Samples successfully evaluated"
+    )
+    failed_count: int = Field(..., ge=0, description="Samples that failed evaluation")
+    accuracy: float = Field(
+        ..., ge=0.0, le=1.0, description="Accuracy score (TP+TN)/(TP+TN+FP+FN)"
+    )
+    precision: float = Field(
+        ..., ge=0.0, le=1.0, description="Precision score TP/(TP+FP)"
+    )
+    recall: float = Field(
+        ..., ge=0.0, le=1.0, description="Recall / True Positive Rate TP/(TP+FN)"
+    )
+    specificity: float = Field(
+        ..., ge=0.0, le=1.0, description="Specificity / True Negative Rate TN/(TN+FP)"
+    )
+    f1_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Harmonic mean of precision and recall"
+    )
+    mean_confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Average confidence score across group"
+    )
+    confusion_matrix: ConfusionMatrixMetrics = Field(
+        ..., description="Raw count confusion matrix"
+    )
+    total_latency_ms: float = Field(
+        ..., ge=0.0, description="Total group inference execution time in milliseconds"
+    )
+    avg_latency_ms: float = Field(
+        ..., ge=0.0, description="Average latency per item in milliseconds"
+    )
+    throughput_fps: float = Field(
+        ..., ge=0.0, description="Throughput in frames (images) per second"
+    )
+
+
+class GroupedEvaluationReport(BaseModel):
+    """Consolidated grouped evaluation report across datasets and partitions."""
+
+    report_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()),
+        description="Unique UUID tracking ID for this evaluation report",
+    )
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="ISO-8601 UTC timestamp of evaluation run",
+    )
+    model_version: str = Field(..., description="Detection model version evaluated")
+    device: str = Field(..., description="Compute hardware utilized (cpu, mps, cuda)")
+    overall_metrics: GroupEvaluationMetrics = Field(
+        ..., description="Overall metrics across all evaluated samples"
+    )
+    group_breakdowns: Dict[str, List[GroupEvaluationMetrics]] = Field(
+        default_factory=dict,
+        description="Categorized evaluation breakdowns by grouping key",
+    )
+    notes: Optional[str] = Field(
+        None, description="Qualitative evaluation observations and notes"
+    )
+
