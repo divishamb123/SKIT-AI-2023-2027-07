@@ -42,3 +42,9 @@ datasets/genimage/*
 # Text Datasets
 datasets/raid/*
 !datasets/raid/.gitkeep
+
+# Pretrained model weights — must NOT be committed (see docs/dev-khandelwal/MODEL_SETUP.md)
+models/
+*.pth
+*.pt
+*.ckpt
