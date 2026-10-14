@@ -1,4 +1,4 @@
-# Dev Khandelwal (23ESKCA035) — Individual Project Contribution & Sprint Status Report
+# Dev Khandelwal (23ESKCA035) â€” Individual Project Contribution & Sprint Status Report
 
 ## 1. Executive Summary
 This report presents a comprehensive, evidence-based forensic audit of Dev Khandelwal's individual contributions to the SKIT-AI-2023-2027-07 project as of **06 October 2026**. The audit cross-references official documentation (Form 1, Form 2, Blueprint) with actual Git history and repository codebase. Dev Khandelwal has successfully completed the backend foundation (Sprint 1) and has made significant code contributions to the audio detection service (Sprint 2) and early spectrogram visualization (Sprint 4). However, critical integration bugs and missing Docker configurations currently prevent the audio service from running successfully in the `main` branch. 
@@ -84,7 +84,7 @@ You have made **15 commits** across the repository.
 
 ## 15. GitHub Contribution Analysis
 **The "2565 Lines" Issue**
-The contribution count of exactly **2565 additions and 45 deletions** corresponds precisely to the sum of your commits made exclusively on the `dev-khandelwal/sprint-1-foundation` branch (Sept 3 – Sept 10). 
+The contribution count of exactly **2565 additions and 45 deletions** corresponds precisely to the sum of your commits made exclusively on the `dev-khandelwal/sprint-1-foundation` branch (Sept 3 â€“ Sept 10). 
 
 ## 16. Why the 2565-line figure is misleading/incomplete
 GitHub's contribution graph often lags, relies on default branch merges, or reflects specific Pull Request statistics. Because your Sprint 2 work (`dev-khandelwal/sprint-2-audio`) was committed directly/fast-forwarded to `main` on September 24 without a formal Pull Request merge commit, any check performed prior to Sept 24, or any check scoped only to the Sprint 1 PR, would only yield 2565 lines.
@@ -110,17 +110,17 @@ Your Sprint 1 and Sprint 2 code is completely merged into `main`. However, becau
 *   **Integration Mismatch:** API Gateway expects `object_key` for images, but `queue_consumer.py` expects `input_object_key` for audio.
 
 ## 20. Recommended Next Actions
-**Priority 1 — Do immediately**
+**Priority 1 â€” Do immediately**
 *   **Task:** Fix variable unpacking bug in `queue_consumer.py`.
 *   **Why:** The worker will crash immediately when processing an audio file.
 *   **Exact Files:** `services/audio-service/app/services/queue_consumer.py` (Line 50: `waveform, meta = ...` should just be `waveform = ...`).
 
-**Priority 2 — Before Sprint 2 ends (Nov 8)**
+**Priority 2 â€” Before Sprint 2 ends (Nov 8)**
 *   **Task:** Fix Docker volumes and add `/audio` API endpoint.
 *   **Why:** Without these, the audio service cannot be accessed or run via Docker Compose.
 *   **Exact Files:** `docker-compose.yml` (add `- ./models:/models` to `audio-service`), `services/api-gateway/app/api/detect.py` (add `@router.post("/audio")`).
 
-**Priority 3 — Sprint 3**
+**Priority 3 â€” Sprint 3**
 *   **Task:** Implement retries, timeouts, and threshold tuning.
 *   **Exact Files:** `audio_detector.py` and `queue_consumer.py`.
 
@@ -158,7 +158,7 @@ Your Sprint 1 and Sprint 2 code is completely merged into `main`. However, becau
 Based strictly on Form 1, Form 2, the Functional Requirements, the Engineering Blueprint, and the actual Git history/code, Dev Khandelwal is currently at approximately 41% completion. Sprint 1 is 95%, Sprint 2 is 70%, and the remaining work is largely on track for future sprints, although Sprint 4 (spectrograms) has been implemented significantly ahead of schedule. The immediate priority must be fixing the critical integration bugs preventing the audio service from running cleanly in Docker.
 
 
-# # #   W e e k   1   � �    W e e k l y   S u b m i s s i o n  
+# # #   W e e k   1   â ¬    W e e k l y   S u b m i s s i o n  
   
  * * D a t e : * *   0 8   O c t o b e r   2 0 2 6  
  * * P l a n n e d   m i l e s t o n e : * *   F i x   a u d i o   w o r k e r   b u g s   a n d   a d d   A P I   e n d p o i n t   f o r   W e e k   1 .  
@@ -212,3 +212,41 @@ Based strictly on Form 1, Form 2, the Functional Requirements, the Engineering B
 - Sprint 5: Weighted text/image/audio fusion, Weight calibration.
 - Sprint 6: Security review, Final installation documentation, Final report.
 **Exact Week-2 plan:** Make the AASIST-L audio service and worker completely executable via Docker. I will focus on fixing the Docker configuration for the AASIST-L pretrained weights, modifying docker-compose.yml and model loading to properly load the model without hardcoded absolute paths, and ensure the container starts successfully.
+
+### Week 2 — Weekly Submission
+
+**Date:** 15 October 2026
+**Planned milestone:** Make the AASIST-L audio service executable via Docker by fixing model mounts.
+**Actual work completed:**
+- Refactored `audio_detector.py` to resolve model paths from environment variables (`AASIST_WEIGHTS_PATH` / `AASIST_CONFIG_PATH`) instead of hardcoded absolute paths.
+- Implemented graceful degraded-mode startup: service starts successfully even when weights are absent; `/internal/health` returns HTTP 503 with structured JSON diagnostic.
+- Updated `main.py` `/internal/health` endpoint to use `detector.health()` dict and return correct HTTP status codes (503 when degraded).
+- Updated `queue_consumer.py` with a degraded-mode guard that marks jobs as `"failed"` with descriptive `error_message` instead of crashing mid-processing with a `RuntimeError`.
+- Fixed `MINIO_BUCKET` default in queue_consumer to match `forensics-uploads` (API Gateway consistency).
+- Added `./models:/models:ro` volume mount and `AASIST_WEIGHTS_PATH` / `AASIST_CONFIG_PATH` / `MINIO_BUCKET` env vars to `audio-service` block in `docker-compose.yml`.
+- Added `.gitignore` entries for `models/`, `*.pth`, `*.pt`, `*.ckpt`.
+- Wrote `docs/dev-khandelwal/MODEL_SETUP.md` — operator guide for mounting weights, degraded-mode behaviour, and CI/dev workflow without weights.
+- Added 10 new unit tests in `tests/unit/test_audio_detector.py` covering degraded-mode state machine, `RuntimeError` guard, health dict structure, and happy-path mock inference.
+**Files changed:**
+- `services/audio-service/app/services/audio_detector.py`
+- `services/audio-service/app/main.py`
+- `services/audio-service/app/services/queue_consumer.py`
+- `docker-compose.yml`
+- `.gitignore`
+- `docs/dev-khandelwal/MODEL_SETUP.md` (new)
+- `tests/unit/test_audio_detector.py` (new)
+**Tests executed:** `tests/unit/test_audio_detector.py` + `services/audio-service/tests/test_audio_service.py` using pytest.
+**Test results:** 13 passed (10 detector + 3 preprocessor), 0 failed.
+**Commit SHA:** `1642630`
+**Branch:** `dev-khandelwal/sprint-2-audio`
+**GitHub push status:** Success.
+**Sprint 1 percentage:** 100%
+**Sprint 2 percentage:** 84% (+7%)
+**Overall percentage:** 55% (+7%)
+**Remaining work:**
+- Sprint 2 remaining: End-to-end integration test of audio pipeline in Docker with real weights (Week 3).
+- Sprint 3: Threshold tuning, ASVspoof 2019 LA evaluation, In-the-Wild generalisation testing, Retry/timeout handling.
+- Sprint 4: API endpoint to surface Mel-spectrogram MinIO URLs in job results.
+- Sprint 5: Weighted text/image/audio fusion, calibration.
+- Sprint 6: Security review, final documentation, release.
+**Next week's planned work (Week 3):** Add retry/timeout handling to the audio queue consumer and write the complete end-to-end audio pipeline integration-test script.

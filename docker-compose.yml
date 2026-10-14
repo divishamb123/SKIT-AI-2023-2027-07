@@ -142,6 +142,14 @@ services:
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-forensics-uploads}
+      # Mount pretrained AASIST-L weights at runtime (see docs/dev-khandelwal/MODEL_SETUP.md)
+      AASIST_WEIGHTS_PATH: /models/aasist_l_v1.0/AASIST-L.pth
+      AASIST_CONFIG_PATH: /models/aasist_l_v1.0/AASIST-L.conf
+    volumes:
+      # Place pretrained weights in ./models/aasist_l_v1.0/ on the host.
+      # The service starts in degraded mode if the directory is absent.
+      - ./models:/models:ro
     ports:
       - "8003:8003"
     depends_on:

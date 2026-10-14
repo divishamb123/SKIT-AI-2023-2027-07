@@ -31,7 +31,7 @@ class QueueConsumer:
             aws_access_key_id=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
             aws_secret_access_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
         )
-        self.bucket = os.getenv("MINIO_BUCKET", "forensics-bucket")
+        self.bucket = os.getenv("MINIO_BUCKET", "forensics-uploads")
         self.visualizer = SpectrogramVisualizer()
 
     async def start(self) -> None:
@@ -50,10 +50,35 @@ class QueueConsumer:
 
     async def _process_message(self, message: IncomingMessage) -> None:
         async with message.process(requeue=False):
+            payload: dict = {}
+            job_id: str = "unknown"
             try:
                 payload = json.loads(message.body.decode())
                 job_id = payload["job_id"]
-                logger.info(f"Processing audio job {job_id}")
+                logger.info("Processing audio job %s", job_id)
+
+                # ------------------------------------------------------------------
+                # Guard: reject message immediately if model is not loaded.
+                # Gives the job a clean FAILED status with a descriptive error
+                # instead of crashing mid-processing with a RuntimeError.
+                # ------------------------------------------------------------------
+                if not self._detector.is_ready():
+                    degraded_reason = self._detector.health().get(
+                        "error", "Model not loaded."
+                    )
+                    logger.error(
+                        "Audio job %s rejected — detector not ready: %s",
+                        job_id,
+                        degraded_reason,
+                    )
+                    async with async_session_maker() as session:
+                        job = await session.get(Job, job_id)
+                        if job:
+                            job.status = "failed"
+                            job.error_message = f"Model unavailable: {degraded_reason}"
+                            job.completed_at = datetime.now(timezone.utc)
+                            await session.commit()
+                    return
 
                 async with async_session_maker() as session:
                     job = await session.get(Job, job_id)
@@ -122,5 +147,5 @@ class QueueConsumer:
                         await session.commit()
 
             except Exception as exc:
-                logger.error(f"Handler failed: {exc}")
+                logger.error("Handler failed for job %s: %s", job_id, exc)
                 raise
