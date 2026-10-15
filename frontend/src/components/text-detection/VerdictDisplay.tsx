@@ -60,6 +60,11 @@ export function VerdictDisplay({ verdict, isLoading }: VerdictDisplayProps) {
             <p className="text-sm text-gray-500 text-center mt-4">
               Our model is <span className="font-semibold">{confidencePercentage}%</span> confident that this text was written by <span className="font-semibold">{verdict.isAI ? 'an AI' : 'a human'}</span>.
             </p>
+            {verdict.modelVersion && (
+              <p className="text-xs text-gray-400 text-center mt-2 font-mono">
+                Model: {verdict.modelVersion}
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
