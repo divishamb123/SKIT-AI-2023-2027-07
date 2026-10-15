@@ -32,6 +32,12 @@ export default function TextDetectionPage() {
               ? detail
               : 'Invalid text input. Please ensure you entered at least 10 words.'
           );
+        } else if (statusCode === 429) {
+          setError(
+            typeof detail === 'string'
+              ? detail
+              : 'Rate limit exceeded: You have sent too many requests (maximum 30 per minute). Please wait a moment before trying again.'
+          );
         } else if (statusCode === 503) {
           setError('Text detection service is currently unavailable. Please try again shortly.');
         } else {
