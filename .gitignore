@@ -43,8 +43,20 @@ datasets/genimage/*
 datasets/raid/*
 !datasets/raid/.gitkeep
 
-# Pretrained model weights — must NOT be committed (see docs/dev-khandelwal/MODEL_SETUP.md)
+# Pretrained model weights & training artifacts — must NOT be committed
 models/
+checkpoints/
+outputs/
 *.pth
 *.pt
 *.ckpt
+*.safetensors
+*.bin
+
+# Text service training artifacts & checkpoints
+services/text-service/models/
+services/text-service/checkpoints/
+services/text-service/outputs/
+services/text-service/training/outputs/
+services/text-service/training/checkpoints/
+

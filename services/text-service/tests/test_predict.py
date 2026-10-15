@@ -104,3 +104,14 @@ def test_health_endpoint(client: TestClient):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json().get("status") == "ok"
+
+
+def test_model_loading_default_fallback():
+    """Verify that when MODEL_PATH is unset or empty, the detector defaults to microsoft/deberta-v3-base."""
+    from app.core.model import DEFAULT_MODEL_NAME, detector
+
+    assert detector.model_name == DEFAULT_MODEL_NAME
+    assert detector.model_version == f"{DEFAULT_MODEL_NAME}-pretrained"
+    verdict = detector.predict("Simple test sentence to verify inference fallback.")
+    assert verdict.model_version == f"{DEFAULT_MODEL_NAME}-pretrained"
+    assert verdict.label in ["ai", "human"]
