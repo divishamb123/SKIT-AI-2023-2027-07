@@ -229,6 +229,15 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 | **Error Handling & Feedback** | [`frontend/src/app/text-detection/page.tsx`](frontend/src/app/text-detection/page.tsx) | Integrated `FormAlert` displaying categorized error states (HTTP 400 validation, HTTP 503 service unavailable, general failures). |
 | **Canonical Endpoint** | `POST /api/v1/detect/text` | Connected frontend requests to API Gateway's canonical route. |
 
+### Sprint 2 - Part 3 hardening (rate-limit handling, model version display, adapter tests)
+*User Story: Hardening text detection frontend with rate-limit feedback, model transparency, and adapter test suite*
+
+#### 📌 Hardening Overview
+- **HTTP 429 Rate-Limit UX:** Added user-facing rate-limit handling in `TextDetectionPage` ([`frontend/src/app/text-detection/page.tsx`](frontend/src/app/text-detection/page.tsx)) mapping HTTP 429 Too Many Requests (30 requests/minute API Gateway limit) to an explicit `FormAlert` warning.
+- **Model Version Transparency:** Extended `DetectionVerdict` schema and `detectText()` adapter to forward `model_version`, rendering a subtle monospace model identifier in `VerdictDisplay` ([`frontend/src/components/text-detection/VerdictDisplay.tsx`](frontend/src/components/text-detection/VerdictDisplay.tsx)).
+- **Adapter Unit Tests (Vitest):** Added comprehensive test suite ([`frontend/src/lib/__tests__/api.test.ts`](frontend/src/lib/__tests__/api.test.ts)) with mocked Axios testing AI/Human classification mappings, confidence & model version pass-through, and Axios HTTP 429 error propagation.
+- **Automated Test Script:** Added `npm test` script in [`frontend/package.json`](frontend/package.json) with non-zero exit on failure.
+
 ---
 
 # Team Lead: Dev Khandelwal (`23ESKCA035`)
