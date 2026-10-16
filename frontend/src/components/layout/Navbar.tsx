@@ -16,6 +16,8 @@ export function Navbar() {
 
   const navLinks = [
     { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Image Detection', href: '/image-detection' },
+    { name: 'Text Detection', href: '/text-detection' },
     { name: 'Health Check', href: '/health' },
   ];
 

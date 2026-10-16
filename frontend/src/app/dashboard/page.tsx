@@ -436,6 +436,12 @@ export default function DashboardPage() {
                     >
                       📷 Test Sample Real Photo (DSLR)
                     </button>
+                    <Link
+                      href="/image-detection"
+                      className="px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors shadow-2xs flex items-center gap-1"
+                    >
+                      <span>🔬 Open Dedicated Image Workbench →</span>
+                    </Link>
                   </div>
                 </div>
 

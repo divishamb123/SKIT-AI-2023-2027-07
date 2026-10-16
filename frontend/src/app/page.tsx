@@ -31,16 +31,20 @@ export default function HomePage() {
       <div className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-blue-500 text-4xl mb-4">📝</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Text Analysis</h3>
-              <p className="text-gray-500">Detect LLM-generated text from GPT, Llama, and other modern language models.</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-blue-500 text-4xl mb-4">🖼️</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Image Analysis</h3>
-              <p className="text-gray-500">Identify AI imagery from Diffusion models and GANs with robust classifiers.</p>
-            </div>
+            <Link href="/text-detection" className="block hover:shadow-md transition-shadow">
+              <div className="bg-white p-6 rounded-lg shadow-sm h-full">
+                <div className="text-blue-500 text-4xl mb-4">📝</div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Text Analysis</h3>
+                <p className="text-gray-500">Detect LLM-generated text from GPT, Llama, and other modern language models.</p>
+              </div>
+            </Link>
+            <Link href="/image-detection" className="block hover:shadow-md transition-shadow">
+              <div className="bg-white p-6 rounded-lg shadow-sm h-full border-2 border-blue-500/20">
+                <div className="text-blue-500 text-4xl mb-4">🖼️</div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Image Analysis (Sprint 2)</h3>
+                <p className="text-gray-500">Identify AI imagery from Diffusion models and GANs with ResNet-18 classifier.</p>
+              </div>
+            </Link>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="text-blue-500 text-4xl mb-4">🎙️</div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Audio Analysis</h3>

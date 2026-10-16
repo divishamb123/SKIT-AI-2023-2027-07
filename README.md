@@ -35,8 +35,7 @@
 |---|---|---|---|
 | 1 | **Developing an image inference service with a defined input/output interface** | **Week 1:** Production-ready `ImageDetectionService` (ResNet-18, MPS/CUDA/CPU).<br/>**Week 2:** I/O API Specification, `/api/detect/image` endpoint with strict validation & `services/image-service` microservice. | **Completed & Verified (Weeks 1 & 2)** |
 | 2 | **Designing batch-processing logic for multiple image inputs** | **Week 3:** Batched tensor collation `(B, 3, 224, 224)`, dynamic chunking ($B \le 32$), vectorized acceleration (~2.3x speedup), fault-isolated partial failure handling, and `/api/detect/image/batch` endpoints. | **Completed & Verified (Week 3)** |
-| 3 | **Testing image inference using grouped input samples** | **Week 4:** Grouped evaluation engine (`GroupedImageEvaluator`), multi-dimensional stratification across in-domain (`cifake` test) and out-of-domain (`genimage` holdout), generator breakdowns (`cifar10`, `stable-diffusion`, `midjourney`, `biggan`), and batch throughput scaling. | **Completed & Verified (Week 4)** |
-| 4 | **Designing image upload and result interaction components** | Interactive Next.js multi-file drag-and-drop uploader, verdict gauges, and batch results gallery. | Scheduled (Weeks 5–7) |
+| 4 | **Designing image upload and result interaction components** | **Week 5:** Interactive multi-file drag-and-drop uploader (`ImageUploadDropzone`), radial SVG verdict gauges (`VerdictGauge`), forensic metadata cards (`ImageMetadataCard`), high-throughput batch results gallery (`BatchResultsGallery`), and dedicated Next.js `/image-detection` workbench. | **Completed & Verified (Week 5)** |
 
 
 ---
@@ -135,8 +134,31 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
   4. **Documented Baseline Reference:** Establishes the formal pre-fine-tuning baseline benchmark on 400 real dataset samples, saved in [`docs/image_baseline_results.md`](docs/image_baseline_results.md) and [`results/image_baseline_evaluation.json`](results/image_baseline_evaluation.json), ready for Sprint 3 fine-tuning and ensemble tuning.
 - **Verification:** Run `python3 scripts/verify_sprint2_week4.py`, `python3 scripts/evaluate_image_baseline.py`, or `pytest tests/test_grouped_image_evaluation.py`.
 
-### Weeks 5 to 7: Upcoming Planned Work (Task 4)
-- **Weeks 5–7 (Task 4):** Building the interactive frontend multi-file drag-and-drop uploader in Next.js with visual verdict gauges and a batch results gallery.
+### Week 5: Image Upload and Result Interaction Components (Task 4)
+- **The Problem:** Up to Week 4, image inference and batch processing were accessible strictly via REST API endpoints (`/api/detect/image` and `/api/detect/image/batch`) or Python test scripts. Forensic investigators need an intuitive, high-impact web workbench to drag-and-drop evidence, inspect live visual authenticity gauges, examine technical image metadata, and review multi-file batches with sorting, filtering, and audit exports.
+- **Our Frontend Solution (`/image-detection` in [`frontend/src/app/image-detection/page.tsx`](frontend/src/app/image-detection/page.tsx)):**
+  1. **Multi-File Drag-and-Drop Uploader ([`ImageUploadDropzone.tsx`](frontend/src/components/image-detection/ImageUploadDropzone.tsx)):**
+     - Supports dragging or browsing single images or batches up to 32 images.
+     - Strict client-side validation for allowed formats (`.png`, `.jpg`, `.jpeg`, `.webp`), 15 MB payload ceiling, and resolution verification ($16 \le W,H \le 8192$).
+     - Live thumbnail preview queue with file size, dimensions, and remove buttons.
+     - One-click sample loaders (`📷 Load Real Photo Sample` and `⚡ Load AI Diffusion Sample`) for instant testing without requiring local test files.
+  2. **Animated Radial Verdict Gauge ([`VerdictGauge.tsx`](frontend/src/components/image-detection/VerdictGauge.tsx)):**
+     - 270-degree SVG circular dial with dynamic `stroke-dashoffset` animated arc.
+     - Color-coded forensic feedback: Emerald Green (`#10b981`) for Authentic Real vs Rose/Ruby (`#f43f5e`) for AI-Generated.
+     - High-precision confidence percentage and dual-probability distribution bar (`P(Real)` vs `P(AI)`).
+  3. **Forensic Technical Metadata Card ([`ImageMetadataCard.tsx`](frontend/src/components/image-detection/ImageMetadataCard.tsx)):**
+     - Inspects image resolution ($W \times H$), color channels (RGB), format, inference latency ($ms$), and hardware target (`mps`/`cuda`/`cpu`).
+     - Includes an interactive raw JSON audit viewer with one-click clipboard copying.
+  4. **High-Throughput Batch Results Gallery ([`BatchResultsGallery.tsx`](frontend/src/components/image-detection/BatchResultsGallery.tsx)):**
+     - Overview KPI cards for total images, AI flagged, Real verified, average latency, and throughput in FPS.
+     - Interactive filter tabs (`All`, `AI-Generated`, `Authentic Real`, `Errors`).
+     - Responsive thumbnail card grid with expandable item inspection modal.
+     - `Export Batch Audit (JSON)` button for generating compliance reports.
+  5. **API Client & Platform Navigation Integration:**
+     - Strongly typed contracts in [`frontend/src/types/image-detection.ts`](frontend/src/types/image-detection.ts).
+     - Standardized async client functions (`detectImage`, `detectImageBase64`, `detectImageBatch`) in [`frontend/src/lib/api.ts`](frontend/src/lib/api.ts).
+     - Added `/image-detection` link to primary [`Navbar.tsx`](frontend/src/components/layout/Navbar.tsx), home page card, and dashboard image tab.
+- **Verification:** Run `python3 scripts/verify_sprint2_week5.py`, `pytest tests/test_image_interaction_components.py -v`, or `cd frontend && npm run build`.
 
 ---
 
@@ -166,6 +188,15 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 | [`tests/test_image_detection_api.py`](tests/test_image_detection_api.py) | 15 integration tests verifying all API responses and HTTP error codes. |
 | [`tests/test_batch_processing.py`](tests/test_batch_processing.py) | 11 tests verifying batch collation, chunking, speedup, and fault isolation. |
 | [`tests/test_grouped_image_evaluation.py`](tests/test_grouped_image_evaluation.py) | 11 tests verifying grouped evaluation, generator stratification, and scaling. |
+| [`frontend/src/types/image-detection.ts`](frontend/src/types/image-detection.ts) | TypeScript interfaces for image detection responses, batch items, and upload states. |
+| [`frontend/src/lib/api.ts`](frontend/src/lib/api.ts) | Frontend API client with `detectImage`, `detectImageBase64`, and `detectImageBatch`. |
+| [`frontend/src/components/image-detection/ImageUploadDropzone.tsx`](frontend/src/components/image-detection/ImageUploadDropzone.tsx) | Multi-file drag-and-drop uploader with validation, preview queue, and sample loaders. |
+| [`frontend/src/components/image-detection/VerdictGauge.tsx`](frontend/src/components/image-detection/VerdictGauge.tsx) | Radial SVG dial gauge displaying animated confidence and dual-probability distribution. |
+| [`frontend/src/components/image-detection/ImageMetadataCard.tsx`](frontend/src/components/image-detection/ImageMetadataCard.tsx) | Technical forensic attributes display with resolution, channels, latency, and raw JSON export. |
+| [`frontend/src/components/image-detection/BatchResultsGallery.tsx`](frontend/src/components/image-detection/BatchResultsGallery.tsx) | Batch results gallery with KPI cards, filter tabs, item inspection modal, and JSON audit export. |
+| [`frontend/src/app/image-detection/page.tsx`](frontend/src/app/image-detection/page.tsx) | Full Next.js interactive image detection workbench with single and batch processing modes. |
+| [`scripts/verify_sprint2_week5.py`](scripts/verify_sprint2_week5.py) | Standalone 8-check automated verification suite for Week 5 deliverables. |
+| [`tests/test_image_interaction_components.py`](tests/test_image_interaction_components.py) | 8 automated unit tests verifying Week 5 schemas, components, and wiring. |
 
 
 ---
@@ -306,7 +337,12 @@ python3 scripts/verify_sprint2_week4.py
 python3 scripts/evaluate_image_baseline.py
 pytest tests/test_grouped_image_evaluation.py -v
 
-# Run all 52 unit & integration tests across Sprint 1 & Sprint 2
+# Week 5: Image upload and result interaction components
+python3 scripts/verify_sprint2_week5.py
+pytest tests/test_image_interaction_components.py -v
+cd frontend && npm run build && cd ..
+
+# Run all 60 unit & integration tests across Sprint 1 & Sprint 2
 pytest tests/ -v
 ```
 
