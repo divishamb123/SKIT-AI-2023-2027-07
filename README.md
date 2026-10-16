@@ -229,6 +229,35 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 | **Error Handling & Feedback** | [`frontend/src/app/text-detection/page.tsx`](frontend/src/app/text-detection/page.tsx) | Integrated `FormAlert` displaying categorized error states (HTTP 400 validation, HTTP 503 service unavailable, general failures). |
 | **Canonical Endpoint** | `POST /api/v1/detect/text` | Connected frontend requests to API Gateway's canonical route. |
 
+### Sprint 2 - Part 3 hardening (rate-limit handling, model version display, adapter tests)
+*User Story: Hardening text detection frontend with rate-limit feedback, model transparency, and adapter test suite*
+
+#### 📌 Hardening Overview
+- **HTTP 429 Rate-Limit UX:** Added user-facing rate-limit handling in `TextDetectionPage` ([`frontend/src/app/text-detection/page.tsx`](frontend/src/app/text-detection/page.tsx)) mapping HTTP 429 Too Many Requests (30 requests/minute API Gateway limit) to an explicit `FormAlert` warning.
+- **Model Version Transparency:** Extended `DetectionVerdict` schema and `detectText()` adapter to forward `model_version`, rendering a subtle monospace model identifier in `VerdictDisplay` ([`frontend/src/components/text-detection/VerdictDisplay.tsx`](frontend/src/components/text-detection/VerdictDisplay.tsx)).
+- **Adapter Unit Tests (Vitest):** Added comprehensive test suite ([`frontend/src/lib/__tests__/api.test.ts`](frontend/src/lib/__tests__/api.test.ts)) with mocked Axios testing AI/Human classification mappings, confidence & model version pass-through, and Axios HTTP 429 error propagation.
+- **Automated Test Script:** Added `npm test` script in [`frontend/package.json`](frontend/package.json) with non-zero exit on failure.
+
+---
+
+## Sprint 3 — Part 1: Fine-tuning pipeline (text)
+*User Story: Building and smoke-testing a reproducible fine-tuning pipeline for the text detection model (DeBERTa-v3)*
+
+### 📌 Milestone Overview
+- **Form-2 Sprint 3 Task 1:** *Developing a reproducible, device-agnostic fine-tuning pipeline for sequence classification (`microsoft/deberta-v3-base`), preparing training scripts with metrics evaluation (Accuracy and Macro F1), setting up a GPU Colab notebook for cloud execution, configuring serving hooks with default fallback, and validating execution invariants via smoke tests.*
+
+### 📁 Deliverables & Architecture
+
+| Component | Path | Description |
+|---|---|---|
+| **Fine-Tuning Script** | [`services/text-service/training/finetune.py`](services/text-service/training/finetune.py) | CLI training pipeline using HuggingFace `Trainer`, explicit label mapping (`0: human`, `1: ai`), device-agnostic runtime (CUDA/MPS/CPU), metric computation, and `metrics.json` export. |
+| **Training Dependencies** | [`services/text-service/training/requirements-train.txt`](services/text-service/training/requirements-train.txt) | Pinned training requirements for `transformers`, `datasets`, `evaluate`, `scikit-learn`, `accelerate`, and `torch`. |
+| **Google Colab Notebook** | [`notebooks/text_finetune_colab.ipynb`](notebooks/text_finetune_colab.ipynb) | Clean GPU-accelerated training notebook cloning the repo, installing dependencies, running fine-tuning on GPU, and exporting compressed model weights. |
+| **Model Serving Hook** | [`services/text-service/app/core/model.py`](services/text-service/app/core/model.py) | Dynamic `MODEL_PATH` environment hook loading fine-tuned weights or safely falling back to pretrained `microsoft/deberta-v3-base`. |
+| **Environment Configuration** | [`services/text-service/.env.example`](services/text-service/.env.example) | Documented `MODEL_PATH` variable for local inference deployment. |
+| **Fallback Test Suite** | [`services/text-service/tests/test_predict.py`](services/text-service/tests/test_predict.py) | Unit test validating default model fallback and inference integrity when `MODEL_PATH` is unset. |
+| **Pipeline Documentation** | [`docs/text_finetuning.md`](docs/text_finetuning.md) | Comprehensive technical guide covering dataset partitions, hyperparameters, execution modes, and serving hand-off. |
+
 ---
 
 # Team Lead: Dev Khandelwal (`23ESKCA035`)

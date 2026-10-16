@@ -13,11 +13,12 @@ export const apiClient = axios.create({
 
 export async function detectText(text: string): Promise<DetectionVerdict> {
   const response = await apiClient.post('/v1/detect/text', { text });
-  const { label, confidence } = response.data;
+  const { label, confidence, model_version } = response.data;
   return {
     isAI: label === 'ai',
     confidence,
     label: label === 'ai' ? 'AI Generated' : 'Human Written',
+    modelVersion: model_version,
   };
 }
 
