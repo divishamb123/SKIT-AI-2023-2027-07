@@ -250,3 +250,34 @@ Based strictly on Form 1, Form 2, the Functional Requirements, the Engineering B
 - Sprint 5: Weighted text/image/audio fusion, calibration.
 - Sprint 6: Security review, final documentation, release.
 **Next week's planned work (Week 3):** Add retry/timeout handling to the audio queue consumer and write the complete end-to-end audio pipeline integration-test script.
+
+### Week 3 — Weekly Submission
+
+**Date:** 22 October 2026
+**Planned milestone:** Implement background worker for audio jobs with retry and timeout handling.
+**Actual work completed:**
+- Added per-job retry with exponential back-off (1s → 2s → 4s) up to MAX_RETRIES (default 3). Messages republished to the same queue with `x-retry-count` header incremented on each transient failure.
+- Added inference timeout (default 30s) via `asyncio.wait_for()` around `predict_sync`.
+- Added MinIO download timeout (default 20s) via `asyncio.wait_for()` around the S3 download call.
+- Jobs exhausting all retries are permanently marked `FAILED` with descriptive `error_message` in the database.
+- All retry/timeout constants exposed as env vars in `docker-compose.yml` (`AUDIO_WORKER_MAX_RETRIES`, `AUDIO_WORKER_RETRY_BASE_DELAY_S`, `AUDIO_WORKER_INFERENCE_TIMEOUT_S`, `AUDIO_WORKER_DOWNLOAD_TIMEOUT_S`).
+- Added 12 unit tests covering: retry count header parsing, env-var constant overrides, exponential back-off formula.
+**Files changed:**
+- `services/audio-service/app/services/queue_consumer.py`
+- `docker-compose.yml`
+- `tests/unit/test_audio_worker_retry.py` (new)
+**Tests executed:** `tests/unit/test_audio_worker_retry.py` + `tests/unit/test_audio_detector.py` using pytest.
+**Test results:** 22 passed (12 retry + 10 detector), 0 failed.
+**Commit SHA:** `1b97099`
+**Branch:** `dev-khandelwal/sprint-2-audio`
+**GitHub push status:** Success.
+**Sprint 1 percentage:** 100%
+**Sprint 2 percentage:** 91% (+7%)
+**Overall percentage:** 62% (+7%)
+**Remaining work:**
+- Sprint 2 final 9%: Record and document baseline EER measurement on ASVspoof 2019 LA (Week 4).
+- Sprint 3: Tune audio decision threshold; measure EER against 1.0% target; test generalisation on In-the-Wild dataset.
+- Sprint 4: Return Mel-spectrogram MinIO URLs through the API.
+- Sprint 5: Weighted fusion, calibration.
+- Sprint 6: Security review, final docs, release.
+**Next week's planned work (Week 4):** Record baseline EER — run the ASVspoof 2019 LA evaluation script, document the results, and finalise Sprint 2 completion evidence.
