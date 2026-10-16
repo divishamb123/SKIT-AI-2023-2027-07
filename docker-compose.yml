@@ -146,6 +146,11 @@ services:
       # Mount pretrained AASIST-L weights at runtime (see docs/dev-khandelwal/MODEL_SETUP.md)
       AASIST_WEIGHTS_PATH: /models/aasist_l_v1.0/AASIST-L.pth
       AASIST_CONFIG_PATH: /models/aasist_l_v1.0/AASIST-L.conf
+      # Background worker retry / timeout policy
+      AUDIO_WORKER_MAX_RETRIES: ${AUDIO_WORKER_MAX_RETRIES:-3}
+      AUDIO_WORKER_RETRY_BASE_DELAY_S: ${AUDIO_WORKER_RETRY_BASE_DELAY_S:-1.0}
+      AUDIO_WORKER_INFERENCE_TIMEOUT_S: ${AUDIO_WORKER_INFERENCE_TIMEOUT_S:-30.0}
+      AUDIO_WORKER_DOWNLOAD_TIMEOUT_S: ${AUDIO_WORKER_DOWNLOAD_TIMEOUT_S:-20.0}
     volumes:
       # Place pretrained weights in ./models/aasist_l_v1.0/ on the host.
       # The service starts in degraded mode if the directory is absent.
