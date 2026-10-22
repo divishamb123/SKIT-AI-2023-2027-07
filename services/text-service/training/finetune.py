@@ -1,11 +1,12 @@
 """
-finetune.py — Sprint 3 Part 1: Fine-Tuning Pipeline for Text Model (DeBERTa-v3)
+finetune.py — Sprint 3 Part 1 & Part 2: Fine-Tuning Pipeline for Text Model (DeBERTa-v3)
 
 A reproducible, device-agnostic CLI pipeline to fine-tune `microsoft/deberta-v3-base`
 (or compatible transformers sequence classifiers) for binary AI-vs-Human text detection.
 
 Key Invariants:
 - Loads partitioned splits from datasets/splits/text_manifest.csv (or specified path).
+- Supports unseen holdout evaluation via --holdout-manifest-path (e.g. text_holdout_test.csv).
 - Explicit label mappings: id2label={0: 'human', 1: 'ai'}, label2id={'human': 0, 'ai': 1}.
 - Evaluation metrics: accuracy and macro F1 computed via compute_metrics.
 - Device agnostic: supports CUDA, MPS, and CPU. Forces fp16=False when CUDA is absent.
@@ -15,17 +16,17 @@ Key Invariants:
 """
 
 import argparse
+from datetime import datetime, timezone
 import json
 import logging
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Tuple
 
+from datasets import Dataset
 import numpy as np
 import pandas as pd
-import torch
-from datasets import Dataset
 from sklearn.metrics import accuracy_score, f1_score
+import torch
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -68,6 +69,30 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default="datasets/splits/text_manifest.csv",
         help="Path to the unified text manifest CSV file.",
+    )
+    parser.add_argument(
+        "--holdout-manifest-path",
+        type=str,
+        default=None,
+        help="Optional path to unseen holdout test manifest CSV file (e.g., datasets/splits/text_holdout_test.csv).",
+    )
+    parser.add_argument(
+        "--train-file",
+        type=str,
+        default=None,
+        help="Optional explicit path to training CSV file (overrides --manifest-path split='train').",
+    )
+    parser.add_argument(
+        "--val-file",
+        type=str,
+        default=None,
+        help="Optional explicit path to validation CSV file (overrides --manifest-path split='val').",
+    )
+    parser.add_argument(
+        "--test-file",
+        type=str,
+        default=None,
+        help="Optional explicit path to test CSV file for final evaluation.",
     )
     parser.add_argument(
         "--epochs",
@@ -152,29 +177,49 @@ def resolve_manifest_path(manifest_arg: str) -> Path:
 
 
 def load_and_preprocess_splits(
-    manifest_path: Path, max_samples: int | None = None
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Loads manifest CSV, validates schema, filters train/val splits, and optionally caps sample count."""
-    logger.info("Loading text manifest from: %s", manifest_path)
-    df = pd.read_csv(manifest_path)
+    manifest_path: Optional[Path] = None,
+    train_file: Optional[Path] = None,
+    val_file: Optional[Path] = None,
+    max_samples: Optional[int] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Loads manifest CSV or discrete train/val files, validates schema, and optionally caps sample count."""
+    if train_file and val_file:
+        logger.info(
+            "Loading training split from: %s, validation split from: %s",
+            train_file,
+            val_file,
+        )
+        train_df = pd.read_csv(train_file)
+        val_df = pd.read_csv(val_file)
+    elif manifest_path:
+        logger.info("Loading text manifest from: %s", manifest_path)
+        df = pd.read_csv(manifest_path)
+        required_cols = {"split", "label", "text"}
+        missing = required_cols - set(df.columns)
+        if missing:
+            raise ValueError(
+                f"Manifest missing required columns: {missing}. Available: {list(df.columns)}"
+            )
 
-    required_cols = {"split", "label", "text"}
-    missing = required_cols - set(df.columns)
-    if missing:
+        df = df.dropna(subset=["text", "label"]).copy()
+        df["label"] = df["label"].astype(int)
+
+        train_df = df[df["split"] == "train"].copy()
+        val_df = df[df["split"] == "val"].copy()
+    else:
         raise ValueError(
-            f"Manifest missing required columns: {missing}. Available: {list(df.columns)}"
+            "Either manifest_path or both train_file and val_file must be specified."
         )
 
     # Clean missing values
-    df = df.dropna(subset=["text", "label"]).copy()
-    df["label"] = df["label"].astype(int)
-
-    train_df = df[df["split"] == "train"].copy()
-    val_df = df[df["split"] == "val"].copy()
+    train_df = train_df.dropna(subset=["text", "label"]).copy()
+    val_df = val_df.dropna(subset=["text", "label"]).copy()
+    train_df["label"] = train_df["label"].astype(int)
+    val_df["label"] = val_df["label"].astype(int)
 
     if train_df.empty or val_df.empty:
         raise ValueError(
-            f"Manifest must contain non-empty 'train' and 'val' splits. "
+            f"Dataset must contain non-empty 'train' and 'val' splits. "
             f"Found {len(train_df)} train rows and {len(val_df)} val rows."
         )
 
@@ -201,8 +246,20 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    manifest_file = resolve_manifest_path(args.manifest_path)
-    train_df, val_df = load_and_preprocess_splits(manifest_file, args.max_samples)
+    train_file = resolve_manifest_path(args.train_file) if args.train_file else None
+    val_file = resolve_manifest_path(args.val_file) if args.val_file else None
+    manifest_file = (
+        resolve_manifest_path(args.manifest_path)
+        if not (train_file and val_file)
+        else None
+    )
+
+    train_df, val_df = load_and_preprocess_splits(
+        manifest_path=manifest_file,
+        train_file=train_file,
+        val_file=val_file,
+        max_samples=args.max_samples,
+    )
 
     # Device detection and precision policy
     has_cuda = torch.cuda.is_available()
@@ -245,7 +302,6 @@ def main():
     )
 
     # For CPU smoke tests or when explicitly requested, freeze the transformer backbone
-    # so backward passes only update the classifier head, running in seconds on CPU.
     if args.freeze_backbone or (args.max_samples is not None and not has_cuda):
         logger.info("Freezing transformer backbone for fast CPU smoke testing...")
         base_encoder = getattr(model, "deberta", None) or getattr(
@@ -295,6 +351,30 @@ def main():
     logger.info("Running final evaluation on validation set...")
     eval_metrics = trainer.evaluate()
 
+    # Optional Holdout / Unseen Test Set Evaluation
+    holdout_metrics: Dict[str, Any] = {}
+    target_holdout_arg = args.holdout_manifest_path or args.test_file
+    if target_holdout_arg:
+        holdout_path = resolve_manifest_path(target_holdout_arg)
+        logger.info(
+            "Evaluating model on unseen holdout test manifest: %s", holdout_path
+        )
+        holdout_df = pd.read_csv(holdout_path).dropna(subset=["text", "label"])
+        holdout_df["label"] = holdout_df["label"].astype(int)
+        if args.max_samples is not None and args.max_samples > 0:
+            holdout_df = holdout_df.iloc[: min(len(holdout_df), args.max_samples)]
+
+        holdout_ds = Dataset.from_pandas(holdout_df[["text", "label"]])
+        holdout_ds = holdout_ds.map(tokenize_fn, batched=True, remove_columns=["text"])
+        raw_holdout = trainer.evaluate(
+            eval_dataset=holdout_ds, metric_key_prefix="holdout"
+        )
+        holdout_metrics = {
+            "holdout_loss": float(raw_holdout.get("holdout_loss", 0.0)),
+            "holdout_accuracy": float(raw_holdout.get("holdout_accuracy", 0.0)),
+            "holdout_macro_f1": float(raw_holdout.get("holdout_macro_f1", 0.0)),
+        }
+
     logger.info("Saving best model and tokenizer to: %s", output_dir)
     trainer.save_model(str(output_dir))
     tokenizer.save_pretrained(str(output_dir))
@@ -310,6 +390,7 @@ def main():
         "eval_loss": float(eval_metrics.get("eval_loss", 0.0)),
         "eval_accuracy": float(eval_metrics.get("eval_accuracy", 0.0)),
         "eval_macro_f1": float(eval_metrics.get("eval_macro_f1", 0.0)),
+        **holdout_metrics,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "model_name": args.model_name,
         "epochs": args.epochs,
@@ -327,12 +408,16 @@ def main():
 
     logger.info("Fine-tuning pipeline execution finished successfully.")
     print("\n--- Training & Evaluation Summary ---")
-    print(f"Training Loss:  {training_loss:.4f}")
-    print(f"Eval Loss:      {metrics_payload['eval_loss']:.4f}")
-    print(f"Eval Accuracy:  {metrics_payload['eval_accuracy']:.4f}")
-    print(f"Eval Macro F1:  {metrics_payload['eval_macro_f1']:.4f}")
-    print(f"Saved To:       {output_dir}")
-    print(f"Metrics File:   {metrics_file}\n")
+    print(f"Training Loss:     {training_loss:.4f}")
+    print(f"Eval Loss:         {metrics_payload['eval_loss']:.4f}")
+    print(f"Eval Accuracy:     {metrics_payload['eval_accuracy']:.4f}")
+    print(f"Eval Macro F1:     {metrics_payload['eval_macro_f1']:.4f}")
+    if holdout_metrics:
+        print(f"Holdout Loss:      {holdout_metrics['holdout_loss']:.4f}")
+        print(f"Holdout Accuracy:  {holdout_metrics['holdout_accuracy']:.4f}")
+        print(f"Holdout Macro F1:  {holdout_metrics['holdout_macro_f1']:.4f}")
+    print(f"Saved To:          {output_dir}")
+    print(f"Metrics File:      {metrics_file}\n")
 
 
 if __name__ == "__main__":
