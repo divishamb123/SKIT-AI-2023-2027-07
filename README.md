@@ -291,6 +291,35 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 
 ---
 
+## Sprint 3 — Part 2: Dataset audit and unseen split
+*User Story: Auditing the text dataset for label balance, sequence length, and data leakage, and constructing an honest out-of-domain unseen holdout split*
+
+> [!NOTE]
+> **Training Status:** Plainly stated, **NO training has been run**. The audit and holdout partitioning establish rigorous data hygiene, quantify baseline data leakage, and prepare an honest "unseen" test benchmark before any future fine-tuning occurs.
+
+### 📌 Milestone Overview
+- **Form-2 Sprint 3 Task 2:** *Auditing the RAID text manifest (`text_manifest.csv`) for class balance, token sequence lengths, cross-split duplicate leakage, and generator distribution; implementing the `--holdout-generator` and `--holdout-domain` partitioning pipeline in `scripts/prepare_text_dataset.py`; generating the separate unseen test manifest (`text_holdout_test.csv`); updating `finetune.py` with holdout evaluation hooks; and validating data partition invariants via automated unit tests.*
+
+### 📁 Deliverables & Architecture
+
+| Component | Path | Description |
+|---|---|---|
+| **Dataset Audit Script** | [`scripts/audit_text_dataset.py`](scripts/audit_text_dataset.py) | Standalone script computing counts per split/label, word length statistics (mean, median, 5th/95th percentiles), exact duplicates, normalized duplicates, and 3-gram Jaccard near-duplicates. |
+| **Comprehensive Audit Report** | [`docs/text_dataset_audit.md`](docs/text_dataset_audit.md) | Structured markdown report detailing sequence length distributions, generator stratification flaws from Sprint 1, and cross-split leakage metrics. |
+| **Holdout Partitioning Pipeline** | [`scripts/prepare_text_dataset.py`](scripts/prepare_text_dataset.py) | Enhanced data preparation script adding `--holdout-generator`, `--holdout-domain`, and `--input-manifest` to cleanly isolate unseen generative models into a dedicated test set while preserving default streaming behavior. |
+| **Unseen Holdout Test Manifest** | [`datasets/splits/text_holdout_test.csv`](datasets/splits/text_holdout_test.csv) | Dedicated holdout test split containing 1,820 balanced samples (910 held-out `chatgpt` AI samples and 910 non-leaking human controls) with zero representation in `train` or `val`. |
+| **Holdout Evaluation Hook** | [`services/text-service/training/finetune.py`](services/text-service/training/finetune.py) | Extended training script with `--holdout-manifest-path`, `--train-file`, and `--val-file` options to evaluate fine-tuned checkpoints on unseen holdout datasets and record `holdout_accuracy` and `holdout_macro_f1` in `metrics.json`. |
+| **Audit & Holdout Test Suites** | [`tests/test_text_dataset_audit.py`](tests/test_text_dataset_audit.py), [`tests/test_text_holdout_split.py`](tests/test_text_holdout_split.py) | Automated unit tests verifying duplicate detection, length statistics calculation, holdout generator isolation, 50/50 balance, single-domain validation, and CLI argument parsing. |
+
+### 📊 Dataset Audit Findings & Leakage Summary
+- **Total Records:** 20,000 rows (`train`: 16,000, `val`: 2,000, `test`: 2,000) with exact 50% Human (`label=0`) and 50% AI (`label=1`) balance across all splits.
+- **Word Length Statistics:** Overall Mean = 178.33 words, Median = 161.0, 5th percentile = 84.0, 95th percentile = 364.0 (Human: Mean = 175.05, Median = 171.0; AI: Mean = 181.62, Median = 137.0).
+- **Exact Cross-Split Leakage:** 99 exact text duplicates between `train` and `val`; 79 between `train` and `test` (174 unique train texts leak into validation or test). 100% of exact leakage occurs in the Human class due to repeated source abstracts in the RAID corpus.
+- **Near-Duplicate Leakage (3-gram Jaccard >= 0.85):** 618 validation samples (30.9%) and 607 test samples (30.4%) have >= 85% token overlap with training texts, highlighting why an isolated unseen holdout test set is essential for honest evaluation.
+- **Generator Allocation Flaw Identified:** Sprint 1 AI records were split sequentially without shuffling, concentrating generators across splits (`train`: 9 generators, `val`: `mistral-chat` and `mpt`, `test`: `mpt` and `mpt-chat`). Holdout partitioning resolves this by stratifying remaining generators across train, val, and test.
+
+---
+
 # Team Lead: Dev Khandelwal (`23ESKCA035`)
 
 ## Sprint 1 — Foundation & Infrastructure
