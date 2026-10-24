@@ -35,7 +35,8 @@
 |---|---|---|---|
 | 1 | **Developing an image inference service with a defined input/output interface** | **Week 1:** Production-ready `ImageDetectionService` (ResNet-18, MPS/CUDA/CPU).<br/>**Week 2:** I/O API Specification, `/api/detect/image` endpoint with strict validation & `services/image-service` microservice. | **Completed & Verified (Weeks 1 & 2)** |
 | 2 | **Designing batch-processing logic for multiple image inputs** | **Week 3:** Batched tensor collation `(B, 3, 224, 224)`, dynamic chunking ($B \le 32$), vectorized acceleration (~2.3x speedup), fault-isolated partial failure handling, and `/api/detect/image/batch` endpoints. | **Completed & Verified (Week 3)** |
-| 4 | **Designing image upload and result interaction components** | **Week 5:** Interactive multi-file drag-and-drop uploader (`ImageUploadDropzone`), radial SVG verdict gauges (`VerdictGauge`), forensic metadata cards (`ImageMetadataCard`), high-throughput batch results gallery (`BatchResultsGallery`), and dedicated Next.js `/image-detection` workbench. | **Completed & Verified (Week 5)** |
+| 3 | **Testing image inference using grouped input samples** | **Week 4:** Grouped evaluation engine (`GroupedImageEvaluator`), multi-dimensional stratification across in-domain (`cifake` test) and out-of-domain (`genimage` holdout), generator breakdowns (`cifar10`, `stable-diffusion`, `midjourney`, `biggan`), and batch throughput scaling. | **Completed & Verified (Week 4)** |
+| 4 | **Designing image upload and result interaction components** | **Week 5:** Interactive multi-file drag-and-drop uploader (`ImageUploadDropzone`), radial SVG verdict gauges (`VerdictGauge`), forensic metadata cards (`ImageMetadataCard`), high-throughput batch results gallery (`BatchResultsGallery`), and dedicated Next.js `/image-detection` workbench.<br/>**Week 6:** Interactive decision boundary & threshold simulator (`DecisionBoundaryController`), multi-channel forensic evidence visualizer (RGB, Luminance Y, Spatial High-Pass in `ForensicEvidenceViewer`), and chain-of-custody audit certificate modal (`ForensicReportModal`). | **Completed & Verified (Weeks 5 & 6)** |
 
 
 ---
@@ -160,6 +161,33 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
      - Added `/image-detection` link to primary [`Navbar.tsx`](frontend/src/components/layout/Navbar.tsx), home page card, and dashboard image tab.
 - **Verification:** Run `python3 scripts/verify_sprint2_week5.py`, `pytest tests/test_image_interaction_components.py -v`, or `cd frontend && npm run build`.
 
+### Week 6: Advanced Forensic Evidence Inspection, Threshold Calibration, and Audit Certification (Task 4)
+- **The Problem:** In legal, journalistic, and institutional forensic investigations, a binary label ("AI" vs "Real") with fixed default $\tau = 0.5$ is insufficient. Analysts must dynamically calibrate detection sensitivity, isolate individual color channels and frequency textures to pinpoint latent diffusion grid irregularities, inspect cryptographic evidence fingerprints, and generate printable chain-of-custody compliance certificates.
+- **Our Forensic Interaction Suite:**
+  1. **Interactive Decision Boundary & Threshold Controller ([`DecisionBoundaryController.tsx`](frontend/src/components/image-detection/DecisionBoundaryController.tsx)):**
+     - Dynamic threshold slider $\tau \in [0.10, 0.90]$ with step $0.01$ and operational presets (`High Sensitivity 0.35`, `Balanced Baseline 0.50`, `High Specificity 0.75`).
+     - Real-time margin calculation ($\Delta = |P(AI) - \tau|$) and calibrated confidence tiering:
+       - *High-Confidence Synthetic Generation* ($P \ge 0.85$)
+       - *Synthetic Diffusion Traces Detected* ($P \ge \tau \land \Delta \ge 0.05$)
+       - *Borderline Ambiguous Evidence Zone* ($\Delta < 0.05$)
+       - *Plausible Natural Photographic Capture* ($P < \tau \land \Delta \ge 0.05$)
+       - *High-Confidence Natural Optical Sensor* ($P \le 0.15$)
+  2. **Multi-Channel Forensic Evidence Visualizer ([`ForensicEvidenceViewer.tsx`](frontend/src/components/image-detection/ForensicEvidenceViewer.tsx)):**
+     - In-browser HTML5 Canvas decomposition of evidence into 6 forensic view domains:
+       - *Full RGB Color Domain* with zoom levels (100%, 150%, 200%).
+       - *Luminance (Y)* channel ($Y = 0.299R + 0.587G + 0.114B$) exposing lighting inconsistencies.
+       - *Spatial High-Pass Filter* revealing latent grid diffusion artifacts and compression blocks.
+       - *Red, Green, Blue Chromatic Channels* isolating Bayer sensor pattern anomalies.
+     - Real-time pixel coordinate HUD ($X, Y$) and RGB intensity probe under the cursor.
+  3. **Printable Chain-of-Custody Audit Certificate ([`ForensicReportModal.tsx`](frontend/src/components/image-detection/ForensicReportModal.tsx)):**
+     - Generates in-browser cryptographic **SHA-256 evidence fingerprint** using Web Crypto API (`crypto.subtle.digest`).
+     - Formats formal investigation certificate with SKIT Department of CSE accreditation, investigator credentials (`Divisha Manak Bohra - 23ESKCA038`), hardware telemetry, and calibrated verdict.
+     - One-click print/save as PDF (`window.print()`) and JSON audit log export.
+  4. **Enhanced Batch Result Analytics ([`BatchResultsGallery.tsx`](frontend/src/components/image-detection/BatchResultsGallery.tsx)):**
+     - Real-time filename search and dynamic batch threshold slider that re-classifies multi-image batches live.
+     - Multi-criterion sorting (confidence high/low, latency, input order) and batch CSV/JSON manifest exports.
+- **Verification:** Run `python3 scripts/verify_sprint2_week6.py`, `pytest tests/test_image_interaction_week6.py -v`, or `cd frontend && npm run build`.
+
 ---
 
 ## 📁 Source Code Files Created for Image Detection
@@ -197,6 +225,11 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 | [`frontend/src/app/image-detection/page.tsx`](frontend/src/app/image-detection/page.tsx) | Full Next.js interactive image detection workbench with single and batch processing modes. |
 | [`scripts/verify_sprint2_week5.py`](scripts/verify_sprint2_week5.py) | Standalone 8-check automated verification suite for Week 5 deliverables. |
 | [`tests/test_image_interaction_components.py`](tests/test_image_interaction_components.py) | 8 automated unit tests verifying Week 5 schemas, components, and wiring. |
+| [`frontend/src/components/image-detection/DecisionBoundaryController.tsx`](frontend/src/components/image-detection/DecisionBoundaryController.tsx) | Interactive threshold calibration slider with margin math, risk levels, and presets. |
+| [`frontend/src/components/image-detection/ForensicEvidenceViewer.tsx`](frontend/src/components/image-detection/ForensicEvidenceViewer.tsx) | Multi-channel decomposition (RGB, Y, Red, Green, Blue, High-Pass) with zoom and probe HUD. |
+| [`frontend/src/components/image-detection/ForensicReportModal.tsx`](frontend/src/components/image-detection/ForensicReportModal.tsx) | Cryptographic SHA-256 chain-of-custody audit certificate modal with printable styling. |
+| [`scripts/verify_sprint2_week6.py`](scripts/verify_sprint2_week6.py) | Standalone 8-check automated verification suite for Week 6 deliverables. |
+| [`tests/test_image_interaction_week6.py`](tests/test_image_interaction_week6.py) | 8 automated unit tests verifying Week 6 interactive modules, math, and certificates. |
 
 
 ---
@@ -369,9 +402,13 @@ pytest tests/test_grouped_image_evaluation.py -v
 # Week 5: Image upload and result interaction components
 python3 scripts/verify_sprint2_week5.py
 pytest tests/test_image_interaction_components.py -v
+
+# Week 6: Advanced evidence inspection, threshold calibration & certificates
+python3 scripts/verify_sprint2_week6.py
+pytest tests/test_image_interaction_week6.py -v
 cd frontend && npm run build && cd ..
 
-# Run all 60 unit & integration tests across Sprint 1 & Sprint 2
+# Run all 68 unit & integration tests across Sprint 1 & Sprint 2
 pytest tests/ -v
 ```
 

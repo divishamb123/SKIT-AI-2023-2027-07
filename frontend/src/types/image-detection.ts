@@ -1,9 +1,10 @@
 /**
- * image-detection.ts — TypeScript Schemas for Sprint 2 Week 5 Image Detection Interface
+ * image-detection.ts — TypeScript Schemas for Sprint 2 Image Detection Interface
  *
  * Student: Divisha Manak Bohra (23ESKCA038)
  * Sprint: Sprint 2 — Baseline Detection Service
- * Task 4: Designing image upload and result interaction components (Week 5)
+ * Tasks:
+ *   - Task 4: Designing image upload and result interaction components (Weeks 5 & 6)
  */
 
 export interface ImageMetadata {
@@ -67,4 +68,52 @@ export interface SelectedImageFile {
   previewUrl: string;
   id: string;
   dimensions?: { width: number; height: number };
+}
+
+// --------------------------------------------------------------------------
+// Sprint 2 Week 6: Advanced Result Interaction & Evidence Inspection Schemas
+// --------------------------------------------------------------------------
+
+export type ConfidenceTier =
+  | 'HIGH_AI'
+  | 'SUSPICIOUS_AI'
+  | 'AMBIGUOUS'
+  | 'PLAUSIBLE_REAL'
+  | 'HIGH_REAL';
+
+export interface ThresholdSimulationResult {
+  threshold: number; // e.g. 0.50
+  adjustedVerdict: 'REAL' | 'AI_GENERATED';
+  margin: number;
+  confidenceTier: ConfidenceTier;
+  confidenceLabel: string;
+  riskLevel: 'critical' | 'high' | 'moderate' | 'low' | 'minimal';
+}
+
+export interface ChannelDecomposition {
+  redUrl: string;
+  greenUrl: string;
+  blueUrl: string;
+  luminanceUrl: string;
+  highPassUrl: string;
+}
+
+export interface ForensicAuditReport {
+  caseId: string;
+  evidenceHashSha256: string;
+  evidenceFileName: string;
+  timestamp: string;
+  analyst: string;
+  department: string;
+  institution: string;
+  rawVerdict: 'REAL' | 'AI_GENERATED';
+  calibratedVerdict: 'REAL' | 'AI_GENERATED';
+  thresholdUsed: number;
+  confidencePercentage: number;
+  probabilities: ImageProbabilities;
+  imageMetadata: ImageMetadata;
+  latencyMs: number;
+  modelVersion: string;
+  hardwareDevice: string;
+  status: 'CERTIFIED' | 'PRELIMINARY';
 }

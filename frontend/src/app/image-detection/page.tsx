@@ -6,6 +6,9 @@ import { ImageUploadDropzone } from '@/components/image-detection/ImageUploadDro
 import { VerdictGauge } from '@/components/image-detection/VerdictGauge';
 import { ImageMetadataCard } from '@/components/image-detection/ImageMetadataCard';
 import { BatchResultsGallery } from '@/components/image-detection/BatchResultsGallery';
+import { DecisionBoundaryController } from '@/components/image-detection/DecisionBoundaryController';
+import { ForensicEvidenceViewer } from '@/components/image-detection/ForensicEvidenceViewer';
+import { ForensicReportModal } from '@/components/image-detection/ForensicReportModal';
 import { FormAlert } from '@/components/ui/FormAlert';
 import {
   SelectedImageFile,
@@ -75,10 +78,17 @@ function createSampleImageFile(isSynthetic: boolean): File {
 
 export default function ImageDetectionPage() {
   const [mode, setMode] = useState<'single' | 'batch'>('single');
+  const [singleTab, setSingleTab] = useState<'overview' | 'channels'>('overview');
   const [selectedFiles, setSelectedFiles] = useState<SelectedImageFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fallbackWarning, setFallbackWarning] = useState<string | null>(null);
+
+  // Threshold calibration state
+  const [threshold, setThreshold] = useState<number>(0.5);
+
+  // Forensic Audit Certificate Modal state
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Results
   const [singleResult, setSingleResult] = useState<ImageDetectionResponse | null>(null);
@@ -264,7 +274,7 @@ export default function ImageDetectionPage() {
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xl">🖼️</span>
             <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-              Sprint 2 • Task 4: Image Upload & Interaction
+              Sprint 2 • Task 4: Image Upload & Result Interaction (Weeks 5 & 6)
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
@@ -406,22 +416,69 @@ export default function ImageDetectionPage() {
               </button>
             </div>
           </div>
+
+          {/* Week 6: Forensic Channel Viewer (Left column when single evidence analyzed) */}
+          {mode === 'single' && singleResult && selectedFiles.length > 0 && (
+            <div className="pt-2">
+              <ForensicEvidenceViewer
+                selectedFile={selectedFiles[0]}
+                verdict={singleResult.verdict}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Right Column: Single Result Panels */}
+        {/* Right Column: Single Result Panels & Interaction Suite */}
         {mode === 'single' && (
           <div className="lg:col-span-5 space-y-5">
             {singleResult ? (
               <>
+                {/* Visual Verdict Dial Gauge */}
                 <VerdictGauge
-                  verdict={singleResult.verdict}
-                  confidence={singleResult.confidence}
+                  verdict={
+                    singleResult.probabilities.ai_generated >= threshold
+                      ? 'AI_GENERATED'
+                      : 'REAL'
+                  }
+                  confidence={
+                    Math.abs(singleResult.probabilities.ai_generated - threshold) + 0.5 > 1
+                      ? singleResult.confidence
+                      : singleResult.confidence
+                  }
                   probabilities={singleResult.probabilities}
                   latencyMs={singleResult.latency_ms}
                   device={singleResult.device}
                 />
 
+                {/* Week 6: Interactive Decision Boundary & Threshold Controller */}
+                <DecisionBoundaryController
+                  probabilities={singleResult.probabilities}
+                  currentThreshold={threshold}
+                  onThresholdChange={(t) => setThreshold(t)}
+                  onResetThreshold={() => setThreshold(0.5)}
+                />
+
+                {/* Technical Forensic Attributes Card */}
                 <ImageMetadataCard data={singleResult} />
+
+                {/* Week 6: Launch Official Audit Certificate Action */}
+                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 p-4 rounded-2xl text-white shadow-sm flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-blue-200">
+                      Official Audit Certification
+                    </p>
+                    <p className="text-xs text-blue-100 mt-0.5">
+                      Generate cryptographic chain-of-custody PDF certificate.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="px-3.5 py-2 text-xs font-bold bg-white hover:bg-gray-100 text-blue-900 rounded-xl shadow-xs transition-colors shrink-0 cursor-pointer"
+                  >
+                    View Certificate →
+                  </button>
+                </div>
               </>
             ) : (
               <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-12 text-center text-gray-600 space-y-3">
@@ -431,7 +488,7 @@ export default function ImageDetectionPage() {
                 <h3 className="text-sm font-bold text-gray-700">Awaiting Evidence Submission</h3>
                 <p className="text-xs text-gray-600 max-w-xs mx-auto">
                   Upload an image or click &quot;Load Sample&quot; on the left to view the interactive
-                  verdict dial, confidence score, and forensic metadata.
+                  verdict dial, decision boundary simulator, and forensic metadata.
                 </p>
               </div>
             )}
@@ -444,6 +501,17 @@ export default function ImageDetectionPage() {
         <div className="pt-4 animate-in fade-in duration-300">
           <BatchResultsGallery data={batchResult} onReset={handleClearAll} />
         </div>
+      )}
+
+      {/* Week 6: Forensic Audit Certificate Modal */}
+      {singleResult && (
+        <ForensicReportModal
+          detection={singleResult}
+          selectedFile={selectedFiles[0]}
+          threshold={threshold}
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+        />
       )}
     </div>
   );
