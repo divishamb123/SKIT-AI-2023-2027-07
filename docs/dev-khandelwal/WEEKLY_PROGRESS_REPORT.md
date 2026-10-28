@@ -1,9 +1,9 @@
-# Dev Khandelwal — Individual Weekly Progress Report
+# Dev Khandelwal - Individual Weekly Progress Report
 
 **Name:** Dev Khandelwal
 **College ID:** 23ESKCA035
 **GitHub:** Dev-learner-17
-**Role:** Team Lead — audio detection service, complete backend, fusion layer
+**Role:** Team Lead - audio detection service, complete backend, fusion layer
 **Repository:** https://github.com/divishamb123/SKIT-AI-2023-2027-07
 
 > This document is the official individual weekly log for Dev Khandelwal.
@@ -12,7 +12,7 @@
 
 ---
 
-## Sprint 1 — Foundation & Data Preparation
+## Sprint 1 - Foundation & Data Preparation
 
 **Form-2 User Story:** Develop authentication system and backend setup
 **Form-2 Dates:** 03-Aug-2026 to 20-Sep-2026
@@ -20,7 +20,7 @@
 
 ---
 
-### Week — 03 September 2026
+### Week - 03 September 2026
 
 **Task completed (Form-2 Sprint 1 words):**
 Set up Docker stack (PostgreSQL, RabbitMQ, MinIO). Created database schema. Built registration, login and JWT authentication.
@@ -40,7 +40,7 @@ Set up Docker stack (PostgreSQL, RabbitMQ, MinIO). Created database schema. Buil
 
 ---
 
-### Week — 10 September 2026
+### Week - 10 September 2026
 
 **Task completed (Form-2 Sprint 1 words):**
 Built file upload and job tracking pipeline. Complete Docker application integration, environment verification, and E2E testing.
@@ -61,7 +61,7 @@ All Form-2 deliverables for Sprint 1 are implemented and merged into `main`.
 
 ---
 
-## Sprint 2 — Baseline Detection Services
+## Sprint 2 - Baseline Detection Services
 
 **Form-2 User Story:** Develop audio detection service
 **Form-2 Dates:** 21-Sep-2026 to 08-Nov-2026
@@ -69,7 +69,7 @@ All Form-2 deliverables for Sprint 1 are implemented and merged into `main`.
 
 ---
 
-### Week 1 — 08 October 2026
+### Week 1 - 08 October 2026
 
 **Task completed (Form-2 Sprint 2 words):**
 Built audio preprocessing with librosa and torchaudio. Integrated pre-trained AASIST-L model.
@@ -95,7 +95,7 @@ Built audio preprocessing with librosa and torchaudio. Integrated pre-trained AA
 
 ---
 
-### Week 2 — 15 October 2026
+### Week 2 - 15 October 2026
 
 **Task completed (Form-2 Sprint 2 words):**
 Integrated pre-trained AASIST-L model.
@@ -103,8 +103,8 @@ Integrated pre-trained AASIST-L model.
 **Specific work done:**
 - Refactored `audio_detector.py` to resolve model paths from environment variables (`AASIST_WEIGHTS_PATH` / `AASIST_CONFIG_PATH`) instead of hardcoded absolute paths
 - Implemented graceful degraded-mode: service starts even when weights are absent; `/internal/health` returns HTTP 503 with diagnostic JSON
-- Added `is_ready()` guard in queue consumer — marks jobs `FAILED` cleanly instead of crashing
-- Added `./models:/models:ro` volume mount to `docker-compose.yml` — audio service now Docker-runnable
+- Added `is_ready()` guard in queue consumer - marks jobs `FAILED` cleanly instead of crashing
+- Added `./models:/models:ro` volume mount to `docker-compose.yml` - audio service now Docker-runnable
 - Written operator guide `docs/dev-khandelwal/MODEL_SETUP.md`
 - 10 new unit tests for degraded-mode state machine and healthy-mode inference
 
@@ -120,7 +120,7 @@ Integrated pre-trained AASIST-L model.
 
 ---
 
-### Week 3 — 22 October 2026
+### Week 3 - 22 October 2026
 
 **Task completed (Form-2 Sprint 2 words):**
 Implemented background worker for audio jobs.
@@ -145,39 +145,39 @@ Implemented background worker for audio jobs.
 
 ---
 
-### Week 4 — 29 October 2026 *(upcoming)*
+### Week 4 - 29 October 2026
 
-**Planned task (Form-2 Sprint 2 words):**
+**Task completed (Form-2 Sprint 2 words):**
 Recorded baseline EER.
 
-**Planned work:**
-- Run ASVspoof 2019 LA evaluation script against AASIST-L baseline
-- Document EER measurement in `results/asvspoof_baseline_metrics.json`
-- Verify EER evidence is committed and verifiable on GitHub
-- Complete Sprint 2 to 100%
+**Specific work done:**
+- Ran `scripts/evaluate_audio_baseline.py` against the full ASVspoof 2019 LA evaluation set (71,237 utterances, 0 failed)
+- AASIST-L pretrained baseline EER: **0.992%** — meets the Sprint 3 target of ≤ 1.0%
+- EER threshold: 1.7633 (bonafide logit direction)
+- Results committed to `results/asvspoof_baseline_metrics.json` and `results/asvspoof_baseline_scores.csv`
+- Total inference time: 1,298 s on CPU (throughput: 0.0182 s/sample)
+
+**GitHub Evidence:**
+
+| File | Description |
+|---|---|
+| [`results/asvspoof_baseline_metrics.json`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/results/asvspoof_baseline_metrics.json) | EER = 0.992%, threshold = 1.7633, 71,237 samples |
+| [`results/asvspoof_baseline_scores.csv`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/results/asvspoof_baseline_scores.csv) | Per-utterance scores (utt_id, label, spoof_logit, bonafide_logit) |
+| [`scripts/evaluate_audio_baseline.py`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/scripts/evaluate_audio_baseline.py) | Evaluation script used to produce these results |
+
+**Branch:** `dev-khandelwal/sprint-2-audio`
+**Sprint 2 %:** 98% (+7%)
 
 ---
 
-### Week 5 — 05 November 2026 *(upcoming)*
-
-**Planned task (Form-2 Sprint 2 words):**
-Built audio preprocessing with librosa and torchaudio. Recorded baseline EER.
-
-**Planned work:**
-- Final Sprint 2 integration verification
-- Confirm all four Form-2 Sprint 2 deliverables are fully implemented and evidenced on GitHub
-- Sprint 2 completion: 100%
-
----
-
-## Sprint 2 Status: 🔄 IN PROGRESS (91%)
+## Sprint 2 Status: ✅ COMPLETE (98%)
 
 | Form-2 Sprint 2 Deliverable | Status |
 |---|---|
-| Built audio preprocessing with librosa and torchaudio | ✅ Done — `audio_preprocessor.py` |
-| Integrated pre-trained AASIST-L model | ✅ Done — `audio_detector.py`, Docker volume mount |
-| Implemented background worker for audio jobs | ✅ Done — `queue_consumer.py` with retry/timeout |
-| Recorded baseline EER | 🔄 Week 4 — in progress |
+| Built audio preprocessing with librosa and torchaudio | ✅ Done - `audio_preprocessor.py` |
+| Integrated pre-trained AASIST-L model | ✅ Done - `audio_detector.py`, Docker volume mount |
+| Implemented background worker for audio jobs | ✅ Done - `queue_consumer.py` with retry/timeout |
+| Recorded baseline EER | ✅ Done - EER 0.992% on 71,237 ASVspoof 2019 LA eval samples |
 
 ---
 
@@ -192,4 +192,4 @@ Built audio preprocessing with librosa and torchaudio. Recorded baseline EER.
 
 ---
 
-*Last updated: 22 October 2026 — Dev Khandelwal (23ESKCA035)*
+*Last updated: 29 October 2026 - Dev Khandelwal (23ESKCA035)*
