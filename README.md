@@ -33,10 +33,11 @@
 
 | S.No. | Form-2 Sprint 2 Task | Implementation | Status |
 |---|---|---|---|
-| 1 | **Developing an image inference service with a defined input/output interface** | **Week 1:** Production-ready `ImageDetectionService` (ResNet-18, MPS/CUDA/CPU).<br/>**Week 2:** I/O API Specification, `/api/detect/image` endpoint with strict validation & `services/image-service` microservice. | **Completed & Verified (Weeks 1 & 2)** |
-| 2 | **Designing batch-processing logic for multiple image inputs** | **Week 3:** Batched tensor collation `(B, 3, 224, 224)`, dynamic chunking ($B \le 32$), vectorized acceleration (~2.3x speedup), fault-isolated partial failure handling, and `/api/detect/image/batch` endpoints. | **Completed & Verified (Week 3)** |
-| 3 | **Testing image inference using grouped input samples** | **Week 4:** Grouped evaluation engine (`GroupedImageEvaluator`), multi-dimensional stratification across in-domain (`cifake` test) and out-of-domain (`genimage` holdout), generator breakdowns (`cifar10`, `stable-diffusion`, `midjourney`, `biggan`), and batch throughput scaling. | **Completed & Verified (Week 4)** |
-| 4 | **Designing image upload and result interaction components** | **Week 5:** Interactive multi-file drag-and-drop uploader (`ImageUploadDropzone`), radial SVG verdict gauges (`VerdictGauge`), forensic metadata cards (`ImageMetadataCard`), high-throughput batch results gallery (`BatchResultsGallery`), and dedicated Next.js `/image-detection` workbench.<br/>**Week 6:** Interactive decision boundary & threshold simulator (`DecisionBoundaryController`), multi-channel forensic evidence visualizer (RGB, Luminance Y, Spatial High-Pass in `ForensicEvidenceViewer`), and chain-of-custody audit certificate modal (`ForensicReportModal`). | **Completed & Verified (Weeks 5 & 6)** |
+| 1 | **Developing an image inference service with a defined input/output interface** | **Week 1:** Production-ready `ImageDetectionService` (ResNet-18, MPS/CUDA/CPU).<br/>**Week 2:** I/O API Specification, `/api/detect/image` endpoint with 6 security guardrails & `services/image-service` microservice. | **✅ Completed & Verified (100%)** |
+| 2 | **Designing batch-processing logic for multiple image inputs** | **Week 3:** Batched tensor collation `(B, 3, 224, 224)`, dynamic chunking ($B \le 32$), vectorized acceleration (~2.3x speedup), fault-isolated partial failure handling, and `/api/detect/image/batch` endpoints. | **✅ Completed & Verified (100%)** |
+| 3 | **Testing image inference using grouped input samples** | **Week 4:** Grouped evaluation engine (`GroupedImageEvaluator`), multi-dimensional stratification across in-domain (`cifake` test) and out-of-domain (`genimage` holdout), generator breakdowns (`cifar10`, `stable-diffusion`, `midjourney`, `biggan`), and batch throughput scaling (176–364 FPS). | **✅ Completed & Verified (100%)** |
+| 4 | **Designing image upload and result interaction components** | **Week 5:** Interactive multi-file drag-and-drop uploader (`ImageUploadDropzone`), radial SVG verdict gauges (`VerdictGauge`), forensic metadata cards (`ImageMetadataCard`), high-throughput batch results gallery (`BatchResultsGallery`), and dedicated Next.js `/image-detection` workbench.<br/>**Week 6:** Interactive decision boundary & threshold simulator (`DecisionBoundaryController`), multi-channel forensic evidence visualizer (RGB, Luminance Y, Spatial High-Pass in `ForensicEvidenceViewer`), and chain-of-custody audit certificate modal (`ForensicReportModal`).<br/>**Week 7 (Final Milestone):** Master verification suite (`verify_sprint2_final.py`), end-to-end audit test suite (`test_sprint2_final_audit.py`), individual work audit report ([`DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md`](DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md)), official weekly log ([`docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md`](docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md)), and full API Gateway image proxy integration. | **✅ Completed & Verified (100%)** |
+
 
 
 ---
@@ -186,7 +187,25 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
   4. **Enhanced Batch Result Analytics ([`BatchResultsGallery.tsx`](frontend/src/components/image-detection/BatchResultsGallery.tsx)):**
      - Real-time filename search and dynamic batch threshold slider that re-classifies multi-image batches live.
      - Multi-criterion sorting (confidence high/low, latency, input order) and batch CSV/JSON manifest exports.
-- **Verification:** Run `python3 scripts/verify_sprint2_week6.py`, `pytest tests/test_image_interaction_week6.py -v`, or `cd frontend && npm run build`.
+### Week 7: Final Sprint 2 Completion, API Gateway Routing & Master Verification (100% Milestone)
+- **The Problem:** By Week 6, all model inference, batch collation, grouped evaluation, and forensic frontend components were built. However, the final sprint deliverable requires unified ecosystem integration (API Gateway synchronous proxy routing), automated end-to-end regression testing across all Form-2 tasks, formal individual work auditing with exact commit SHAs, and full test suite verification.
+- **Our Final Sprint 2 Deliverables:**
+  1. **API Gateway Synchronous Proxy Integration:**
+     - Configured `IMAGE_SERVICE_URL` in [`services/api-gateway/app/core/config.py`](services/api-gateway/app/core/config.py) and linked container dependencies in [`docker-compose.yml`](docker-compose.yml).
+     - Added direct proxy routes in [`services/api-gateway/app/api/detect.py`](services/api-gateway/app/api/detect.py):
+       - `POST /api/v1/detect/image/direct`: Proxies multipart image upload to `image-service:8004`.
+       - `POST /api/v1/detect/image/direct-batch`: Proxies batch multipart files with streaming aggregation.
+       - `POST /api/v1/detect/image/direct-base64`: Proxies Base64 JSON payloads.
+  2. **Frontend API Client Test Suite ([`frontend/src/lib/__tests__/image-api.test.ts`](frontend/src/lib/__tests__/image-api.test.ts)):**
+     - 3 automated Vitest unit tests verifying multipart FormData encoding, Base64 JSON requests, batch item aggregation, and response schema contracts.
+  3. **Master Sprint 2 Verification Suite ([`scripts/verify_sprint2_final.py`](scripts/verify_sprint2_final.py)):**
+     - Comprehensive 8-stage verification pipeline validating the entire Sprint 2 milestone in a single command.
+  4. **Master End-to-End Audit Suite ([`tests/test_sprint2_final_audit.py`](tests/test_sprint2_final_audit.py)):**
+     - 12 comprehensive automated unit tests covering ResNet-18 model loading, preprocessing, Pydantic I/O contracts, batch collation, fault isolation, grouped evaluation metrics, threshold math, Canvas formulas, and Docker configurations.
+  5. **Formal Individual Work Audit & Weekly Log:**
+     - [`DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md`](DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md): Comprehensive forensic audit report of Divisha Manak Bohra's (23ESKCA038) individual contributions across Sprint 1 and Sprint 2.
+     - [`docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md`](docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md): Official weekly log from Sprint 1 Week 1 through Sprint 2 Week 7 with exact Form-2 task mapping and commit SHAs.
+- **Verification:** Run `python3 scripts/verify_sprint2_final.py`, `pytest tests/test_sprint2_final_audit.py -v`, or `cd frontend && npm test`.
 
 ---
 
@@ -218,6 +237,7 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 | [`tests/test_grouped_image_evaluation.py`](tests/test_grouped_image_evaluation.py) | 11 tests verifying grouped evaluation, generator stratification, and scaling. |
 | [`frontend/src/types/image-detection.ts`](frontend/src/types/image-detection.ts) | TypeScript interfaces for image detection responses, batch items, and upload states. |
 | [`frontend/src/lib/api.ts`](frontend/src/lib/api.ts) | Frontend API client with `detectImage`, `detectImageBase64`, and `detectImageBatch`. |
+| [`frontend/src/lib/__tests__/image-api.test.ts`](frontend/src/lib/__tests__/image-api.test.ts) | Vitest automated unit tests for image API client functions. |
 | [`frontend/src/components/image-detection/ImageUploadDropzone.tsx`](frontend/src/components/image-detection/ImageUploadDropzone.tsx) | Multi-file drag-and-drop uploader with validation, preview queue, and sample loaders. |
 | [`frontend/src/components/image-detection/VerdictGauge.tsx`](frontend/src/components/image-detection/VerdictGauge.tsx) | Radial SVG dial gauge displaying animated confidence and dual-probability distribution. |
 | [`frontend/src/components/image-detection/ImageMetadataCard.tsx`](frontend/src/components/image-detection/ImageMetadataCard.tsx) | Technical forensic attributes display with resolution, channels, latency, and raw JSON export. |
@@ -230,6 +250,11 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 | [`frontend/src/components/image-detection/ForensicReportModal.tsx`](frontend/src/components/image-detection/ForensicReportModal.tsx) | Cryptographic SHA-256 chain-of-custody audit certificate modal with printable styling. |
 | [`scripts/verify_sprint2_week6.py`](scripts/verify_sprint2_week6.py) | Standalone 8-check automated verification suite for Week 6 deliverables. |
 | [`tests/test_image_interaction_week6.py`](tests/test_image_interaction_week6.py) | 8 automated unit tests verifying Week 6 interactive modules, math, and certificates. |
+| [`scripts/verify_sprint2_final.py`](scripts/verify_sprint2_final.py) | Master 8-check verification suite for final Sprint 2 completion (100%). |
+| [`tests/test_sprint2_final_audit.py`](tests/test_sprint2_final_audit.py) | Master 12-test comprehensive audit suite validating all 4 Form-2 tasks. |
+| [`DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md`](DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md) | Official comprehensive individual work audit and Form-2 evidence tracking. |
+| [`docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md`](docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md) | Official individual weekly progress report from Sprint 1 Week 1 to Sprint 2 Week 7. |
+
 
 
 ---
@@ -406,9 +431,13 @@ pytest tests/test_image_interaction_components.py -v
 # Week 6: Advanced evidence inspection, threshold calibration & certificates
 python3 scripts/verify_sprint2_week6.py
 pytest tests/test_image_interaction_week6.py -v
-cd frontend && npm run build && cd ..
 
-# Run all 68 unit & integration tests across Sprint 1 & Sprint 2
+# Week 7 (Final Milestone): Master Sprint 2 Verification & Full Audit
+python3 scripts/verify_sprint2_final.py
+pytest tests/test_sprint2_final_audit.py -v
+cd frontend && npm test && npm run build && cd ..
+
+# Run all 94 unit & integration tests across Sprint 1 & Sprint 2
 pytest tests/ -v
 ```
 

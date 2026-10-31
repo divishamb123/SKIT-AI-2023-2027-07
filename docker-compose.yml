@@ -198,6 +198,7 @@ services:
     environment:
       AUTH_SERVICE_URL: http://auth-service:8006/api/v1/auth
       TEXT_SERVICE_URL: http://text-service:8007
+      IMAGE_SERVICE_URL: http://image-service:8004
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-forensics}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
@@ -208,6 +209,8 @@ services:
       auth-service:
         condition: service_started
       text-service:
+        condition: service_started
+      image-service:
         condition: service_started
       rabbitmq:
         condition: service_healthy

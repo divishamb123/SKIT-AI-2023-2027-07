@@ -2,7 +2,10 @@ import uuid
 from typing import Any
 
 import httpx
-import magic
+try:
+    import magic
+except ImportError:
+    magic = None
 import structlog
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,8 +43,11 @@ async def detect_image(
             detail=f"File too large. Max size is {MAX_FILE_SIZE / 1024 / 1024} MB.",
         )
 
-    # 2. Validate MIME type using python-magic
-    mime_type = magic.from_buffer(file_bytes, mime=True)
+    # 2. Validate MIME type using python-magic with content-type fallback
+    if magic is not None:
+        mime_type = magic.from_buffer(file_bytes, mime=True)
+    else:
+        mime_type = file.content_type or "image/png"
     if mime_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
@@ -129,8 +135,11 @@ async def detect_audio(
             detail=f"File too large. Max size is {MAX_FILE_SIZE / 1024 / 1024} MB.",
         )
 
-    # 2. Validate MIME type using python-magic
-    mime_type = magic.from_buffer(file_bytes, mime=True)
+    # 2. Validate MIME type using python-magic with content-type fallback
+    if magic is not None:
+        mime_type = magic.from_buffer(file_bytes, mime=True)
+    else:
+        mime_type = file.content_type or "audio/wav"
     if mime_type not in ALLOWED_AUDIO_MIME_TYPES and not mime_type.startswith("audio/"):
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
@@ -237,3 +246,113 @@ async def detect_text(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to process text detection: {exc}",
             )
+
+
+@router.post("/image/direct")
+@limiter.limit("30/minute")
+async def detect_image_direct(
+    request: Request,
+    file: UploadFile = File(...),
+):
+    target_url = f"{settings.IMAGE_SERVICE_URL.rstrip('/')}/api/detect/image"
+    content = await file.read()
+    files = {"file": (file.filename, content, file.content_type or "image/png")}
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            resp = await client.post(target_url, files=files)
+            if resp.status_code >= 400:
+                try:
+                    error_detail = resp.json().get("detail", resp.text)
+                except Exception:
+                    error_detail = resp.text
+                raise HTTPException(status_code=resp.status_code, detail=error_detail)
+            return resp.json()
+        except HTTPException:
+            raise
+        except httpx.RequestError as exc:
+            logger.error("image_service_unavailable", error=str(exc), url=target_url)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Image detection service unavailable: {exc}",
+            )
+        except Exception as exc:
+            logger.error("image_detection_proxy_error", error=str(exc))
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to process image detection: {exc}",
+            )
+
+
+@router.post("/image/direct-batch")
+@limiter.limit("20/minute")
+async def detect_image_batch_direct(
+    request: Request,
+    files: list[UploadFile] = File(...),
+):
+    target_url = f"{settings.IMAGE_SERVICE_URL.rstrip('/')}/api/detect/image/batch"
+    multipart_files = []
+    for f in files:
+        data = await f.read()
+        multipart_files.append(
+            ("files", (f.filename, data, f.content_type or "image/png"))
+        )
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        try:
+            resp = await client.post(target_url, files=multipart_files)
+            if resp.status_code >= 400:
+                try:
+                    error_detail = resp.json().get("detail", resp.text)
+                except Exception:
+                    error_detail = resp.text
+                raise HTTPException(status_code=resp.status_code, detail=error_detail)
+            return resp.json()
+        except HTTPException:
+            raise
+        except httpx.RequestError as exc:
+            logger.error("image_service_unavailable", error=str(exc), url=target_url)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Image detection service unavailable: {exc}",
+            )
+        except Exception as exc:
+            logger.error("image_batch_proxy_error", error=str(exc))
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to process batch image detection: {exc}",
+            )
+
+
+@router.post("/image/direct-base64")
+@limiter.limit("30/minute")
+async def detect_image_base64_direct(
+    request: Request,
+    payload: dict[str, Any],
+):
+    target_url = f"{settings.IMAGE_SERVICE_URL.rstrip('/')}/api/detect/image/base64"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            resp = await client.post(target_url, json=payload)
+            if resp.status_code >= 400:
+                try:
+                    error_detail = resp.json().get("detail", resp.text)
+                except Exception:
+                    error_detail = resp.text
+                raise HTTPException(status_code=resp.status_code, detail=error_detail)
+            return resp.json()
+        except HTTPException:
+            raise
+        except httpx.RequestError as exc:
+            logger.error("image_service_unavailable", error=str(exc), url=target_url)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Image detection service unavailable: {exc}",
+            )
+        except Exception as exc:
+            logger.error("image_base64_proxy_error", error=str(exc))
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to process base64 image detection: {exc}",
+            )
+
