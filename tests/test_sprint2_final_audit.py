@@ -139,7 +139,9 @@ def test_task2_partial_failure_fault_isolation(image_service, sample_image_bytes
     assert len(batch_response.results) == 2
     assert len(batch_response.errors) == 1
     assert batch_response.errors[0].filename == "corrupt_2.png"
-    assert "Corrupted or unrecognizable image payload" in batch_response.errors[0].message
+    assert (
+        "Corrupted or unrecognizable image payload" in batch_response.errors[0].message
+    )
 
 
 # ---------------------------------------------------------------------------

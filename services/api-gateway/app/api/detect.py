@@ -2,6 +2,7 @@ import uuid
 from typing import Any
 
 import httpx
+
 try:
     import magic
 except ImportError:
@@ -355,4 +356,3 @@ async def detect_image_base64_direct(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to process base64 image detection: {exc}",
             )
-
