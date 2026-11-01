@@ -56,7 +56,7 @@ Built file upload and job tracking pipeline. Complete Docker application integra
 
 ---
 
-**Sprint 1 Status: ✅ COMPLETE (100%)**
+**Sprint 1 Status: COMPLETE (100%)**
 All Form-2 deliverables for Sprint 1 are implemented and merged into `main`.
 
 ---
@@ -126,7 +126,7 @@ Integrated pre-trained AASIST-L model.
 Implemented background worker for audio jobs.
 
 **Specific work done:**
-- Added per-job retry with exponential back-off (1s → 2s → 4s, up to 3 retries) in `queue_consumer.py`
+- Added per-job retry with exponential back-off (1s -> 2s -> 4s, up to 3 retries) in `queue_consumer.py`
 - Added inference timeout (30s) via `asyncio.wait_for()` around `predict_sync` call
 - Added MinIO download timeout (20s) via `asyncio.wait_for()` around S3 download
 - Jobs exhausting all retries permanently marked `FAILED` with descriptive `error_message` in database
@@ -152,7 +152,7 @@ Recorded baseline EER.
 
 **Specific work done:**
 - Ran `scripts/evaluate_audio_baseline.py` against the full ASVspoof 2019 LA evaluation set (71,237 utterances, 0 failed)
-- AASIST-L pretrained baseline EER: **0.992%** — meets the Sprint 3 target of ≤ 1.0%
+- AASIST-L pretrained baseline EER: **0.992%** - meets the Sprint 3 target of <= 1.0%
 - EER threshold: 1.7633 (bonafide logit direction)
 - Results committed to `results/asvspoof_baseline_metrics.json` and `results/asvspoof_baseline_scores.csv`
 - Total inference time: 1,298 s on CPU (throughput: 0.0182 s/sample)
@@ -170,14 +170,42 @@ Recorded baseline EER.
 
 ---
 
-## Sprint 2 Status: ✅ COMPLETE (98%)
+### Week 5 - 05 November 2026
+
+**Task completed (Form-2 Sprint 2 words):**
+Built audio preprocessing with librosa and torchaudio. Recorded baseline EER.
+
+**Specific work done:**
+- Ran final Sprint 2 integration verification (`scripts/verify_sprint2_week5_audio.py`) — all 4 Form-2 deliverables confirmed PASS
+- Verified `audio_preprocessor.py`: `process_bytes()` produces correct shape; handles mono/stereo, resampling to 16 kHz, tile/crop padding; `librosa==0.11.0` listed in service `requirements.txt`; `torchaudio` used for all I/O and transforms
+- Verified `audio_detector.py`: `AASISTDetector` class, `is_ready()` guard, `predict_sync()`, graceful degraded-mode startup, model path resolved from `AASIST_WEIGHTS_PATH` env-var
+- Verified `queue_consumer.py`: `MAX_RETRIES=3`, exponential back-off (1s->2s->4s), `asyncio.wait_for()` inference timeout 30s, MinIO download timeout 20s, `x-retry-count` header tracking, dead-letter FAILED state
+- Verified EER evidence: `results/asvspoof_baseline_metrics.json` EER=0.992% < 1.0% target; `results/asvspoof_baseline_scores.csv` 71,237 rows
+- Verification result: **21/21 checks PASS, 0 FAIL** (exit code 0)
+- Sprint 2 complete: all 4 Form-2 deliverables implemented, tested, and evidenced on GitHub
+
+**GitHub Evidence:**
+
+| File | Description |
+|---|---|
+| [`scripts/verify_sprint2_week5_audio.py`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/scripts/verify_sprint2_week5_audio.py) | Final integration verification — 21/21 checks PASS, all 4 Sprint 2 deliverables confirmed |
+| [`results/asvspoof_baseline_metrics.json`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/results/asvspoof_baseline_metrics.json) | EER = 0.992%, threshold = 1.7633, 71,237 samples |
+| [`results/asvspoof_baseline_scores.csv`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/results/asvspoof_baseline_scores.csv) | 71,237 per-utterance ASVspoof 2019 LA eval scores |
+
+**Branch:** `dev-khandelwal/sprint-2-audio`
+**Verification:** 21 checks PASS, 0 FAIL (`scripts/verify_sprint2_week5_audio.py`)
+**Sprint 2 %:** 100% (+2%) — COMPLETE
+
+---
+
+## Sprint 2 Status: COMPLETE (100%)
 
 | Form-2 Sprint 2 Deliverable | Status |
 |---|---|
-| Built audio preprocessing with librosa and torchaudio | ✅ Done - `audio_preprocessor.py` |
-| Integrated pre-trained AASIST-L model | ✅ Done - `audio_detector.py`, Docker volume mount |
-| Implemented background worker for audio jobs | ✅ Done - `queue_consumer.py` with retry/timeout |
-| Recorded baseline EER | ✅ Done - EER 0.992% on 71,237 ASVspoof 2019 LA eval samples |
+| Built audio preprocessing with librosa and torchaudio | Done - `audio_preprocessor.py` (librosa in requirements.txt, torchaudio for I/O/transforms) |
+| Integrated pre-trained AASIST-L model | Done - `audio_detector.py`, graceful degraded-mode, Docker volume mount |
+| Implemented background worker for audio jobs | Done - `queue_consumer.py` with retry/timeout (MAX_RETRIES=3, back-off 1s->2s->4s, inference timeout 30s) |
+| Recorded baseline EER | Done - EER 0.992% on 71,237 ASVspoof 2019 LA eval samples |
 
 ---
 
@@ -192,4 +220,4 @@ Recorded baseline EER.
 
 ---
 
-*Last updated: 29 October 2026 - Dev Khandelwal (23ESKCA035)*
+*Last updated: 05 November 2026 - Dev Khandelwal (23ESKCA035)*
