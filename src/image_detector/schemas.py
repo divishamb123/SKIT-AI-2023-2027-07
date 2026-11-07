@@ -111,14 +111,13 @@ class SubModelPrediction(BaseModel):
     """Prediction output from an individual constituent model in the ensemble."""
 
     model_name: str = Field(
-        ..., description="Identifier of the constituent model (e.g. resnet18, mobilenet_v3)"
+        ...,
+        description="Identifier of the constituent model (e.g. resnet18, mobilenet_v3)",
     )
     weight: float = Field(
         ..., ge=0.0, le=1.0, description="Normalized weight assigned to this submodel"
     )
-    verdict: PredictionVerdict = Field(
-        ..., description="Constituent model verdict"
-    )
+    verdict: PredictionVerdict = Field(..., description="Constituent model verdict")
     confidence: float = Field(
         ..., ge=0.0, le=1.0, description="Constituent model confidence score"
     )

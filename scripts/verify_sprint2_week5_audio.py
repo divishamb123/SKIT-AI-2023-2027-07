@@ -18,7 +18,6 @@ Exit code: 0 if all checks PASS, 1 if any check FAILS.
 import json
 import os
 import sys
-import inspect
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -46,8 +45,7 @@ print("Deliverable 1 — Audio preprocessing with librosa and torchaudio")
 print("=" * 70)
 
 preprocessor_path = os.path.join(
-    REPO_ROOT,
-    "services", "audio-service", "app", "services", "audio_preprocessor.py"
+    REPO_ROOT, "services", "audio-service", "app", "services", "audio_preprocessor.py"
 )
 
 if not os.path.isfile(preprocessor_path):
@@ -58,28 +56,40 @@ else:
     src = open(preprocessor_path, encoding="utf-8").read()
 
     # Check librosa in service requirements (may be used in evaluation scripts)
-    req_path = os.path.join(
-        REPO_ROOT, "services", "audio-service", "requirements.txt"
+    req_path = os.path.join(REPO_ROOT, "services", "audio-service", "requirements.txt")
+    req_src = (
+        open(req_path, encoding="utf-8").read() if os.path.isfile(req_path) else ""
     )
-    req_src = open(req_path, encoding="utf-8").read() if os.path.isfile(req_path) else ""
     if "librosa" in req_src or "librosa" in src:
-        check("librosa in audio-service dependencies", PASS,
-              f"Found in: {req_path if 'librosa' in req_src else preprocessor_path}")
+        check(
+            "librosa in audio-service dependencies",
+            PASS,
+            f"Found in: {req_path if 'librosa' in req_src else preprocessor_path}",
+        )
     else:
-        check("librosa in audio-service dependencies", FAIL,
-              "No 'librosa' reference found in source or requirements.txt")
+        check(
+            "librosa in audio-service dependencies",
+            FAIL,
+            "No 'librosa' reference found in source or requirements.txt",
+        )
 
     # Check torchaudio import
     if "torchaudio" in src:
         check("torchaudio import present", PASS)
     else:
-        check("torchaudio import present", FAIL, "No 'torchaudio' reference found in source")
+        check(
+            "torchaudio import present",
+            FAIL,
+            "No 'torchaudio' reference found in source",
+        )
 
     # Check process_bytes method
     if "process_bytes" in src:
         check("process_bytes() method present", PASS)
     else:
-        check("process_bytes() method present", FAIL, "Method 'process_bytes' not found")
+        check(
+            "process_bytes() method present", FAIL, "Method 'process_bytes' not found"
+        )
 
     # Check sampling-rate / resampling logic
     if "resamp" in src.lower() or "sample_rate" in src.lower():
@@ -95,8 +105,7 @@ print("Deliverable 2 — Integrated pre-trained AASIST-L model")
 print("=" * 70)
 
 detector_path = os.path.join(
-    REPO_ROOT,
-    "services", "audio-service", "app", "services", "audio_detector.py"
+    REPO_ROOT, "services", "audio-service", "app", "services", "audio_detector.py"
 )
 
 if not os.path.isfile(detector_path):
@@ -131,8 +140,11 @@ else:
     if "AASIST_WEIGHTS_PATH" in src or "getenv" in src:
         check("Model path from env-var (AASIST_WEIGHTS_PATH)", PASS)
     else:
-        check("Model path from env-var (AASIST_WEIGHTS_PATH)", FAIL,
-              "Hardcoded path may still be present")
+        check(
+            "Model path from env-var (AASIST_WEIGHTS_PATH)",
+            FAIL,
+            "Hardcoded path may still be present",
+        )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Deliverable 3: Implemented background worker for audio jobs
@@ -142,8 +154,7 @@ print("Deliverable 3 — Background worker for audio jobs")
 print("=" * 70)
 
 consumer_path = os.path.join(
-    REPO_ROOT,
-    "services", "audio-service", "app", "services", "queue_consumer.py"
+    REPO_ROOT, "services", "audio-service", "app", "services", "queue_consumer.py"
 )
 
 if not os.path.isfile(consumer_path):
@@ -168,7 +179,13 @@ else:
     else:
         check("Retry-count header tracking present", FAIL)
 
-    if "exponential" in src.lower() or "back" in src.lower() or "backoff" in src.lower() or "** retry" in src or "**" in src:
+    if (
+        "exponential" in src.lower()
+        or "back" in src.lower()
+        or "backoff" in src.lower()
+        or "** retry" in src
+        or "**" in src
+    ):
         check("Exponential back-off logic present", PASS)
     else:
         # Also check for 2**n pattern
@@ -190,7 +207,7 @@ print("Deliverable 4 — Recorded baseline EER")
 print("=" * 70)
 
 metrics_path = os.path.join(REPO_ROOT, "results", "asvspoof_baseline_metrics.json")
-scores_path  = os.path.join(REPO_ROOT, "results", "asvspoof_baseline_scores.csv")
+scores_path = os.path.join(REPO_ROOT, "results", "asvspoof_baseline_scores.csv")
 
 if not os.path.isfile(metrics_path):
     check("asvspoof_baseline_metrics.json exists", FAIL, f"Not found: {metrics_path}")
@@ -205,8 +222,11 @@ else:
             if float(eer) < 1.0:
                 check(f"EER < 1.0% target (actual: {eer}%)", PASS)
             else:
-                check(f"EER < 1.0% target (actual: {eer}%)", FAIL,
-                      "EER meets or exceeds 1.0% target")
+                check(
+                    f"EER < 1.0% target (actual: {eer}%)",
+                    FAIL,
+                    "EER meets or exceeds 1.0% target",
+                )
     except Exception as exc:
         check("EER value readable from JSON", FAIL, str(exc))
 
@@ -220,8 +240,11 @@ else:
         if row_count >= 70000:
             check(f"Score CSV has >= 70,000 rows (actual: {row_count:,})", PASS)
         else:
-            check(f"Score CSV row count (actual: {row_count:,})", FAIL,
-                  "Expected at least 70,000 rows (71,237 ASVspoof 2019 LA eval utterances)")
+            check(
+                f"Score CSV row count (actual: {row_count:,})",
+                FAIL,
+                "Expected at least 70,000 rows (71,237 ASVspoof 2019 LA eval utterances)",
+            )
     except Exception as exc:
         check("Score CSV row count readable", FAIL, str(exc))
 
@@ -232,9 +255,9 @@ print("\n" + "=" * 70)
 print("SPRINT 2 VERIFICATION SUMMARY — Dev Khandelwal (23ESKCA035)")
 print("=" * 70)
 
-total   = len(results)
-passed  = sum(1 for _, s, _ in results if s == PASS)
-failed  = sum(1 for _, s, _ in results if s == FAIL)
+total = len(results)
+passed = sum(1 for _, s, _ in results if s == PASS)
+failed = sum(1 for _, s, _ in results if s == FAIL)
 blocked = sum(1 for _, s, _ in results if s == BLOCKED)
 
 print(f"  Total checks : {total}")
@@ -244,14 +267,48 @@ print(f"  BLOCKED      : {blocked}")
 print()
 
 deliverable_map = {
-    "Deliverable 1 (Preprocessing)" : [r for r in results if any(
-        k in r[0] for k in ["audio_preprocessor", "librosa", "torchaudio", "process_bytes", "Resampling"])],
-    "Deliverable 2 (AASIST-L model)": [r for r in results if any(
-        k in r[0] for k in ["audio_detector", "AASISTDetector", "is_ready", "predict", "degraded", "AASIST_WEIGHTS"])],
-    "Deliverable 3 (Background worker)": [r for r in results if any(
-        k in r[0] for k in ["queue_consumer", "Retry", "Timeout", "back-off", "Dead-letter"])],
-    "Deliverable 4 (Baseline EER)": [r for r in results if any(
-        k in r[0] for k in ["asvspoof_baseline", "EER", "Score CSV"])],
+    "Deliverable 1 (Preprocessing)": [
+        r
+        for r in results
+        if any(
+            k in r[0]
+            for k in [
+                "audio_preprocessor",
+                "librosa",
+                "torchaudio",
+                "process_bytes",
+                "Resampling",
+            ]
+        )
+    ],
+    "Deliverable 2 (AASIST-L model)": [
+        r
+        for r in results
+        if any(
+            k in r[0]
+            for k in [
+                "audio_detector",
+                "AASISTDetector",
+                "is_ready",
+                "predict",
+                "degraded",
+                "AASIST_WEIGHTS",
+            ]
+        )
+    ],
+    "Deliverable 3 (Background worker)": [
+        r
+        for r in results
+        if any(
+            k in r[0]
+            for k in ["queue_consumer", "Retry", "Timeout", "back-off", "Dead-letter"]
+        )
+    ],
+    "Deliverable 4 (Baseline EER)": [
+        r
+        for r in results
+        if any(k in r[0] for k in ["asvspoof_baseline", "EER", "Score CSV"])
+    ],
 }
 
 all_deliverables_pass = True
@@ -266,11 +323,15 @@ for deliverable, checks in deliverable_map.items():
 
 print()
 if all_deliverables_pass:
-    print("  *** ALL SPRINT 2 DELIVERABLES VERIFIED --- Sprint 2 is COMPLETE (100%) ***")
+    print(
+        "  *** ALL SPRINT 2 DELIVERABLES VERIFIED --- Sprint 2 is COMPLETE (100%) ***"
+    )
     print()
     sys.exit(0)
 else:
     print("  [FAIL] One or more Sprint 2 deliverables have failing checks.")
-    print("     Review the FAIL entries above and fix before marking Sprint 2 complete.")
+    print(
+        "     Review the FAIL entries above and fix before marking Sprint 2 complete."
+    )
     print()
     sys.exit(1)

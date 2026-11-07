@@ -94,7 +94,12 @@ def test_single_prediction_with_pil(ensemble_detector, sample_pil_image):
     assert 0.0 <= response.confidence <= 1.0
     assert 0.0 <= response.probabilities.real <= 1.0
     assert 0.0 <= response.probabilities.ai_generated <= 1.0
-    assert pytest.approx(response.probabilities.real + response.probabilities.ai_generated, rel=1e-3) == 1.0
+    assert (
+        pytest.approx(
+            response.probabilities.real + response.probabilities.ai_generated, rel=1e-3
+        )
+        == 1.0
+    )
 
     # Verify Ensemble Metadata
     assert response.ensemble_metadata is not None
@@ -151,7 +156,9 @@ def test_batch_prediction_collation(ensemble_detector, sample_pil_image):
     images = [sample_pil_image for _ in range(6)]
     filenames = [f"sample_{i}.png" for i in range(6)]
 
-    batch_resp = ensemble_detector.predict_batch(images, filenames=filenames, chunk_size=4)
+    batch_resp = ensemble_detector.predict_batch(
+        images, filenames=filenames, chunk_size=4
+    )
 
     assert isinstance(batch_resp, BatchImageInferenceResponse)
     assert batch_resp.summary.total_submitted == 6

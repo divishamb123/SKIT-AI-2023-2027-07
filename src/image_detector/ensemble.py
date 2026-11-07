@@ -198,7 +198,9 @@ class ImageEnsembleDetector:
 
         # 5. Calculate consensus and disagreement metrics
         consensus_score = max(0.0, min(1.0, 1.0 - abs(p_res_ai - p_mob_ai)))
-        disagreement_var = float(((p_res_ai - p_fused_ai) ** 2 + (p_mob_ai - p_fused_ai) ** 2) / 2.0)
+        disagreement_var = float(
+            ((p_res_ai - p_fused_ai) ** 2 + (p_mob_ai - p_fused_ai) ** 2) / 2.0
+        )
 
         # 6. Categorical verdict based on threshold tau
         if p_fused_ai >= threshold:
@@ -216,17 +218,29 @@ class ImageEnsembleDetector:
             SubModelPrediction(
                 model_name="resnet18",
                 weight=w_res,
-                verdict=PredictionVerdict.AI_GENERATED if p_res_ai >= threshold else PredictionVerdict.REAL,
+                verdict=(
+                    PredictionVerdict.AI_GENERATED
+                    if p_res_ai >= threshold
+                    else PredictionVerdict.REAL
+                ),
                 confidence=round(p_res_ai if p_res_ai >= threshold else p_res_real, 4),
-                probabilities=ClassProbabilities(real=p_res_real, ai_generated=p_res_ai),
+                probabilities=ClassProbabilities(
+                    real=p_res_real, ai_generated=p_res_ai
+                ),
                 latency_ms=round(lat_res, 2),
             ),
             SubModelPrediction(
                 model_name="mobilenet_v3",
                 weight=w_mob,
-                verdict=PredictionVerdict.AI_GENERATED if p_mob_ai >= threshold else PredictionVerdict.REAL,
+                verdict=(
+                    PredictionVerdict.AI_GENERATED
+                    if p_mob_ai >= threshold
+                    else PredictionVerdict.REAL
+                ),
                 confidence=round(p_mob_ai if p_mob_ai >= threshold else p_mob_real, 4),
-                probabilities=ClassProbabilities(real=p_mob_real, ai_generated=p_mob_ai),
+                probabilities=ClassProbabilities(
+                    real=p_mob_real, ai_generated=p_mob_ai
+                ),
                 latency_ms=round(lat_mob, 2),
             ),
         ]
@@ -243,7 +257,9 @@ class ImageEnsembleDetector:
             verdict=verdict,
             is_ai=is_ai,
             confidence=round(confidence, 4),
-            probabilities=ClassProbabilities(real=p_fused_real, ai_generated=p_fused_ai),
+            probabilities=ClassProbabilities(
+                real=p_fused_real, ai_generated=p_fused_ai
+            ),
             image_metadata=raw_metadata,
             latency_ms=round(total_latency_ms, 2),
             model_version=self.ensemble_version,
@@ -317,7 +333,9 @@ class ImageEnsembleDetector:
         # 2. Dynamic chunking over valid tensors
         for chunk_start in range(0, len(valid_items), chunk_size):
             chunk = valid_items[chunk_start : chunk_start + chunk_size]
-            batch_tensor = torch.stack([item[2] for item in chunk], dim=0).to(self.device)
+            batch_tensor = torch.stack([item[2] for item in chunk], dim=0).to(
+                self.device
+            )
 
             chunk_t0 = time.perf_counter()
             with torch.inference_mode():
@@ -360,16 +378,32 @@ class ImageEnsembleDetector:
                     SubModelPrediction(
                         model_name="resnet18",
                         weight=w_res,
-                        verdict=PredictionVerdict.AI_GENERATED if p_res_ai >= threshold else PredictionVerdict.REAL,
-                        confidence=round(p_res_ai if p_res_ai >= threshold else p_res_real, 4),
-                        probabilities=ClassProbabilities(real=p_res_real, ai_generated=p_res_ai),
+                        verdict=(
+                            PredictionVerdict.AI_GENERATED
+                            if p_res_ai >= threshold
+                            else PredictionVerdict.REAL
+                        ),
+                        confidence=round(
+                            p_res_ai if p_res_ai >= threshold else p_res_real, 4
+                        ),
+                        probabilities=ClassProbabilities(
+                            real=p_res_real, ai_generated=p_res_ai
+                        ),
                     ),
                     SubModelPrediction(
                         model_name="mobilenet_v3",
                         weight=w_mob,
-                        verdict=PredictionVerdict.AI_GENERATED if p_mob_ai >= threshold else PredictionVerdict.REAL,
-                        confidence=round(p_mob_ai if p_mob_ai >= threshold else p_mob_real, 4),
-                        probabilities=ClassProbabilities(real=p_mob_real, ai_generated=p_mob_ai),
+                        verdict=(
+                            PredictionVerdict.AI_GENERATED
+                            if p_mob_ai >= threshold
+                            else PredictionVerdict.REAL
+                        ),
+                        confidence=round(
+                            p_mob_ai if p_mob_ai >= threshold else p_mob_real, 4
+                        ),
+                        probabilities=ClassProbabilities(
+                            real=p_mob_real, ai_generated=p_mob_ai
+                        ),
                     ),
                 ]
 
@@ -379,7 +413,9 @@ class ImageEnsembleDetector:
                         verdict=verdict,
                         is_ai=is_ai,
                         confidence=round(confidence, 4),
-                        probabilities=ClassProbabilities(real=p_fused_real, ai_generated=p_fused_ai),
+                        probabilities=ClassProbabilities(
+                            real=p_fused_real, ai_generated=p_fused_ai
+                        ),
                         image_metadata=meta,
                         latency_ms=round(avg_item_lat, 2),
                         model_version=self.ensemble_version,
@@ -396,10 +432,16 @@ class ImageEnsembleDetector:
         total_latency_ms = (time.perf_counter() - batch_start_time) * 1000.0
         successful_count = len(results)
         failed_count = len(errors)
-        avg_latency = round(total_latency_ms / successful_count, 2) if successful_count > 0 else 0.0
+        avg_latency = (
+            round(total_latency_ms / successful_count, 2)
+            if successful_count > 0
+            else 0.0
+        )
 
         real_count = sum(1 for r in results if r.verdict == PredictionVerdict.REAL)
-        ai_count = sum(1 for r in results if r.verdict == PredictionVerdict.AI_GENERATED)
+        ai_count = sum(
+            1 for r in results if r.verdict == PredictionVerdict.AI_GENERATED
+        )
         mean_conf = (
             round(sum(r.confidence for r in results) / successful_count, 4)
             if successful_count > 0
