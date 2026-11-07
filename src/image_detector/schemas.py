@@ -101,6 +101,56 @@ class ImageInferenceResponse(BaseModel):
     device: str = Field(
         ..., description="Computing hardware used for inference (cpu, cuda, mps)"
     )
+    ensemble_metadata: Optional["EnsembleMetadata"] = Field(
+        default=None,
+        description="Detailed submodel breakdown if generated via multi-model ensemble",
+    )
+
+
+class SubModelPrediction(BaseModel):
+    """Prediction output from an individual constituent model in the ensemble."""
+
+    model_name: str = Field(
+        ..., description="Identifier of the constituent model (e.g. resnet18, mobilenet_v3)"
+    )
+    weight: float = Field(
+        ..., ge=0.0, le=1.0, description="Normalized weight assigned to this submodel"
+    )
+    verdict: PredictionVerdict = Field(
+        ..., description="Constituent model verdict"
+    )
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Constituent model confidence score"
+    )
+    probabilities: ClassProbabilities = Field(
+        ..., description="Decomposed class probability distributions from this submodel"
+    )
+    latency_ms: Optional[float] = Field(
+        default=None, description="Submodel execution duration in milliseconds"
+    )
+
+
+class EnsembleMetadata(BaseModel):
+    """Forensic consensus telemetry for multi-model ensemble."""
+
+    ensemble_strategy: str = Field(
+        default="weighted_soft_voting",
+        description="Ensemble fusion strategy (e.g. weighted_soft_voting, hard_voting, stacking)",
+    )
+    submodels: List[SubModelPrediction] = Field(
+        ..., description="Breakdown of predictions from all constituent ensemble models"
+    )
+    consensus_score: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Consensus agreement metric between submodels (1.0 = unanimous agreement)",
+    )
+    disagreement_variance: float = Field(
+        ...,
+        ge=0.0,
+        description="Statistical variance of predicted AI probabilities across constituent models",
+    )
 
 
 class ImageDetectionAPIResponse(ImageInferenceResponse):

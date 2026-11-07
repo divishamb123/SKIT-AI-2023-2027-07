@@ -292,4 +292,38 @@
 
 ---
 
-*Last updated: 01 November 2026 — Divisha Manak Bohra (23ESKCA038)*
+## Sprint 3 — Accuracy Optimisation
+
+**Form-2 User Story:** Refining the image detection module  
+**Form-2 Dates:** 09-Nov-2026 to 31-Dec-2026  
+**Form-2 Deliverables:**  
+- Building and tuning a model ensemble for improved reliability  
+- Testing generalisation on unseen image generators  
+- Tuning classification thresholds using sample test sets  
+
+---
+
+### Week 1 — 15 November 2026
+
+**Task completed (Form-2 Sprint 3 words):**  
+*Building and tuning a model ensemble for improved reliability.*
+
+**Specific work done:**  
+- Developed `ImageEnsembleDetector` and `MobileNetV3Classifier` in `src/image_detector/ensemble.py`.
+- Combined complementary deep vision architectures: ResNet-18 (Deep Spatial Residual CNN) and MobileNetV3-Small (Inverted Residuals with Squeeze-and-Excitation channel attention).
+- Implemented weighted soft-voting probability fusion with automatic weight normalization ($\sum w = 1.0$).
+- Developed consensus agreement telemetry ($1.0 - |P_{\text{ResNet}} - P_{\text{MobileNet}}|$) and statistical disagreement variance metrics.
+- Extended Pydantic schemas with `SubModelPrediction` and `EnsembleMetadata` in `src/image_detector/schemas.py`.
+- Implemented high-throughput vectorized batch inference with dynamic chunking ($B \le 32$) and fault-isolated error handling.
+- Built automated 11-test suite in `tests/test_image_ensemble.py` and standalone master verifier `scripts/verify_sprint3_week1.py` (all 8 stages pass 100%).
+
+**GitHub Evidence:**
+- Code: `src/image_detector/ensemble.py`
+- Tests: `tests/test_image_ensemble.py` (11/11 passed)
+- Verification: `scripts/verify_sprint3_week1.py` (8/8 stages passed)
+
+**Sprint 3 Progress:** 14% (+14%)
+
+---
+
+*Last updated: 07 November 2026 — Divisha Manak Bohra (23ESKCA038)*

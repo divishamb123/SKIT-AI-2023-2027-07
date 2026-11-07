@@ -38,7 +38,16 @@
 | 3 | **Testing image inference using grouped input samples** | **Week 4:** Grouped evaluation engine (`GroupedImageEvaluator`), multi-dimensional stratification across in-domain (`cifake` test) and out-of-domain (`genimage` holdout), generator breakdowns (`cifar10`, `stable-diffusion`, `midjourney`, `biggan`), and batch throughput scaling (176–364 FPS). | **✅ Completed & Verified (100%)** |
 | 4 | **Designing image upload and result interaction components** | **Week 5:** Interactive multi-file drag-and-drop uploader (`ImageUploadDropzone`), radial SVG verdict gauges (`VerdictGauge`), forensic metadata cards (`ImageMetadataCard`), high-throughput batch results gallery (`BatchResultsGallery`), and dedicated Next.js `/image-detection` workbench.<br/>**Week 6:** Interactive decision boundary & threshold simulator (`DecisionBoundaryController`), multi-channel forensic evidence visualizer (RGB, Luminance Y, Spatial High-Pass in `ForensicEvidenceViewer`), and chain-of-custody audit certificate modal (`ForensicReportModal`).<br/>**Week 7 (Final Milestone):** Master verification suite (`verify_sprint2_final.py`), end-to-end audit test suite (`test_sprint2_final_audit.py`), individual work audit report ([`DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md`](DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md)), official weekly log ([`docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md`](docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md)), and full API Gateway image proxy integration. | **✅ Completed & Verified (100%)** |
 
+---
 
+### Sprint 3 — Accuracy Optimisation (09-Nov-2026 to 31-Dec-2026)
+*User Story: Refining the image detection module*
+
+| S.No. | Form-2 Sprint 3 Task | Implementation | Status |
+|---|---|---|---|
+| 1 | **Building and tuning a model ensemble for improved reliability** | **Week 1:** Multi-Model Ensemble Detector (`ImageEnsembleDetector`) combining ResNet-18 (Deep Spatial Residual CNN) with MobileNetV3-Small (Inverted Residuals with Squeeze-and-Excitation channel attention). Implemented weighted soft-voting probability fusion, automated weight normalization ($\sum w = 1.0$), sub-model consensus agreement and disagreement variance metrics, fault-isolated vectorized batch collation, and dynamic chunking ($B \le 32$). Verified with 11 automated pytest unit tests in [`tests/test_image_ensemble.py`](tests/test_image_ensemble.py) and standalone master verifier [`scripts/verify_sprint3_week1.py`](scripts/verify_sprint3_week1.py). | **✅ Completed & Verified (Week 1)** |
+| 2 | **Testing generalisation on unseen image generators** | Cross-generator benchmarking across the 12,000 out-of-domain GenImage holdout pool (Midjourney, BigGAN, Stable Diffusion) to quantify unseen generator transfer. | ⏳ Scheduled (Week 4) |
+| 3 | **Tuning classification thresholds using sample test sets** | Optimizing decision boundary thresholds ($\tau^*$) via Youden's J-statistic and equal error rate (EER) on validation test sets; generating ROC and DET curves. | ⏳ Scheduled (Week 5) |
 
 ---
 
@@ -253,7 +262,10 @@ In Sprint 2, we built the actual image detection machine learning engine, wrappe
 | [`scripts/verify_sprint2_final.py`](scripts/verify_sprint2_final.py) | Master 8-check verification suite for final Sprint 2 completion (100%). |
 | [`tests/test_sprint2_final_audit.py`](tests/test_sprint2_final_audit.py) | Master 12-test comprehensive audit suite validating all 4 Form-2 tasks. |
 | [`DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md`](DIVISHA_MANAK_BOHRA_INDIVIDUAL_WORK_AUDIT.md) | Official comprehensive individual work audit and Form-2 evidence tracking. |
-| [`docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md`](docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md) | Official individual weekly progress report from Sprint 1 Week 1 to Sprint 2 Week 7. |
+| [`docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md`](docs/divisha-bohra/WEEKLY_PROGRESS_REPORT.md) | Official individual weekly progress report from Sprint 1 Week 1 to Sprint 3 Week 1. |
+| [`src/image_detector/ensemble.py`](src/image_detector/ensemble.py) | Sprint 3 Week 1 multi-model ensemble detector combining ResNet-18 and MobileNetV3 with weighted soft-voting fusion. |
+| [`scripts/verify_sprint3_week1.py`](scripts/verify_sprint3_week1.py) | Standalone 8-stage automated verification suite for Sprint 3 Week 1 deliverables. |
+| [`tests/test_image_ensemble.py`](tests/test_image_ensemble.py) | 11 automated unit tests verifying multi-model ensemble initialization, soft-voting math, consensus metrics, and batch chunking. |
 
 
 
