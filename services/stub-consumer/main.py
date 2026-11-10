@@ -103,7 +103,9 @@ async def process_message(message: aio_pika.IncomingMessage) -> None:
 
             # ── 2. Download image bytes from MinIO ─────────────────────────
             file_bytes = await asyncio.to_thread(_download_from_minio, object_key)
-            logger.info("image_minio_download_ok", job_id=job_id, size_bytes=len(file_bytes))
+            logger.info(
+                "image_minio_download_ok", job_id=job_id, size_bytes=len(file_bytes)
+            )
 
             # ── 3. Run inference via image-service ─────────────────────────
             result = await _run_inference(file_bytes, filename)
@@ -132,13 +134,15 @@ async def process_message(message: aio_pika.IncomingMessage) -> None:
                     job.completed_at = datetime.now(timezone.utc)
                     # Store verdict summary in error_message field (repurposed for result)
                     # TODO Sprint 3: write to reports table using Report model
-                    job.error_message = json.dumps({
-                        "verdict": verdict,
-                        "confidence": confidence,
-                        "is_ai": is_ai,
-                        "model_version": model_version,
-                        "latency_ms": latency_ms,
-                    })
+                    job.error_message = json.dumps(
+                        {
+                            "verdict": verdict,
+                            "confidence": confidence,
+                            "is_ai": is_ai,
+                            "model_version": model_version,
+                            "latency_ms": latency_ms,
+                        }
+                    )
                     await session.commit()
 
             await message.ack()
