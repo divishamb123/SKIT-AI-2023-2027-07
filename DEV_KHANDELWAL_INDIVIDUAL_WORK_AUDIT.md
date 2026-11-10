@@ -1,345 +1,117 @@
-# Dev Khandelwal (23ESKCA035) â€” Individual Project Contribution & Sprint Status Report
+# Dev Khandelwal (23ESKCA035) — Project Contribution & Sprint Status
 
-## 1. Executive Summary
-This report presents a comprehensive, evidence-based forensic audit of Dev Khandelwal's individual contributions to the SKIT-AI-2023-2027-07 project as of **05 November 2026**. The audit cross-references official documentation (Form 1, Form 2, Blueprint) with actual Git history and repository codebase. Dev Khandelwal has successfully completed the backend foundation (Sprint 1, 100%) and the complete audio detection service (Sprint 2, 100%). All four Form-2 Sprint 2 deliverables are implemented, tested, and evidenced on GitHub. Sprint 3 is NOT STARTED (begins 09-Nov-2026). 
+**Name:** Dev Khandelwal
+**College ID:** 23ESKCA035
+**GitHub:** Dev-learner-17 (`devkhandelwal61@gmail.com`)
+**Role:** Team Lead — backend engineering, audio detection service, fusion layer
+**Repository:** https://github.com/divishamb123/SKIT-AI-2023-2027-07
+**Last updated:** 05 November 2026
 
-## 2. My Official Role
-**Team Lead**. Responsible for backend engineering and audio signal processing.
+---
 
-## 3. My Form-1 Responsibilities
-According to Form 1:
-*   **Audio detection service** (AASIST-L)
-*   **Complete backend** (API gateway, authentication, database, object storage, job queue)
-*   **Fusion layer**
+## My Role
 
-## 4. My Form-2 Responsibilities
-According to Form 2:
-*   **Sprint 1 (03-Aug-2026 to 20-Sep-2026):** Set up Docker stack (PostgreSQL, RabbitMQ, MinIO). Created database schema. Built registration, login and JWT authentication. Built file upload and job tracking pipeline.
-*   **Sprint 2 (21-Sep-2026 to 08-Nov-2026):** Built audio preprocessing with librosa and torchaudio. Integrated pre-trained AASIST-L model. Implemented background worker for audio jobs. Recorded baseline EER.
-*   **Sprint 3 (09-Nov-2026 to 31-Dec-2026):** Tuned audio decision threshold. Measured EER on ASVspoof 2019 LA against 1.0% target. Tested generalisation on In-the-Wild dataset. Added retry and timeout handling.
-*   **Sprint 4 (01-Jan-2027 to 24-Jan-2027):** Generated Mel-spectrogram images for each audio verdict. Stored them in MinIO and returned references through the API.
-*   **Sprint 5 (25-Jan-2027 to 14-Feb-2027):** Implemented weighted fusion of text, image and audio scores. Calibrated weights on validation data. Compared fused score against individual models.
-*   **Sprint 6 (15-Feb-2027 to 15-Mar-2027):** Completed security review and file validation. Verified clean rebuild from repository. Wrote installation and API documentation. Compiled final project report.
+As Team Lead I am responsible for:
+- Complete backend infrastructure (API gateway, auth, database, object storage, job queue)
+- Audio detection service (AASIST-L model, preprocessing, background worker)
+- Fusion layer (Sprint 5)
 
-## 5. Git Identity
-All contributions have been consistently committed under:
-*   **Name:** `Dev-learner-17`
-*   **Email:** `devkhandelwal61@gmail.com`
+---
 
-There are no commits under the explicit name "Dev Khandelwal", but authorship attribution maps clearly to `Dev-learner-17`.
+## Form-2 Responsibilities
 
-## 6. Branches Used
-*   `dev-khandelwal/sprint-1-foundation`
-*   `dev-khandelwal/sprint-2-audio`
-*   `main` (All work is currently merged/pushed here)
+| Sprint | Dates | Deliverable |
+|---|---|---|
+| Sprint 1 | 03-Aug-2026 to 20-Sep-2026 | Set up Docker stack. Created database schema. Built registration, login and JWT authentication. Built file upload and job tracking pipeline. |
+| Sprint 2 | 21-Sep-2026 to 08-Nov-2026 | Built audio preprocessing with librosa and torchaudio. Integrated pre-trained AASIST-L model. Implemented background worker for audio jobs. Recorded baseline EER. |
+| Sprint 3 | 09-Nov-2026 to 31-Dec-2026 | Tuned audio decision threshold. Measured EER on ASVspoof 2019 LA against 1.0% target. Tested generalisation on In-the-Wild dataset. Added retry and timeout handling. |
+| Sprint 4 | 01-Jan-2027 to 24-Jan-2027 | Generated Mel-spectrogram images for each audio verdict. Stored them in MinIO and returned references through the API. |
+| Sprint 5 | 25-Jan-2027 to 14-Feb-2027 | Implemented weighted fusion of text, image and audio scores. Calibrated weights on validation data. |
+| Sprint 6 | 15-Feb-2027 to 15-Mar-2027 | Security review. Clean rebuild verification. Installation and API documentation. Final project report. |
 
-## 7. Commit History
-You have made **15 commits** across the repository.
-*   Sprint 1 foundation commits were made between Sept 3 and Sept 10 and formally merged into `main` on Sept 12 (`e5766ac813`).
-*   Sprint 2 audio commits were made on Sept 24 and pushed directly to `main` without a pull-request merge commit.
+---
 
-## 8. Sprint 1 Work
-**Status:** **[COMPLETE]**
-*   **Database/Alembic/Models:** Implemented in `shared/db` (Commit `c0edf0fd43`).
-*   **Authentication/JWT:** Implemented in `services/auth-service` (Commit `314b1b2bd7`).
-*   **API Gateway:** Implemented in `services/api-gateway` (Commit `12ff443806`). File upload is complete for images, but an `/audio` endpoint is currently missing.
-*   **MinIO/RabbitMQ/Docker:** Implemented across `docker-compose.yml` and Python services (Commit `f67ef9bd54`).
-*   **Verification tests:** Implemented in `tests/e2e` (Commit `93cd342fbd`).
+## Git Identity
 
-## 9. Sprint 2 Work
-**Status:** **[COMPLETE - 100%]** *(All Form-2 deliverables implemented, tested, and evidenced on GitHub as of 05-Nov-2026)*
-*   **Preprocessing:** Implemented via `audio_preprocessor.py` (torchaudio for I/O/resampling/padding; librosa==0.11.0 in service requirements.txt). process_bytes() produces shape (1, 64600), handles mono/stereo and 16 kHz resampling.
-*   **AASIST-L Integration:** AASISTDetector class in `audio_detector.py`. Model path from AASIST_WEIGHTS_PATH env-var. Graceful degraded-mode startup. Docker volume mount added. Previous crash bug fixed (Commit 2a27c424).
-*   **Background Worker:** `queue_consumer.py` with MAX_RETRIES=3, exponential back-off (1s->2s->4s), asyncio.wait_for() inference timeout 30s, MinIO download timeout 20s, x-retry-count header, dead-letter FAILED state. All constants as env-vars. Previous unpacking bug fixed (Commit 2a27c424).
-*   **Baseline EER:** EER = 0.992% on 71,237 ASVspoof 2019 LA eval utterances (results/asvspoof_baseline_metrics.json, results/asvspoof_baseline_scores.csv).
-*   **Final verification:** scripts/verify_sprint2_week5_audio.py - 21/21 checks PASS (exit code 0).
+All my commits are under:
+- **Name:** `Dev-learner-17`
+- **Email:** `devkhandelwal61@gmail.com`
 
-## 10. Sprint 3 Status
-**Status:** **[NOT STARTED]** *(Sprint 3 dates: 09-Nov-2026 to 31-Dec-2026)*
-*   **Threshold Tuning:** Threshold is currently at default value. Active tuning not yet started.
-*   **EER on ASVspoof 2019 LA vs 1.0% target:** Baseline EER of 0.992% is already below target (recorded in Sprint 2). Sprint 3 will tune and re-measure post-tuning.
-*   **In-the-wild testing:** No evidence found. Planned for Sprint 3.
-*   **Retry/Timeout handling:** DONE in Sprint 2 (Commit 1b97099e). This item is complete ahead of schedule.
+---
 
-## 11. Sprint 4 Status
-**Status:** **[PARTIALLY COMPLETE]** *(Ahead of schedule)*
-*   **Mel-spectrogram generation:** Implemented early in `spectrogram_visualizer.py` and actively called by the queue consumer.
-*   **MinIO Storage:** Successfully uploads `melspec.png` to MinIO.
-*   **API References:** Not yet returned through the API Gateway (the `jobs.py` API only returns basic job status, not the explanation artifacts).
+## Sprint 1 — COMPLETE (100%)
 
-## 12. Sprint 5 Status
-**Status:** **[NOT STARTED]**
-*   Fusion layer not implemented.
+**What I built:**
 
-## 13. Sprint 6 Status
-**Status:** **[NOT STARTED]**
-*   Only Sprint 1 documentation exists in `docs/dev-khandelwal/SPRINT_1_STATUS.md`.
+| Component | File(s) | Commit |
+|---|---|---|
+| DB models (users, jobs, reports) | `shared/db/models/` | `c0edf0f` |
+| Alembic migration | `shared/db/alembic/versions/001_initial_migration.py` | `c0edf0f` |
+| Auth service (register, login, JWT, bcrypt, Redis) | `services/auth-service/` | `314b1b2` |
+| API Gateway (upload, MinIO, RabbitMQ, rate limiting) | `services/api-gateway/` | `12ff443` |
+| Job queue and tracking | `services/api-gateway/app/api/jobs.py` | `b6abf37` |
+| Docker Compose stack | `docker-compose.yml` | `f67ef9b` |
+| CI pipeline | `.github/workflows/ci.yml` | `93cd342` |
+| E2E verification scripts | `tests/e2e/` | `93cd342` |
 
-## 14. Current Overall Percentage
-*   **Sprint 1:** 95%
-*   **Sprint 2:** 70%
-*   **Sprint 3:** 0%
-*   **Sprint 4:** 80% (Completed early)
-*   **Sprint 5:** 0%
-*   **Sprint 6:** 5% (Initial docs only)
-*   **Overall Individual Completion:** **~41%**
+**Tests:** Auth unit tests (`tests/unit/test_auth.py`, `test_security.py`) pass.
 
-## 15. GitHub Contribution Analysis
-**The "2565 Lines" Issue**
-The contribution count of exactly **2565 additions and 45 deletions** corresponds precisely to the sum of your commits made exclusively on the `dev-khandelwal/sprint-1-foundation` branch (Sept 3 â€“ Sept 10). 
+---
 
-## 16. Why the 2565-line figure is misleading/incomplete
-GitHub's contribution graph often lags, relies on default branch merges, or reflects specific Pull Request statistics. Because your Sprint 2 work (`dev-khandelwal/sprint-2-audio`) was committed directly/fast-forwarded to `main` on September 24 without a formal Pull Request merge commit, any check performed prior to Sept 24, or any check scoped only to the Sprint 1 PR, would only yield 2565 lines.
+## Sprint 2 — COMPLETE (100%)
 
-**Actual Git Contribution on `main`:**
-*   Total Additions: **4,678 lines**
-*   Total Deletions: **286 lines**
+**What I built:**
 
-## 17. Current Main-Branch Status
-Your Sprint 1 and Sprint 2 code is completely merged into `main`. However, because of missing Docker volume mappings for model weights, missing `/audio` API endpoints, and a variable unpacking bug, the audio pipeline does not function end-to-end on `main` out-of-the-box.
+| Form-2 Deliverable | File(s) | Commit | Status |
+|---|---|---|---|
+| Audio preprocessing (librosa + torchaudio) | `services/audio-service/app/services/audio_preprocessor.py` | `905f3cb` | Done |
+| AASIST-L model integration | `services/audio-service/app/services/audio_detector.py`, `app/models/aasist.py` | `1642630` | Done |
+| Background worker (retry + timeout) | `services/audio-service/app/services/queue_consumer.py` | `1b97099` | Done |
+| Baseline EER measurement | `results/asvspoof_baseline_metrics.json`, `results/asvspoof_baseline_scores.csv` | `905f3cb` / `e72cafa` | Done |
 
-## 18. Remaining Work
-1. Fix the audio worker bugs.
-2. Mount the pretrained AASIST-L weights in Docker.
-3. Expose the `/audio` upload endpoint in the API Gateway.
-4. Execute Sprint 3 (timeout/retries, tuning).
-5. Expose spectrogram URLs via API (Sprint 4).
-6. Build the fusion module (Sprint 5).
+**Key results:**
+- AASIST-L EER = **0.992%** on 71,237 ASVspoof 2019 LA eval utterances (target: ≤ 1.0%)
+- Worker: MAX_RETRIES=3, exponential back-off 1s→2s→4s, inference timeout 30s, download timeout 20s
+- Degraded mode: service starts without model weights, returns HTTP 503, marks jobs FAILED cleanly
 
-## 19. Risks / Missing Evidence
-*   **Missing Model Weights:** AASIST-L pretrained weights are referenced by absolute path but not included in the Docker context or volume mounts.
-*   **Test Scaffolding:** `tests/unit/test_audio_service.py` contains only 1 placeholder test. Real audio tests are missing.
-*   **Integration Mismatch:** API Gateway expects `object_key` for images, but `queue_consumer.py` expects `input_object_key` for audio.
+**Tests:** 22 unit tests pass (12 retry + 10 detector).
 
-## 20. Recommended Next Actions
-**Priority 1 â€” Do immediately**
-*   **Task:** Fix variable unpacking bug in `queue_consumer.py`.
-*   **Why:** The worker will crash immediately when processing an audio file.
-*   **Exact Files:** `services/audio-service/app/services/queue_consumer.py` (Line 50: `waveform, meta = ...` should just be `waveform = ...`).
+---
 
-**Priority 2 â€” Before Sprint 2 ends (Nov 8)**
-*   **Task:** Fix Docker volumes and add `/audio` API endpoint.
-*   **Why:** Without these, the audio service cannot be accessed or run via Docker Compose.
-*   **Exact Files:** `docker-compose.yml` (add `- ./models:/models` to `audio-service`), `services/api-gateway/app/api/detect.py` (add `@router.post("/audio")`).
+## Sprint 3 — NOT STARTED
 
-**Priority 3 â€” Sprint 3**
-*   **Task:** Implement retries, timeouts, and threshold tuning.
-*   **Exact Files:** `audio_detector.py` and `queue_consumer.py`.
+Begins 09-Nov-2026.
 
-## 21. Evidence Appendix
-*   **Database Foundation:** `c0edf0fd43` (Main: YES) - `shared/db/models`
-*   **Auth Service:** `314b1b2bd7` (Main: YES) - `services/auth-service/app/api/auth.py`
-*   **API Gateway:** `12ff443806` (Main: YES) - `services/api-gateway/app/main.py`
-*   **AASIST-L Architecture:** `905f3cb829` (Main: YES) - `services/audio-service/app/models/aasist.py`
-*   **Baseline EER Evidence:** `905f3cb829` (Main: YES) - `results/asvspoof_baseline_metrics.json`
-*   **Spectrogram Generation:** `905f3cb829` (Main: YES) - `services/audio-service/app/services/spectrogram_visualizer.py`
+---
 
-============================================================
-## FINAL VERDICT
+## Sprint 4 — NOT STARTED
 
-| Metric | Status |
-| :--- | :--- |
-| Sprint 1 | 95% |
-| Sprint 2 | 70% |
-| Sprint 3 | 0% |
-| Sprint 4 | 80% (Completed early) |
-| Sprint 5 | 0% |
-| Sprint 6 | 5% |
-| Overall individual completion | ~41% |
-| My commits | 15 |
-| My additions | 4,678 |
-| My deletions | 286 |
-| My work currently in main | YES (All commits) |
-| Unmerged work | None |
-| Current active sprint | Sprint 2 (Ends 08-Nov-2026) |
-| Current sprint status | On Track (but requires bug fixes) |
-| Most urgent task | Fix `queue_consumer.py` unpacking bug |
-| Main missing evidence | Pretrained weights mount in Docker |
+Begins 01-Jan-2027.
 
-**Conclusion:**
-Based strictly on Form 1, Form 2, the Functional Requirements, the Engineering Blueprint, and the actual Git history/code, Dev Khandelwal is currently at approximately 41% completion. Sprint 1 is 95%, Sprint 2 is 70%, and the remaining work is largely on track for future sprints, although Sprint 4 (spectrograms) has been implemented significantly ahead of schedule. The immediate priority must be fixing the critical integration bugs preventing the audio service from running cleanly in Docker.
+---
 
+## Sprint 5 — NOT STARTED
 
-# # #   W e e k   1   â ¬    W e e k l y   S u b m i s s i o n  
-  
- * * D a t e : * *   0 8   O c t o b e r   2 0 2 6  
- * * P l a n n e d   m i l e s t o n e : * *   F i x   a u d i o   w o r k e r   b u g s   a n d   a d d   A P I   e n d p o i n t   f o r   W e e k   1 .  
- * * A c t u a l   w o r k   c o m p l e t e d : * *    
- -   R e s o l v e d   o b j e c t _ k e y   p a y l o a d   c o n t r a c t   m i s m a t c h   b e t w e e n   A P I   G a t e w a y   a n d   R a b b i t M Q   c o n s u m e r .  
- -   F i x e d   a   c r i t i c a l   u n p a c k i n g   b u g   i n   q u e u e _ c o n s u m e r . p y   w h e r e   i t   e x p e c t e d   t w o   v a r i a b l e s   f r o m   p r o c e s s _ b y t e s .  
- -   I m p l e m e n t e d   t h e   ` / a u d i o `   f i l e   u p l o a d   e n d p o i n t   i n   A P I   G a t e w a y   ( ` d e t e c t . p y ` ) ,   c o m p l e t i n g   t h e   f i n a l   S p r i n t   1   f o u n d a t i o n   g a p   f o r   a u d i o .  
- -   D o c u m e n t e d   t h e   a u d i o   A P I   c o n t r a c t .  
- -   A d d e d   m e a n i n g f u l   u n i t   t e s t s   f o r   ` A u d i o P r e p r o c e s s o r ` .  
- * * F i l e s   c h a n g e d : * *    
- -   ` s e r v i c e s / a p i - g a t e w a y / a p p / a p i / d e t e c t . p y `  
- -   ` s e r v i c e s / a p i - g a t e w a y / a p p / c o r e / c o n f i g . p y `  
- -   ` s e r v i c e s / a u d i o - s e r v i c e / a p p / s e r v i c e s / q u e u e _ c o n s u m e r . p y `  
- -   ` t e s t s / u n i t / t e s t _ a u d i o _ s e r v i c e . p y `  
- -   ` d o c s / d e v - k h a n d e l w a l / A U D I O _ A P I _ C O N T R A C T . m d `  
- * * T e s t s   e x e c u t e d : * *   ` t e s t s / u n i t / t e s t _ a u d i o _ s e r v i c e . p y `   u s i n g   p y t e s t .  
- * * T e s t   r e s u l t s : * *   3   p a s s e d .  
- * * C o m m i t   S H A : * *   ` 2 a 2 7 c 4 2 `  
- * * B r a n c h : * *   ` d e v - k h a n d e l w a l / s p r i n t - 2 - a u d i o `  
- * * G i t H u b   p u s h   s t a t u s : * *   S u c c e s s .  
- * * S p r i n t   1   p e r c e n t a g e : * *   1 0 0 %  
- * * S p r i n t   2   p e r c e n t a g e : * *   7 7 %   ( + 7 % )  
- * * O v e r a l l   p e r c e n t a g e : * *   4 8 %   ( + 7 % )  
- * * R e m a i n i n g   w o r k : * *    
- -   M o u n t   t h e   p r e t r a i n e d   A A S I S T - L   w e i g h t s   i n   D o c k e r   f o r   S p r i n t   2 .  
- -   E x e c u t e   S p r i n t   3   ( t i m e o u t / r e t r i e s ,   t u n i n g ) .  
- -   E x p o s e   s p e c t r o g r a m   U R L s   v i a   A P I   ( S p r i n t   4 ) .  
- -   B u i l d   t h e   f u s i o n   m o d u l e   ( S p r i n t   5 ) .  
- * * N e x t   w e e k ' s   p l a n n e d   w o r k : * *   M a k e   t h e   A A S I S T - L   a u d i o   s e r v i c e   a n d   w o r k e r   e x e c u t a b l e   v i a   D o c k e r   b y   f i x i n g   t h e   m o d e l   m o u n t s .  
- 
+Begins 25-Jan-2027.
 
-### Week-1 Finalization
-**Week 1 completion date:** 08 October 2026
-**Implementation commit SHA(s):** a27c42**Report commit SHA:** \c33d349**PR number:** #2
-**PR URL:** https://github.com/divishamb123/SKIT-AI-2023-2027-07/pull/2
-**Merge commit SHA:** \aebd8d**Merge date:** 06 October 2026
-**Source branch:** \dev-khandelwal/sprint-2-audio**Target branch:** \main**Tests:** Executed unit tests for AudioPreprocessor via pytest (3 passed, 0 failed).
-**Final verified Sprint-1 percentage:** 100%
-**Final verified Sprint-2 percentage:** 77%
-**Overall percentage:** 48% (Calculation: Sprint 1 [100%], Sprint 2 [77%], Sprint 4 [80%]. Others [0-5%])
-**Production-code additions:** +84 lines
-**Test-code additions:** +36 lines
-**Documentation additions:** +35 lines
-**Total additions/deletions:** 155 additions / 3 deletions (excluding report updates)
-**Remaining Sprint-2 work:**
-- Mount the pretrained AASIST-L weights in Docker configuration to enable container execution.
-- End-to-end testing of the complete audio pipeline running under Docker Compose.
-**Future sprint work:**
-- Sprint 3: Threshold tuning, ASVspoof 2019 LA evaluation, In-the-Wild generalisation testing, Retry/timeout handling.
-- Sprint 4: Final API endpoint integration for MinIO Mel-spectrogram references (currently partially complete).
-- Sprint 5: Weighted text/image/audio fusion, Weight calibration.
-- Sprint 6: Security review, Final installation documentation, Final report.
-**Exact Week-2 plan:** Make the AASIST-L audio service and worker completely executable via Docker. I will focus on fixing the Docker configuration for the AASIST-L pretrained weights, modifying docker-compose.yml and model loading to properly load the model without hardcoded absolute paths, and ensure the container starts successfully.
+---
 
-### Week 2 — Weekly Submission
+## Sprint 6 — NOT STARTED
 
-**Date:** 15 October 2026
-**Planned milestone:** Make the AASIST-L audio service executable via Docker by fixing model mounts.
-**Actual work completed:**
-- Refactored `audio_detector.py` to resolve model paths from environment variables (`AASIST_WEIGHTS_PATH` / `AASIST_CONFIG_PATH`) instead of hardcoded absolute paths.
-- Implemented graceful degraded-mode startup: service starts successfully even when weights are absent; `/internal/health` returns HTTP 503 with structured JSON diagnostic.
-- Updated `main.py` `/internal/health` endpoint to use `detector.health()` dict and return correct HTTP status codes (503 when degraded).
-- Updated `queue_consumer.py` with a degraded-mode guard that marks jobs as `"failed"` with descriptive `error_message` instead of crashing mid-processing with a `RuntimeError`.
-- Fixed `MINIO_BUCKET` default in queue_consumer to match `forensics-uploads` (API Gateway consistency).
-- Added `./models:/models:ro` volume mount and `AASIST_WEIGHTS_PATH` / `AASIST_CONFIG_PATH` / `MINIO_BUCKET` env vars to `audio-service` block in `docker-compose.yml`.
-- Added `.gitignore` entries for `models/`, `*.pth`, `*.pt`, `*.ckpt`.
-- Wrote `docs/dev-khandelwal/MODEL_SETUP.md` — operator guide for mounting weights, degraded-mode behaviour, and CI/dev workflow without weights.
-- Added 10 new unit tests in `tests/unit/test_audio_detector.py` covering degraded-mode state machine, `RuntimeError` guard, health dict structure, and happy-path mock inference.
-**Files changed:**
-- `services/audio-service/app/services/audio_detector.py`
-- `services/audio-service/app/main.py`
-- `services/audio-service/app/services/queue_consumer.py`
-- `docker-compose.yml`
-- `.gitignore`
-- `docs/dev-khandelwal/MODEL_SETUP.md` (new)
-- `tests/unit/test_audio_detector.py` (new)
-**Tests executed:** `tests/unit/test_audio_detector.py` + `services/audio-service/tests/test_audio_service.py` using pytest.
-**Test results:** 13 passed (10 detector + 3 preprocessor), 0 failed.
-**Commit SHA:** `1642630`
-**Branch:** `dev-khandelwal/sprint-2-audio`
-**GitHub push status:** Success.
-**Sprint 1 percentage:** 100%
-**Sprint 2 percentage:** 84% (+7%)
-**Overall percentage:** 55% (+7%)
-**Remaining work:**
-- Sprint 2 remaining: End-to-end integration test of audio pipeline in Docker with real weights (Week 3).
-- Sprint 3: Threshold tuning, ASVspoof 2019 LA evaluation, In-the-Wild generalisation testing, Retry/timeout handling.
-- Sprint 4: API endpoint to surface Mel-spectrogram MinIO URLs in job results.
-- Sprint 5: Weighted text/image/audio fusion, calibration.
-- Sprint 6: Security review, final documentation, release.
-**Next week's planned work (Week 3):** Add retry/timeout handling to the audio queue consumer and write the complete end-to-end audio pipeline integration-test script.
+Begins 15-Feb-2027.
 
-### Week 3 — Weekly Submission
+---
 
-**Date:** 22 October 2026
-**Planned milestone:** Implement background worker for audio jobs with retry and timeout handling.
-**Actual work completed:**
-- Added per-job retry with exponential back-off (1s → 2s → 4s) up to MAX_RETRIES (default 3). Messages republished to the same queue with `x-retry-count` header incremented on each transient failure.
-- Added inference timeout (default 30s) via `asyncio.wait_for()` around `predict_sync`.
-- Added MinIO download timeout (default 20s) via `asyncio.wait_for()` around the S3 download call.
-- Jobs exhausting all retries are permanently marked `FAILED` with descriptive `error_message` in the database.
-- All retry/timeout constants exposed as env vars in `docker-compose.yml` (`AUDIO_WORKER_MAX_RETRIES`, `AUDIO_WORKER_RETRY_BASE_DELAY_S`, `AUDIO_WORKER_INFERENCE_TIMEOUT_S`, `AUDIO_WORKER_DOWNLOAD_TIMEOUT_S`).
-- Added 12 unit tests covering: retry count header parsing, env-var constant overrides, exponential back-off formula.
-**Files changed:**
-- `services/audio-service/app/services/queue_consumer.py`
-- `docker-compose.yml`
-- `tests/unit/test_audio_worker_retry.py` (new)
-**Tests executed:** `tests/unit/test_audio_worker_retry.py` + `tests/unit/test_audio_detector.py` using pytest.
-**Test results:** 22 passed (12 retry + 10 detector), 0 failed.
-**Commit SHA:** `1b97099`
-**Branch:** `dev-khandelwal/sprint-2-audio`
-**GitHub push status:** Success.
-**Sprint 1 percentage:** 100%
-**Sprint 2 percentage:** 91% (+7%)
-**Overall percentage:** 62% (+7%)
-**Remaining work:**
-- Sprint 2 final 9%: Record and document baseline EER measurement on ASVspoof 2019 LA (Week 4).
-- Sprint 3: Tune audio decision threshold; measure EER against 1.0% target; test generalisation on In-the-Wild dataset.
-- Sprint 4: Return Mel-spectrogram MinIO URLs through the API.
-- Sprint 5: Weighted fusion, calibration.
-- Sprint 6: Security review, final docs, release.
-**Next week's planned work (Week 4):** Record baseline EER — run the ASVspoof 2019 LA evaluation script, document the results, and finalise Sprint 2 completion evidence.
+## Known Limitations / Honest Notes
 
-### Week 4 - Weekly Submission
+- The image consumer (`services/stub-consumer/`) was a placeholder (asyncio.sleep stub) during Sprint 1–2. It has been replaced with a real implementation that calls the image-service for detection.
+- The text detection model (`microsoft/deberta-v3-base`) is currently loaded with a **randomly initialized classifier head** — it has not been fine-tuned yet. Fine-tuning is Sprint 3 work for Aryansh.
+- E2E tests (`tests/e2e/`) require the full Docker Compose stack to be running. They have not been run in CI because the GitHub Actions runner doesn't have Docker Compose with all services.
+- AASIST-L weights are not in the repository (85 MB, gitignored). The service starts in degraded mode without them.
 
-**Date:** 29 October 2026
-**Planned milestone:** Record baseline EER on ASVspoof 2019 LA evaluation set.
-**Actual work completed:**
-- Ran `scripts/evaluate_audio_baseline.py` against the full ASVspoof 2019 LA evaluation set (71,237 utterances, 0 failed).
-- AASIST-L pretrained baseline EER: **0.992%** — meets the Sprint 3 target of <= 1.0%.
-- EER threshold: 1.7633 (bonafide logit direction).
-- Total inference time: 1,298 s on CPU (throughput: 0.0182 s/sample).
-- Results committed to `results/asvspoof_baseline_metrics.json` and `results/asvspoof_baseline_scores.csv` (71,237 rows, 2.4 MB).
-**Files changed:**
-- `results/asvspoof_baseline_metrics.json` (updated)
-- `results/asvspoof_baseline_scores.csv` (new, 71,237 rows)
-**Tests executed:** N/A (evaluation pipeline run, not unit tests).
-**Commit SHA:** `e72cafa`
-**Branch:** `dev-khandelwal/sprint-2-audio`
-**GitHub push status:** Success.
-**Sprint 1 percentage:** 100%
-**Sprint 2 percentage:** 98% (+7%)
-**Overall percentage:** 69% (+7%)
-**Remaining work:**
-- Sprint 2 final 2%: Final integration verification confirming all 4 Form-2 deliverables (Week 5).
-- Sprint 3: Threshold tuning, In-the-Wild generalisation testing.
-- Sprint 4: Return Mel-spectrogram MinIO URLs through the API.
-- Sprint 5: Weighted text/image/audio fusion, calibration.
-- Sprint 6: Security review, final docs, release.
-**Next week's planned work (Week 5):** Run final Sprint 2 integration verification script, confirm all 4 Form-2 deliverables pass, update weekly report to 100%.
+---
 
-### Week 5 - Weekly Submission
+## Verification
 
-**Date:** 05 November 2026
-**Planned milestone:** Final Sprint 2 integration verification — confirm all 4 Form-2 deliverables.
-**Actual work completed:**
-- Created `scripts/verify_sprint2_week5_audio.py` — automated verification script covering all 4 Form-2 Sprint 2 deliverables.
-- Ran the script: **21/21 checks PASS, 0 FAIL** (exit code 0).
-  - Deliverable 1 (Preprocessing): COMPLETE — `audio_preprocessor.py` confirmed, librosa in requirements.txt, torchaudio imports, process_bytes(), resampling logic.
-  - Deliverable 2 (AASIST-L model): COMPLETE — AASISTDetector, is_ready(), predict_sync(), degraded-mode, AASIST_WEIGHTS_PATH env-var.
-  - Deliverable 3 (Background worker): COMPLETE — MAX_RETRIES, asyncio.wait_for(), x-retry-count header, exponential back-off, dead-letter FAILED state.
-  - Deliverable 4 (Baseline EER): COMPLETE — EER=0.992% < 1.0%, 71,237 score rows confirmed.
-- Updated `docs/dev-khandelwal/WEEKLY_PROGRESS_REPORT.md`: Week 5 entry added, Sprint 2 status -> 100%.
-- Updated `DEV_KHANDELWAL_INDIVIDUAL_WORK_AUDIT.md`: Sprint 2 -> COMPLETE (100%), Sprint 3 -> NOT STARTED.
-**Files changed:**
-- `scripts/verify_sprint2_week5_audio.py` (new)
-- `docs/dev-khandelwal/WEEKLY_PROGRESS_REPORT.md` (updated)
-- `DEV_KHANDELWAL_INDIVIDUAL_WORK_AUDIT.md` (updated)
-**Tests executed:** `scripts/verify_sprint2_week5_audio.py` (21 structural/content checks)
-**Test results:** 21 passed, 0 failed, exit code 0.
-**Commit SHA:** *(this commit)*
-**Branch:** `main`
-**GitHub push status:** *(pending — this submission)*
-**Sprint 1 percentage:** 100%
-**Sprint 2 percentage:** 100% (+2%) — COMPLETE
-**Overall percentage:** 71% (+2%)
-**Remaining work:**
-- Sprint 3: Threshold tuning; measure EER on ASVspoof 2019 LA post-tuning; In-the-Wild generalisation testing. (09-Nov-2026 to 31-Dec-2026)
-- Sprint 4: Return Mel-spectrogram MinIO URLs through the API. (01-Jan-2027 to 24-Jan-2027)
-- Sprint 5: Weighted text/image/audio fusion, weight calibration. (25-Jan-2027 to 14-Feb-2027)
-- Sprint 6: Security review, final installation documentation, final report. (15-Feb-2027 to 15-Mar-2027)
-**Next sprint planned work (Sprint 3 Week 1):** Tune audio decision threshold using the ASVspoof 2019 LA development set, re-measure EER vs 1.0% target.
+Sprint 2 verification script: `python scripts/verify_sprint2_week5_audio.py`
+Result: 21/21 checks PASS.

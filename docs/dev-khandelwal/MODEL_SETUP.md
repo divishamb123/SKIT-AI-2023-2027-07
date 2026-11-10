@@ -1,57 +1,21 @@
 # AASIST-L Model Setup Guide
 
-**Author:** Dev Khandelwal (23ESKCA035)  
-**Sprint:** 2 — Week 2  
-**Last updated:** 15 October 2026
+**Author:** Dev Khandelwal (23ESKCA035)
+**Service:** `services/audio-service`
 
 ---
 
-## Overview
+## What the model needs
 
-The audio detection service uses the **AASIST-L** pretrained model (published by
-NAVER Corp.) for audio deepfake detection.  The pretrained weights are **not**
-checked into the repository (`.gitignore` excludes `*.pth` / `*.pt` files).
-They must be placed on the host machine and volume-mounted into the container at
-runtime.
+The audio service uses the **AASIST-L** pretrained model (from the official NAVER AASIST repository). The weights file is NOT committed to Git (it's 85 MB, gitignored).
 
----
-
-## Quick Start
-
-### 1 — Download the pretrained weights
-
-Download the AASIST-L checkpoint from the official repository:
-
+You need to place the weights at:
 ```
-https://github.com/clovaai/aasist/releases
+./models/aasist_l_v1.0/AASIST-L.pth
+./models/aasist_l_v1.0/AASIST-L.conf
 ```
 
-You need two files:
-
-| File | Purpose |
-|------|---------|
-| `AASIST-L.pth` | PyTorch model weights |
-| `AASIST-L.conf` | Model architecture config (JSON) |
-
-### 2 — Place files in the host `./models/` directory
-
-```
-SKIT-AI-2023-2027-07/
-└── models/
-    └── aasist_l_v1.0/
-        ├── AASIST-L.pth    ← pretrained weights (~84 MB)
-        └── AASIST-L.conf   ← model config JSON
-```
-
-### 3 — Start the stack
-
-```bash
-docker compose up --build
-```
-
-The `audio-service` Docker Compose definition mounts `./models` as a read-only
-volume at `/models` inside the container:
-
+The Docker Compose file mounts `./models` as a read-only volume:
 ```yaml
 volumes:
   - ./models:/models:ro
@@ -59,68 +23,52 @@ volumes:
 
 ---
 
-## Graceful Degradation (No Weights)
+## Downloading the weights
 
-If the weight file is absent, the audio-service **does not crash**.  Instead:
-
-- Container starts successfully.
-- `/internal/health` returns **HTTP 503** with:
-  ```json
-  {
-    "status": "degraded",
-    "model_loaded": false,
-    "weights_path": "/models/aasist_l_v1.0/AASIST-L.pth",
-    "error": "Weight file not found: ..."
-  }
-  ```
-- Any RabbitMQ messages received while in degraded mode will have their database
-  job status set to `"failed"` with an `error_message` describing the missing
-  weights.
-
----
-
-## Custom Weight Paths (Environment Variables)
-
-If you want to store weights at a different host location, override the default
-container paths via environment variables in `.env` or `docker-compose.yml`:
-
-```env
-AASIST_WEIGHTS_PATH=/custom/path/weights.pth
-AASIST_CONFIG_PATH=/custom/path/config.conf
+Download from the official AASIST release:
+```
+https://github.com/clovaai/aasist/releases
 ```
 
+Place the `.pth` and `.conf` files under `./models/aasist_l_v1.0/`.
+
 ---
 
-## Verifying the Model is Loaded
+## Degraded mode (no weights)
 
-After `docker compose up`, run:
+If the weights are absent, the service **starts anyway** in degraded mode:
+- `/internal/health` returns HTTP 503 with:
+  ```json
+  {"status": "degraded", "reason": "model weights not found"}
+  ```
+- Jobs submitted to the queue are marked `FAILED` with `error_message: "model not ready"`
+
+This prevents the container from crash-looping during development without the large weights file.
+
+---
+
+## Running with Docker Compose
 
 ```bash
-curl http://localhost:8003/internal/health
-```
+# 1. Place weights
+mkdir -p models/aasist_l_v1.0
+cp /path/to/AASIST-L.pth models/aasist_l_v1.0/
+cp /path/to/AASIST-L.conf models/aasist_l_v1.0/
 
-Expected response when weights are present:
-```json
-{
-  "status": "healthy",
-  "model_loaded": true,
-  "weights_path": "/models/aasist_l_v1.0/AASIST-L.pth",
-  "device": "cpu"
-}
+# 2. Start services
+cp .env.example .env
+# edit .env to set passwords
+docker-compose up --build audio-service
 ```
 
 ---
 
-## CI / Development Without Weights
+## Running without Docker (dev/CI mode)
 
-In CI environments and local development without weights, the service starts in
-degraded mode and the health endpoint returns 503.  The audio *pipeline tests*
-(preprocessing, shape validation) still pass independently of the model weights.
+The service uses environment variables to find the weights:
+```bash
+export AASIST_WEIGHTS_PATH=/absolute/path/to/AASIST-L.pth
+export AASIST_CONFIG_PATH=/absolute/path/to/AASIST-L.conf
+```
 
----
-
-## Security Note
-
-Do **not** commit pretrained weights to the repository.  The `.gitignore` already
-excludes `*.pth` and `*.pt` files.  Weights are large binary files and may be
-subject to licence restrictions from NAVER Corp.
+If these env vars are not set or the files don't exist, the service starts in degraded mode.

@@ -1,43 +1,65 @@
-# Audio API Contract
+# Audio Detection API Contract
 
-This document defines the REST API contract for the audio detection service implemented in the API Gateway.
+**Service:** API Gateway (`services/api-gateway`)
+**Author:** Dev Khandelwal (23ESKCA035)
 
-## Endpoints
+---
 
-### 1. Upload Audio for Detection
-**Endpoint**: `POST /api/v1/detect/audio`
+## POST /api/v1/detect/audio
 
-**Description**: Accepts an audio file (e.g., `.wav`, `.flac`, `.mp3`), validates it, generates a UUID-based object key, uploads it to MinIO storage, and creates a queued database job. The job is then published to the RabbitMQ `forensics.audio.detect` queue for the background worker to consume.
+Upload an audio file for deepfake detection.
 
-**Authentication**: Required (JWT Bearer Token).
+**Auth:** JWT Bearer token required
 
-**Request**:
-*   `multipart/form-data`
-*   **Field**: `file` (binary, max 20MB)
-*   **Allowed MIME types**: `audio/wav`, `audio/x-wav`, `audio/flac`, `audio/ogg`, `audio/mpeg`, `audio/mp3`, and anything starting with `audio/`.
+**Request:** `multipart/form-data`
 
-**Response (Success - 202 Accepted)**:
+| Field | Type | Constraints |
+|---|---|---|
+| `file` | binary | Max 20 MB. Allowed types: `audio/wav`, `audio/x-wav`, `audio/flac`, `audio/ogg`, `audio/mpeg`, `audio/mp3` |
+
+**Response 202 Accepted:**
 ```json
 {
-  "job_id": "123e4567-e89b-12d3-a456-426614174000",
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "queued",
   "message": "Audio successfully uploaded and queued for detection."
 }
 ```
 
-**Errors**:
-*   `413 Payload Too Large`: If file exceeds 20MB.
-*   `415 Unsupported Media Type`: If file is not an allowed audio format.
-*   `500 Internal Server Error`: If MinIO upload or RabbitMQ publish fails.
+**What happens after 202:**
+1. File is stored in MinIO under a UUID-based key
+2. A job record is created in PostgreSQL with status `queued`
+3. A message is published to RabbitMQ queue `forensics.audio.detect`
+4. The audio-service worker picks up the job, runs AASIST-L inference, and updates the job status to `completed` or `failed`
 
-### Internal Message Payload (RabbitMQ)
-Once accepted, the API gateway sends the following JSON payload to the `forensics.audio.detect` queue:
+**Check job result:** `GET /api/v1/jobs/{job_id}`
 
+**Error responses:**
+
+| Code | Meaning |
+|---|---|
+| 401 | Missing or invalid JWT |
+| 413 | File exceeds 20 MB |
+| 415 | Unsupported MIME type |
+| 429 | Rate limit exceeded (20 requests/minute) |
+| 500 | MinIO upload or RabbitMQ publish failed |
+
+---
+
+## GET /api/v1/jobs/{job_id}
+
+Returns current status of a detection job.
+
+**Auth:** JWT Bearer token required (must own the job)
+
+**Response 200:**
 ```json
 {
-  "job_id": "123e4567-e89b-12d3-a456-426614174000",
-  "object_key": "123e4567-e89b-12d3-a456-426614174000-filename.wav",
-  "modality": "audio"
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "modality": "audio",
+  "file_name": "sample.wav",
+  "created_at": "2026-10-15T10:30:00Z",
+  "error_message": null
 }
 ```
-*Note: The consumer accesses the uploaded audio file from MinIO using the `object_key` value.*

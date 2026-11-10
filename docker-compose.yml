@@ -217,21 +217,34 @@ services:
       minio:
         condition: service_healthy
 
+
+
   stub-consumer:
     build:
       context: .
       dockerfile: services/stub-consumer/Dockerfile
-    container_name: forensics-stub-consumer
+    container_name: forensics-image-consumer
     restart: unless-stopped
     networks:
       - forensics_net
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-forensics_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-forensics_db}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-forensics}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      QUEUE_IMAGE_DETECTION: ${QUEUE_IMAGE_DETECTION:-image-detection-queue}
+      IMAGE_SERVICE_URL: http://image-service:8004
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-forensics-uploads}
+      IMAGE_INFERENCE_TIMEOUT_S: ${IMAGE_INFERENCE_TIMEOUT_S:-30.0}
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      image-service:
+        condition: service_started
       init-db:
         condition: service_completed_successfully

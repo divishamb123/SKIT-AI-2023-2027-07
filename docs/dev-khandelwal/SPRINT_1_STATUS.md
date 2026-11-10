@@ -1,25 +1,19 @@
-# Dev Khandelwal — Sprint 1 Progress
+# Dev Khandelwal - Sprint 1 Status
 
-**Sprint period:** 3 August 2026 – 20 September 2026
+**Sprint period:** 03 August 2026 — 20 September 2026
+**Role:** Team Lead — backend infrastructure
 
-## Completed / Currently Implemented
-- backend infrastructure foundation
-- database models and setup
-- authentication foundation
-- JWT and refresh-token flow
-- API Gateway foundation
-- authenticated file upload pipeline
-- MIME/file validation
-- MinIO integration
-- RabbitMQ job publishing
-- job tracking
-- asynchronous stub consumer
-- backend testing/CI foundations where applicable
-- complete reproducible environment verification
-- complete Docker application-level integration
-- clean-database migration verification
-- final end-to-end verification
-- configuration cleanup where necessary
-- Sprint 1 completion testing and documentation
+## What I built in Sprint 1
 
-> **NOTE**: Sprint 1 is now officially 100% complete as of September 2026. All pending items have been resolved.
+- PostgreSQL database schema: `users`, `jobs`, `reports` tables with proper constraints and indexes
+- Alembic migration (`001_initial_migration.py`) — single source of truth for schema changes
+- Auth service: registration, login, JWT access + refresh tokens, bcrypt password hashing, Redis token blacklist
+- API Gateway: authenticated file upload to MinIO, RabbitMQ job publishing, rate limiting, CORS
+- Job tracking: UUID-based jobs with status lifecycle (queued → processing → completed/failed)
+- Docker Compose stack: PostgreSQL, Redis, RabbitMQ, MinIO, all services wired together
+- CI pipeline: Black formatting, Ruff linting, Alembic migration check
+- E2E verification scripts (`tests/e2e/`) — require `docker-compose up` to run
+
+## Sprint 1 Status: COMPLETE
+
+All Form-2 deliverables are implemented and merged into `main` as of September 2026.

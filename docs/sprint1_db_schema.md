@@ -1,85 +1,89 @@
-# Sprint 1 Database Schema
+# Sprint 1 — Database Schema
 
-Based on the Sprint 1 setup (as defined in the `001_initial_migration.py` Alembic migration and the models in `shared/db`), the following is the database schema for the core infrastructure.
+Source of truth: [`shared/db/alembic/versions/001_initial_migration.py`](../../shared/db/alembic/versions/001_initial_migration.py)
 
-## Entity-Relationship Diagram
+Three tables are created in this migration. All use UUID primary keys (PostgreSQL `uuid` type, default `gen_random_uuid()`).
 
-```mermaid
-erDiagram
-    users {
-        UUID id PK
-        String name
-        String email UK
-        String password_hash
-        String role "Enum: user, admin, analyst"
-        Boolean is_active
-        DateTime created_at
-        DateTime updated_at
-    }
-    
-    jobs {
-        UUID id PK
-        UUID user_id FK
-        job_status status
-        modality_type modality
-        String input_type
-        Text input_text
-        String input_object_key
-        String file_name
-        BigInteger file_size_bytes
-        String file_mime_type
-        String file_sha256
-        SmallInteger priority "1 to 10"
-        SmallInteger retry_count
-        SmallInteger max_retries
-        String queue_name
-        String worker_id
-        Text error_message
-        String error_code
-        DateTime queued_at
-        DateTime started_at
-        DateTime completed_at
-        DateTime created_at
-        DateTime deleted_at
-    }
+---
 
-    reports {
-        UUID id PK
-        UUID job_id FK
-        report_type report_type
-        report_status status
-        String minio_object_key
-        BigInteger file_size_bytes
-        String file_sha256
-        Text signed_url
-        DateTime signed_url_expires
-        Integer generation_time_ms
-        Text error_message
-        DateTime generated_at
-        DateTime created_at
-    }
+## `users`
 
-    users ||--o{ jobs : "submits"
-    jobs ||--o{ reports : "generates"
+| Column | Type | Constraints |
+|---|---|---|
+| `id` | UUID | PK, default `gen_random_uuid()` |
+| `name` | VARCHAR | NOT NULL |
+| `email` | VARCHAR | NOT NULL, UNIQUE |
+| `password_hash` | VARCHAR | NOT NULL — Argon2 hash |
+| `role` | VARCHAR | NOT NULL, CHECK IN (`'user'`, `'admin'`, `'analyst'`), default `'user'` |
+| `is_active` | BOOLEAN | NOT NULL, default `true` |
+| `created_at` | TIMESTAMP | NOT NULL, default `now()` |
+| `updated_at` | TIMESTAMP | NOT NULL, default `now()` |
+
+---
+
+## `jobs`
+
+| Column | Type | Constraints |
+|---|---|---|
+| `id` | UUID | PK |
+| `user_id` | UUID | FK → `users.id`, NOT NULL |
+| `status` | `job_status` ENUM | NOT NULL, default `'queued'` |
+| `modality` | `modality_type` ENUM | NOT NULL |
+| `input_type` | VARCHAR | NOT NULL |
+| `input_text` | TEXT | nullable (text modality only) |
+| `input_object_key` | VARCHAR | nullable (file modalities) |
+| `file_name` | VARCHAR | nullable |
+| `file_size_bytes` | BIGINT | nullable |
+| `file_mime_type` | VARCHAR | nullable |
+| `file_sha256` | VARCHAR | nullable |
+| `priority` | SMALLINT | NOT NULL, default `5`, CHECK 1–10 |
+| `retry_count` | SMALLINT | NOT NULL, default `0` |
+| `max_retries` | SMALLINT | NOT NULL, default `3` |
+| `queue_name` | VARCHAR | nullable |
+| `worker_id` | VARCHAR | nullable |
+| `error_message` | TEXT | nullable |
+| `error_code` | VARCHAR | nullable |
+| `queued_at` | TIMESTAMP | nullable |
+| `started_at` | TIMESTAMP | nullable |
+| `completed_at` | TIMESTAMP | nullable |
+| `created_at` | TIMESTAMP | NOT NULL, default `now()` |
+| `deleted_at` | TIMESTAMP | nullable (soft-delete) |
+
+**ENUMs (created in migration):**
+- `job_status`: `queued`, `processing`, `completed`, `failed`, `cancelled`
+- `modality_type`: `text`, `image`, `audio`, `video`, `multimodal`
+
+---
+
+## `reports`
+
+| Column | Type | Constraints |
+|---|---|---|
+| `id` | UUID | PK |
+| `job_id` | UUID | FK → `jobs.id`, NOT NULL |
+| `report_type` | `report_type` ENUM | NOT NULL |
+| `status` | `report_status` ENUM | NOT NULL, default `'pending'` |
+| `minio_object_key` | VARCHAR | nullable |
+| `file_size_bytes` | BIGINT | nullable |
+| `file_sha256` | VARCHAR | nullable |
+| `signed_url` | TEXT | nullable |
+| `signed_url_expires` | TIMESTAMP | nullable |
+| `generation_time_ms` | INTEGER | nullable |
+| `error_message` | TEXT | nullable |
+| `generated_at` | TIMESTAMP | nullable |
+| `created_at` | TIMESTAMP | NOT NULL, default `now()` |
+
+**ENUMs:**
+- `report_type`: `pdf`, `json`, `html`
+- `report_status`: `pending`, `generating`, `completed`, `failed`
+
+**Unique constraint:** `(job_id, report_type)` — one report per type per job.
+
+---
+
+## Relationships
+
 ```
-
-## Tables Overview
-
-### 1. `users`
-- Handles the core authentication schema, storing the user's `email` and Argon2-encrypted `password_hash`. 
-- A `role` column uses a check constraint allowing only `'user'`, `'admin'`, or `'analyst'`.
-
-### 2. `jobs`
-- Tracks inference requests submitted by users, linked via `user_id`.
-- Supports different input configurations (validated by constraints), storing either raw `input_text` for text detection or an `input_object_key` representing a file in MinIO (for images/audio/video).
-- Core ENUMs defined in PostgreSQL:
-    - `job_status`: `'queued'`, `'processing'`, `'completed'`, `'failed'`, `'cancelled'`
-    - `modality_type`: `'text'`, `'image'`, `'audio'`, `'video'`, `'multimodal'`
-- Tracks telemetry, metadata, error details, and timeline information (queued, started, completed).
-
-### 3. `reports`
-- Represents the resulting forensics and analysis output tied to a completed `job`.
-- `report_type` ENUM: `'pdf'`, `'json'`, `'html'`
-- `report_status` ENUM: `'pending'`, `'generating'`, `'completed'`, `'failed'`
-- Contains a unique combination constraint on `job_id` and `report_type` so each job only generates one report of a specific type.
-- Points to the finalized report payload living in object storage (`minio_object_key` / `signed_url`).
+users (1) ──< jobs (many)
+jobs  (1) ──< reports (many)
+```
