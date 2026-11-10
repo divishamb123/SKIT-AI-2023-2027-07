@@ -1,4 +1,4 @@
-"""
+﻿"""
 Image Detection Consumer
 Dev Khandelwal (23ESKCA035) — Sprint 1 backend infrastructure
 
@@ -20,7 +20,6 @@ Environment variables:
 """
 
 import asyncio
-import io
 import json
 import os
 import traceback
