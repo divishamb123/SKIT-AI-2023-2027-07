@@ -168,4 +168,44 @@ Sprint 2: **100% — COMPLETE**
 - Audit report: [`DEV_KHANDELWAL_INDIVIDUAL_WORK_AUDIT.md`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/DEV_KHANDELWAL_INDIVIDUAL_WORK_AUDIT.md)
 - Audio API contract: [`docs/dev-khandelwal/AUDIO_API_CONTRACT.md`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/docs/dev-khandelwal/AUDIO_API_CONTRACT.md)
 
-*Last updated: 05 November 2026 — Dev Khandelwal (23ESKCA035)*
+---
+
+## Sprint 3 — Accuracy Optimisation
+
+**Form-2 dates:** 09-Nov-2026 to 31-Dec-2026  
+**Form-2 deliverable:** Tuned audio decision threshold. Measured EER on ASVspoof 2019 LA against 1.0% target. Tested generalisation on In-the-Wild dataset. Added retry and timeout handling.
+
+---
+
+### Week 1 — 15 November 2026
+
+**Form-2 task:** Tuned audio decision threshold.
+
+Work done:
+- Implemented `ThresholdCalibrator` class in `services/audio-service/app/services/threshold_calibrator.py`
+- 3 operating profiles tuned from ASVspoof 2019 LA EER evaluation:
+  - `balanced` τ = 1.7633 — EER operating point (EER = 0.992%, Sprint 2 baseline)
+  - `high_security` τ = 2.4 — reduced false acceptance for access-control use cases
+  - `forensic` τ = 0.8 — reduced missed detections for investigative use cases
+- Temperature-scaled sigmoid calibration: P(bonafide) = sigmoid((score − τ) / T), T = 1.5
+- At decision boundary: P = 0.5 exactly (maximum uncertainty)
+- Confidence tier output: HIGH (P ≥ 0.90), MEDIUM (P ≥ 0.70), LOW (P < 0.70)
+- 33 unit tests in `tests/unit/test_threshold_calibration.py` — all pass
+
+| File | Description |
+|---|---|
+| [`services/audio-service/app/services/threshold_calibrator.py`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/services/audio-service/app/services/threshold_calibrator.py) | ThresholdCalibrator — 3 operating modes, sigmoid calibration |
+| [`tests/unit/test_threshold_calibration.py`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/tests/unit/test_threshold_calibration.py) | 33 unit tests (profiles, verdicts, math, tiers, batch, metadata) |
+| [`scripts/verify_sprint3_week1_audio.py`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/scripts/verify_sprint3_week1_audio.py) | Standalone verifier — 22/22 checks PASS |
+
+Sprint 3: **14%**
+
+---
+
+## Verification Links
+
+- Repository: https://github.com/divishamb123/SKIT-AI-2023-2027-07
+- Audit report: [`DEV_KHANDELWAL_INDIVIDUAL_WORK_AUDIT.md`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/DEV_KHANDELWAL_INDIVIDUAL_WORK_AUDIT.md)
+- Audio API contract: [`docs/dev-khandelwal/AUDIO_API_CONTRACT.md`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/blob/main/docs/dev-khandelwal/AUDIO_API_CONTRACT.md)
+
+*Last updated: 11 November 2026 — Dev Khandelwal (23ESKCA035)*

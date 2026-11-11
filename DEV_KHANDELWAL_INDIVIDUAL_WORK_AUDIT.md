@@ -78,9 +78,21 @@ All my commits are under:
 
 ---
 
-## Sprint 3 — NOT STARTED
+## Sprint 3 — IN PROGRESS (14%)
 
-Begins 09-Nov-2026.
+**Form-2 deliverable:** Tuned audio decision threshold. Measured EER on ASVspoof 2019 LA against 1.0% target. Tested generalisation on In-the-Wild dataset. Added retry and timeout handling.
+
+| Week | Deliverable | File(s) | Status |
+|---|---|---|---|
+| Week 1 | Audio decision threshold calibration engine — 3 operating modes (balanced τ=1.7633, high_security τ=2.4, forensic τ=0.8), temperature-scaled sigmoid probability calibration, confidence tier output | `services/audio-service/app/services/threshold_calibrator.py` | Done |
+| Week 1 | 33 unit tests for calibrator (profiles, verdicts, math, tiers, batch, metadata) | `tests/unit/test_threshold_calibration.py` | Done — 33/33 pass |
+| Week 1 | Standalone verifier script | `scripts/verify_sprint3_week1_audio.py` | Done — 22/22 checks PASS |
+| Week 2–7 | Remaining Sprint 3 deliverables | — | Upcoming |
+
+**Key design decisions:**
+- EER threshold τ = 1.7633 sourced directly from `results/asvspoof_baseline_metrics.json` (actual evaluation run, 71,237 utterances)
+- Temperature T = 1.5 logit units — calibrated so a ±1.5 logit shift from boundary maps to P ≈ 0.73 (MEDIUM confidence), consistent with observed score distribution spread
+- Pure Python stdlib + `math` module only — no torch dependency in calibrator itself
 
 ---
 
