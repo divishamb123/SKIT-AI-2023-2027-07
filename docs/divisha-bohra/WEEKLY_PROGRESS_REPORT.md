@@ -344,6 +344,11 @@
 - Built automated 12-test suite in `tests/test_generalization_unseen.py` and standalone master verifier `scripts/verify_sprint3_week2.py` (all 8 stages pass 100%).
 
 **GitHub Evidence:**
+
+| Commit SHA | Date | Description |
+|---|---|---|
+| [`1fb40cb`](https://github.com/divishamb123/SKIT-AI-2023-2027-07/commit/1fb40cb) | 16-Nov-2026 | feat(sprint3): implement Week 2 cross-generator generalization testing engine |
+
 - Code: `src/image_detector/generalization.py`
 - Tests: `tests/test_generalization_unseen.py` (12/12 passed)
 - Verification: `scripts/verify_sprint3_week2.py` (8/8 stages passed)
