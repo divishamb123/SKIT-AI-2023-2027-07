@@ -40,6 +40,13 @@ from src.image_detector.model import (
 )
 from src.image_detector.service import ImageDetectionService
 from src.image_detector.evaluator import GroupedImageEvaluator
+from src.image_detector.generalization import (
+    GeneralizationEvaluator,
+    GeneratorMetrics,
+    DomainMetrics,
+    GeneralizationGap,
+    GeneralizationReport,
+)
 from src.image_detector.api import router as image_detection_router
 
 __all__ = [
@@ -73,5 +80,10 @@ __all__ = [
     "EmptyImageError",
     "CorruptedImageError",
     "UnsupportedFormatError",
+    "GeneralizationEvaluator",
+    "GeneratorMetrics",
+    "DomainMetrics",
+    "GeneralizationGap",
+    "GeneralizationReport",
     "image_detection_router",
 ]

@@ -1,0 +1,187 @@
+{
+  "report_id": "a455d9a1-de3c-4d66-a5a4-28d6ce245648",
+  "timestamp": "2026-11-16T09:33:06.328040+00:00",
+  "ensemble_version": "ensemble-resnet18-mobilenetv3-v1.0",
+  "device": "mps",
+  "threshold": 0.5,
+  "total_samples_evaluated": 60,
+  "overall_accuracy": 0.4833,
+  "overall_f1": 0.3673,
+  "per_generator": [
+    {
+      "generator_name": "biggan",
+      "domain": "out_of_domain",
+      "sample_count": 10,
+      "accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "specificity": 1.0,
+      "f1_score": 0.0,
+      "mean_confidence": 0.775,
+      "robustness_score": 1.0,
+      "confusion_matrix": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 5,
+        "fn": 5
+      },
+      "latency_ms": 345.78,
+      "throughput_fps": 28.92
+    },
+    {
+      "generator_name": "cifar10",
+      "domain": "in_domain",
+      "sample_count": 10,
+      "accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "specificity": 1.0,
+      "f1_score": 0.0,
+      "mean_confidence": 0.7294,
+      "robustness_score": 1.0,
+      "confusion_matrix": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 5,
+        "fn": 5
+      },
+      "latency_ms": 160.41,
+      "throughput_fps": 62.34
+    },
+    {
+      "generator_name": "midjourney",
+      "domain": "out_of_domain",
+      "sample_count": 10,
+      "accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "specificity": 1.0,
+      "f1_score": 0.0,
+      "mean_confidence": 0.7359,
+      "robustness_score": 1.0,
+      "confusion_matrix": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 5,
+        "fn": 5
+      },
+      "latency_ms": 130.28,
+      "throughput_fps": 76.76
+    },
+    {
+      "generator_name": "real",
+      "domain": "out_of_domain",
+      "sample_count": 10,
+      "accuracy": 0.5,
+      "precision": 0.5,
+      "recall": 1.0,
+      "specificity": 0.0,
+      "f1_score": 0.6667,
+      "mean_confidence": 0.7525,
+      "robustness_score": 1.0,
+      "confusion_matrix": {
+        "tp": 5,
+        "fp": 5,
+        "tn": 0,
+        "fn": 0
+      },
+      "latency_ms": 124.99,
+      "throughput_fps": 80.0
+    },
+    {
+      "generator_name": "stable-diffusion",
+      "domain": "out_of_domain",
+      "sample_count": 10,
+      "accuracy": 0.7,
+      "precision": 1.0,
+      "recall": 0.4,
+      "specificity": 1.0,
+      "f1_score": 0.5714,
+      "mean_confidence": 0.5994,
+      "robustness_score": 0.8,
+      "confusion_matrix": {
+        "tp": 2,
+        "fp": 0,
+        "tn": 5,
+        "fn": 3
+      },
+      "latency_ms": 122.95,
+      "throughput_fps": 81.33
+    },
+    {
+      "generator_name": "stable-diffusion-1.4",
+      "domain": "in_domain",
+      "sample_count": 10,
+      "accuracy": 0.2,
+      "precision": 0.2857,
+      "recall": 0.4,
+      "specificity": 0.0,
+      "f1_score": 0.3333,
+      "mean_confidence": 0.6684,
+      "robustness_score": 0.7,
+      "confusion_matrix": {
+        "tp": 2,
+        "fp": 5,
+        "tn": 0,
+        "fn": 3
+      },
+      "latency_ms": 129.18,
+      "throughput_fps": 77.41
+    }
+  ],
+  "in_domain": {
+    "domain": "in_domain",
+    "generators": [
+      "cifar10",
+      "stable-diffusion-1.4"
+    ],
+    "total_samples": 20,
+    "accuracy": 0.35,
+    "precision": 0.2857,
+    "recall": 0.2,
+    "specificity": 0.5,
+    "f1_score": 0.2353,
+    "mean_confidence": 0.6989,
+    "mean_robustness": 0.85,
+    "confusion_matrix": {
+      "tp": 2,
+      "fp": 5,
+      "tn": 5,
+      "fn": 8
+    }
+  },
+  "out_of_domain": {
+    "domain": "out_of_domain",
+    "generators": [
+      "biggan",
+      "midjourney",
+      "real",
+      "stable-diffusion"
+    ],
+    "total_samples": 40,
+    "accuracy": 0.55,
+    "precision": 0.5833,
+    "recall": 0.35,
+    "specificity": 0.75,
+    "f1_score": 0.4375,
+    "mean_confidence": 0.7157,
+    "mean_robustness": 0.95,
+    "confusion_matrix": {
+      "tp": 7,
+      "fp": 5,
+      "tn": 15,
+      "fn": 13
+    }
+  },
+  "generalization_gap": {
+    "in_domain_accuracy": 0.35,
+    "out_of_domain_accuracy": 0.55,
+    "accuracy_gap": -0.2,
+    "f1_gap": -0.2022,
+    "precision_gap": -0.2976,
+    "recall_gap": -0.15,
+    "severity": "significant"
+  },
+  "total_latency_ms": 1013.81,
+  "notes": "Baseline cross-generator generalization evaluation using untrained ensemble weights. With random initialization (pre-Sprint 3 fine-tuning), accuracy is expected at ~50% (random chance) across all generators. The generalization gap is minimal at this stage, confirming that the evaluation pipeline correctly computes and reports metrics. After fine-tuning, this pipeline will reveal real performance differences between in-domain and out-of-domain generators."
+}

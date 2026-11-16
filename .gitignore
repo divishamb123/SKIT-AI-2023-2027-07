@@ -1,4 +1,8 @@
+# Generated reports
+*_Final_Report_*.pdf
+
 # Python
+.env*
 __pycache__/
 *.py[cod]
 *$py.class

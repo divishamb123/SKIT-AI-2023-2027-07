@@ -326,4 +326,32 @@
 
 ---
 
-*Last updated: 07 November 2026 — Divisha Manak Bohra (23ESKCA038)*
+### Week 2 — 22 November 2026
+
+**Task completed (Form-2 Sprint 3 words):**  
+*Testing generalisation on unseen image generators.*
+
+**Specific work done:**  
+- Developed `GeneralizationEvaluator` in `src/image_detector/generalization.py` — a cross-generator generalization testing engine that evaluates ensemble detector robustness on unseen image generators.
+- Implemented domain classification separating in-domain generators (cifar10, stable-diffusion-1.4) from out-of-domain / unseen generators (real, stable-diffusion, midjourney, biggan).
+- Built per-generator evaluation pipeline with full binary classification metrics: accuracy, precision, recall, specificity, F1-score, confusion matrices, and throughput telemetry.
+- Implemented domain-level aggregated metrics computing `DomainMetrics` by summing raw confusion matrix counts across generators within each domain.
+- Computed generalization gap ($\Delta = \text{Acc}_{\text{in-domain}} - \text{Acc}_{\text{out-of-domain}}$) with severity classification: minimal ($|\Delta| < 0.05$), moderate ($0.05 \le |\Delta| < 0.15$), significant ($|\Delta| \ge 0.15$).
+- Designed per-generator robustness scoring: $R = 1.0 - |0.5 - \text{Acc}|$, measuring non-random detection strength.
+- Extended Pydantic schema layer with `GeneratorMetrics`, `DomainMetrics`, `GeneralizationGap`, and `GeneralizationReport` models in `src/image_detector/generalization.py`.
+- Built synthetic sample generation supporting balanced class creation per generator for standalone unit testing without real dataset files.
+- Generated structured Markdown reports with 5 sections: Executive Summary, Per-Generator Breakdown, Domain-Level Analysis, Generalization Gap Analysis, and Per-Generator Confusion Matrices.
+- Built automated 12-test suite in `tests/test_generalization_unseen.py` and standalone master verifier `scripts/verify_sprint3_week2.py` (all 8 stages pass 100%).
+
+**GitHub Evidence:**
+- Code: `src/image_detector/generalization.py`
+- Tests: `tests/test_generalization_unseen.py` (12/12 passed)
+- Verification: `scripts/verify_sprint3_week2.py` (8/8 stages passed)
+- Documentation: `docs/generalization_results.md`
+- Results: `results/generalization_evaluation.json`
+
+**Sprint 3 Progress:** 28% (+14%)
+
+---
+
+*Last updated: 16 November 2026 — Divisha Manak Bohra (23ESKCA038)*
