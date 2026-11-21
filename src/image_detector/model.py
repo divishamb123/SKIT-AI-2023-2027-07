@@ -12,7 +12,12 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
-MODEL_VERSION = "baseline-resnet18-v1.0"
+from src.image_detector.config import (
+    DEFAULT_RESNET_CHECKPOINT,
+    MODEL_VERSION_RESNET,
+)
+
+MODEL_VERSION = MODEL_VERSION_RESNET
 NUM_CLASSES = 2  # Class 0: REAL, Class 1: AI_GENERATED
 
 
@@ -82,6 +87,22 @@ class BaselineImageClassifier(nn.Module):
         return x
 
 
+def _remap_state_dict(state_dict: dict, model: nn.Module) -> dict:
+    """Remaps state_dict keys with or without 'backbone.' prefix for compatibility."""
+    target_keys = set(model.state_dict().keys())
+    new_sd = {}
+    for k, v in state_dict.items():
+        if k in target_keys:
+            new_sd[k] = v
+        elif f"backbone.{k}" in target_keys:
+            new_sd[f"backbone.{k}"] = v
+        elif k.startswith("backbone.") and k[9:] in target_keys:
+            new_sd[k[9:]] = v
+        else:
+            new_sd[k] = v
+    return new_sd
+
+
 def load_baseline_model(
     checkpoint_path: Optional[Union[str, Path]] = None,
     device: Optional[torch.device] = None,
@@ -95,12 +116,15 @@ def load_baseline_model(
     target_device = device or get_optimal_device()
     model = BaselineImageClassifier(num_classes=NUM_CLASSES)
 
+    # Auto-discover trained checkpoint if not explicitly provided
+    if checkpoint_path is None:
+        if DEFAULT_RESNET_CHECKPOINT.is_file():
+            checkpoint_path = DEFAULT_RESNET_CHECKPOINT
+
     if checkpoint_path and os.path.isfile(checkpoint_path):
         checkpoint = torch.load(checkpoint_path, map_location=target_device)
-        if "state_dict" in checkpoint:
-            model.load_state_dict(checkpoint["state_dict"])
-        elif isinstance(checkpoint, dict):
-            model.load_state_dict(checkpoint)
+        sd = checkpoint.get("state_dict", checkpoint)
+        model.load_state_dict(_remap_state_dict(sd, model))
 
     model.to(target_device)
     model.eval()

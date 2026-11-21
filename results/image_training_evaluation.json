@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-11-21T15:30:21Z",
+  "dataset": "CIFAKE (Real CIFAR-10 vs. Stable Diffusion 1.4)",
+  "train_samples": 10000,
+  "test_samples": 2000,
+  "epochs": 3,
+  "device": "mps",
+  "checkpoints": {
+    "resnet18": "/Users/dmb/Documents/Multimodal AI Detect AI/checkpoints/resnet18_cifake.pth",
+    "mobilenetv3": "/Users/dmb/Documents/Multimodal AI Detect AI/checkpoints/mobilenetv3_cifake.pth"
+  },
+  "results": {
+    "resnet18": {
+      "accuracy": 0.959,
+      "precision": 0.9456,
+      "recall": 0.974,
+      "specificity": 0.944,
+      "f1_score": 0.9596,
+      "loss": 0.113,
+      "tp": 974,
+      "fp": 56,
+      "tn": 944,
+      "fn": 26,
+      "total_test_samples": 2000
+    },
+    "mobilenetv3": {
+      "accuracy": 0.955,
+      "precision": 0.9452,
+      "recall": 0.966,
+      "specificity": 0.944,
+      "f1_score": 0.9555,
+      "loss": 0.1335,
+      "tp": 966,
+      "fp": 56,
+      "tn": 944,
+      "fn": 34,
+      "total_test_samples": 2000
+    },
+    "ensemble": {
+      "accuracy": 0.9685,
+      "precision": 0.958,
+      "recall": 0.98,
+      "specificity": 0.957,
+      "f1_score": 0.9689,
+      "tp": 980,
+      "fp": 43,
+      "tn": 957,
+      "fn": 20,
+      "total_test_samples": 2000
+    }
+  }
+}

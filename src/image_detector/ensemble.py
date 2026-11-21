@@ -25,9 +25,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
 
+from src.image_detector.config import (
+    DEFAULT_MOBILENET_CHECKPOINT,
+    DEFAULT_RESNET_CHECKPOINT,
+    MODEL_VERSION_ENSEMBLE,
+    OPTIMIZED_ENSEMBLE_WEIGHTS,
+)
 from src.image_detector.model import (
     NUM_CLASSES,
     BaselineImageClassifier,
+    _remap_state_dict,
     get_optimal_device,
 )
 from src.image_detector.preprocessing import (
@@ -47,8 +54,8 @@ from src.image_detector.schemas import (
     SubModelPrediction,
 )
 
-ENSEMBLE_VERSION = "ensemble-resnet18-mobilenetv3-v1.0"
-DEFAULT_WEIGHTS = {"resnet18": 0.55, "mobilenet_v3": 0.45}
+ENSEMBLE_VERSION = MODEL_VERSION_ENSEMBLE
+DEFAULT_WEIGHTS = OPTIMIZED_ENSEMBLE_WEIGHTS
 
 
 class MobileNetV3Classifier(nn.Module):
@@ -113,6 +120,24 @@ class ImageEnsembleDetector:
         # Set and normalize ensemble weights
         self.set_weights(weights or DEFAULT_WEIGHTS)
 
+        # Auto-discover and load trained checkpoints if present on disk
+        if (
+            DEFAULT_RESNET_CHECKPOINT.is_file()
+            or DEFAULT_MOBILENET_CHECKPOINT.is_file()
+        ):
+            self.load_checkpoints(
+                resnet_checkpoint=(
+                    DEFAULT_RESNET_CHECKPOINT
+                    if DEFAULT_RESNET_CHECKPOINT.is_file()
+                    else None
+                ),
+                mobilenet_checkpoint=(
+                    DEFAULT_MOBILENET_CHECKPOINT
+                    if DEFAULT_MOBILENET_CHECKPOINT.is_file()
+                    else None
+                ),
+            )
+
     def set_weights(self, weights: Dict[str, float]) -> None:
         """Sets and normalizes ensemble fusion weights so sum(weights) == 1.0."""
         w_resnet = max(0.0, float(weights.get("resnet18", 0.5)))
@@ -135,13 +160,15 @@ class ImageEnsembleDetector:
         if resnet_checkpoint and Path(resnet_checkpoint).is_file():
             ckpt = torch.load(resnet_checkpoint, map_location=self.device)
             state_dict = ckpt.get("state_dict", ckpt)
-            self.resnet.load_state_dict(state_dict)
+            self.resnet.load_state_dict(_remap_state_dict(state_dict, self.resnet))
             self.resnet.eval()
 
         if mobilenet_checkpoint and Path(mobilenet_checkpoint).is_file():
             ckpt = torch.load(mobilenet_checkpoint, map_location=self.device)
             state_dict = ckpt.get("state_dict", ckpt)
-            self.mobilenet.load_state_dict(state_dict)
+            self.mobilenet.load_state_dict(
+                _remap_state_dict(state_dict, self.mobilenet)
+            )
             self.mobilenet.eval()
 
     def predict(

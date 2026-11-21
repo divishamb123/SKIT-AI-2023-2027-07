@@ -38,6 +38,8 @@ from src.image_detector.model import (
     get_optimal_device,
     load_baseline_model,
 )
+from src.image_detector.config import ModelNotReadyError
+from src.image_detector.ensemble import ImageEnsembleDetector
 from src.image_detector.service import ImageDetectionService
 from src.image_detector.evaluator import GroupedImageEvaluator
 from src.image_detector.generalization import (
@@ -47,10 +49,22 @@ from src.image_detector.generalization import (
     GeneralizationGap,
     GeneralizationReport,
 )
+from src.image_detector.threshold_tuner import (
+    CalibratedImageVerdict,
+    ConfidenceTier,
+    HoldoutValidationMetrics,
+    ThresholdMode,
+    ThresholdSweepPoint,
+    ThresholdTuner,
+    ThresholdTuningReport,
+    TunedProfile,
+)
 from src.image_detector.api import router as image_detection_router
 
 __all__ = [
     "ImageDetectionService",
+    "ImageEnsembleDetector",
+    "ModelNotReadyError",
     "GroupedImageEvaluator",
     "BaselineImageClassifier",
     "ImageInferenceRequest",
@@ -85,5 +99,13 @@ __all__ = [
     "DomainMetrics",
     "GeneralizationGap",
     "GeneralizationReport",
+    "ThresholdTuner",
+    "ThresholdMode",
+    "ConfidenceTier",
+    "ThresholdSweepPoint",
+    "TunedProfile",
+    "ThresholdTuningReport",
+    "CalibratedImageVerdict",
+    "HoldoutValidationMetrics",
     "image_detection_router",
 ]
